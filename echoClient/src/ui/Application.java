@@ -5,12 +5,12 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.UnknownHostException;
 
+import client.ClientThread;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import logging.LogSetup;
 
-import client.Client;
 import client.ClientSocketListener;
 import client.TextMessage;
 
@@ -19,19 +19,19 @@ public class Application implements ClientSocketListener {
 	private static Logger logger = Logger.getRootLogger();
 	private static final String PROMPT = "EchoClient> ";
 	private BufferedReader stdin;
-	private Client client = null;
+	private ClientThread client = null;
 	private boolean stop = false;
 	
 	private String serverAddress;
 	private int serverPort;
 	
-	public void run() {
+	public void start() {
 		while(!stop) {
-			stdin = new BufferedReader(new InputStreamReader(System.in));
+			stdin = new BufferedReader(new InputStreamReader(System.in)); //Buffered Reader pointed at STDIN
 			System.out.print(PROMPT);
 			
 			try {
-				String cmdLine = stdin.readLine();
+				String cmdLine = stdin.readLine(); // reads input after prompt
 				this.handleCommand(cmdLine);
 			} catch (IOException e) {
 				stop = true;
@@ -40,14 +40,13 @@ public class Application implements ClientSocketListener {
 		}
 	}
 	
-	private void handleCommand(String cmdLine) {
+	private void handleCommand(String cmdLine) { // CLI Class probably should just be modifying this is enough .__.
 		String[] tokens = cmdLine.split("\\s+");
 
 		if(tokens[0].equals("quit")) {	
 			stop = true;
 			disconnect();
 			System.out.println(PROMPT + "Application exit!");
-		
 		} else if (tokens[0].equals("connect")){
 			if(tokens.length == 3) {
 				try{
@@ -67,8 +66,7 @@ public class Application implements ClientSocketListener {
 			} else {
 				printError("Invalid number of parameters!");
 			}
-			
-		} else  if (tokens[0].equals("send")) {
+		} else if (tokens[0].equals("send")) {
 			if(tokens.length >= 2) {
 				if(client != null && client.isRunning()){
 					StringBuilder msg = new StringBuilder();
@@ -120,9 +118,8 @@ public class Application implements ClientSocketListener {
 		}
 	}
 
-	private void connect(String address, int port) 
-			throws UnknownHostException, IOException {
-		client = new Client(address, port);
+	private void connect(String address, int port) throws UnknownHostException, IOException {
+		client = new ClientThread(address, port);
 		client.addListener(this);
 		client.start();
 	}
@@ -195,7 +192,9 @@ public class Application implements ClientSocketListener {
 	@Override
 	public void handleNewMessage(TextMessage msg) {
 		if(!stop) {
-			System.out.println(msg.getMsg());
+			System.out.println(msg.getMsg()); // this is where I should put message class?
+			
+
 			System.out.print(PROMPT);
 		}
 	}
@@ -229,7 +228,7 @@ public class Application implements ClientSocketListener {
     	try {
 			new LogSetup("logs/client.log", Level.OFF);
 			Application app = new Application();
-			app.run();
+			app.start();
 		} catch (IOException e) {
 			System.out.println("Error! Unable to initialize logger!");
 			e.printStackTrace();

@@ -115,7 +115,7 @@ public class KVStore implements KVCommInterface {
 		return running;
 	}
 
-	public void setRunning(boolean run) {
+	private void setRunning(boolean run) {
 		running = run;
 	}
 
