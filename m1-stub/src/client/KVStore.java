@@ -7,6 +7,7 @@ import java.net.UnknownHostException;
 import java.util.HashSet;
 import java.util.Set;
 import common.messages.KVMessage;
+import common.messages.Message;
 import org.apache.log4j.Logger;
 
 import common.transmission.Transmission;
@@ -21,10 +22,10 @@ public class KVStore implements KVCommInterface {
 	private boolean running;
 	private static int client_id = 0;
 
-	private Transmission transmit;
+	String address;
+	int port;
 
-	private static final int BUFFER_SIZE = 1024;
-	private static final int DROP_SIZE = 1024 * BUFFER_SIZE;
+	private Transmission transmit;
 
 	/**
 	 * Initialize KVStore with address and port of KVServer
@@ -32,24 +33,26 @@ public class KVStore implements KVCommInterface {
 	 * @param address the address of the KVServer
 	 * @param port    the port of the KVServer
 	 */
-	public KVStore(String address, int port) {
+	public KVStore(String address, int port){
 		// TODO Auto-generated method stub
-		clientSocket = new Socket(address, port);
-		output = clientSocket.getOutputStream();
-		input = clientSocket.getInputStream();
-		client_id = client_id++;
-		transmit  = new Transmission();
+		try {
+			this.address = address;
+			this.port = port;
+			output = clientSocket.getOutputStream();
+			input = clientSocket.getInputStream();
+			client_id = client_id++;
+			transmit = new Transmission();
+		}catch(IOException ioe){
+			logger.error("Input/Outputstream initialization failed!");
+		}
 	}
 
 	@Override
-	public void connect() throws Exception {
+	public void connect() throws Exception{
 		// TODO Auto-generated method stub
-		try{
-			setRunning(true);
-			logger.info("Connection established");
-		} catch (IOException ioe) {
-			logger.error("Unable to connect!");
-		}
+        clientSocket = new Socket(address, port);
+        setRunning(true);
+        logger.info("Connection established");
 	}
 
 	@Override
@@ -69,62 +72,43 @@ public class KVStore implements KVCommInterface {
 }
 
 	@Override
-	public /*KVMessage*/String put(String key, String value) throws Exception {
+	public KVMessage put(String key, String value) throws Exception {
 		// TODO Auto-generated method stub
+		byte[] status={};
 
 		if(isRunning()) {
-			try {
-				StringBuilder send_msg = new StringBuilder();
-				send_msg.append("PUT");
-				send_msg.append(Integer.toString(client_id));
-				send_msg.append(key);
-				send_msg.append(value);
-				transmit.sendMessage(toByteArray(send_msg), output);
+            StringBuilder send_msg = new StringBuilder();
+            send_msg.append("PUT");
+            send_msg.append(Integer.toString(client_id));
+            send_msg.append(key);
+            send_msg.append(value);
+            transmit.sendMessage(toByteArray(send_msg.toString()), output);
 
-				byte[] status = transmit.receiveMessage(input);
-
-			} catch (IOException ioe) {
-				if(isRunning()) {
-					logger.error("Connection lost!");
-					try {
-						disconnect();
-					} catch (IOException e) {
-						logger.error("Unable to close connection!");
-					}
-				}
-			}
+            status = transmit.receiveMessage(input);
 		}
-		String ret_val = new String(status).trim();
-		return ret_val;
+        KVMessage received_stat = new Message(new String(status));
+		System.out.println(new String(status));
+		return received_stat;
 	}
 
 	@Override
-	public /*KVMessage*/String get(String key) throws Exception {
+	public KVMessage get(String key) throws Exception {
 		// TODO Auto-generated method stub
+		byte[] value = {};
+
 		if(isRunning()) {
-			try {
-				StringBuilder send_msg = new StringBuilder();
-				send_msg.append("GET");
-				send_msg.append(Integer.toString(client_id));
-				send_msg.append(key);
-				send_msg.append("");
-				transmit.sendMessage(toByteArray(send_msg), output);
+            StringBuilder send_msg = new StringBuilder();
+            send_msg.append("GET");
+            send_msg.append(Integer.toString(client_id));
+            send_msg.append(key);
+            send_msg.append("");
+            transmit.sendMessage(toByteArray(send_msg.toString()), output);
 
-				byte[] value = transmit.receiveMessage(input);
-
-			} catch (IOException ioe) {
-				if(isRunning()) {
-					logger.error("Connection lost!");
-					try {
-						disconnect();
-					} catch (IOException e) {
-						logger.error("Unable to close connection!");
-					}
-				}
-			}
+            value = transmit.receiveMessage(input);
 		}
-		String ret_val = new String(value).trim();
-		return ret_val;//note: for debugging, later needs to be changed to KVMessage type.
+        KVMessage received_value = new Message(new String(value));
+		System.out.println(new String(value));
+		return received_value;//note: for debugging, later needs to be changed to KVMessage type.
 	}
 
 	public boolean isRunning() {
@@ -134,7 +118,11 @@ public class KVStore implements KVCommInterface {
 	public void setRunning(boolean run) {
 		running = run;
 	}
+
 	//temp use for debugging
+	private static final char LINE_FEED = 0x0A;
+	private static final char RETURN = 0x0D;
+
 	private byte[] toByteArray(String s){
 		byte[] bytes = s.getBytes();
 		byte[] ctrBytes = new byte[]{LINE_FEED, RETURN};

@@ -3,13 +3,29 @@ import java.net.BindException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
-import logging.LogSetup;
+import logger.LogSetup;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
+import app_kvServer.ClientConnection;
+
 public class KVServer implements IKVServer {
+
+    //log info
+    private static Logger logger = Logger.getRootLogger();
+
+    //connection info
+    private int port;
+    private ServerSocket serverSocket;
+    private boolean running;
+
+    //cache info
+    private CacheStrategy cache_strategy;
+    private int cache_size;
 
 	/**
 	 * Start KV Server at given port
@@ -21,18 +37,6 @@ public class KVServer implements IKVServer {
 	 *           currently not contained in the cache. Options are "FIFO", "LRU",
 	 *           and "LFU".
 	 */
-
-	private static Logger logger = Logger.getRootLogger();
-	private OutputStream output;
-	private InputStream input;
-
-	private int port;
-	private ServerSocket serverSocket;
-	private boolean running;
-	private CacheStrategy cache_strategy;
-	private int cache_size;
-
-
 
 	public KVServer(int port, int cacheSize, String strategy) {
 		// TODO Auto-generated method stub
@@ -50,10 +54,7 @@ public class KVServer implements IKVServer {
 			while(isRunning()){
 				try {
 					Socket client = serverSocket.accept();
-					output = client.getOutputStream();
-					input = client.getInputStream();
-					ClientConnection connection =
-							new ClientConnection(client);
+					ClientConnection connection = new ClientConnection(client);
 					new Thread(connection).start();
 
 					logger.info("Connected to "
@@ -68,15 +69,23 @@ public class KVServer implements IKVServer {
 		logger.info("Server stopped.");
 	}
 
+    public boolean isRunning() {
+        return this.running;
+    }
 
-	private CacheStrategy string_to_enum_cache_strategy(String str) {
-		if(str == "None")  return None;
-		if(str == "LRU")  return LRU;
-		if(str == "LFU") return LFU;
-		if(str == "FIFO") return FIFO;
+	public CacheStrategy string_to_enum_cache_strategy(String str) {
+
+		if(str.equals("LRU"))
+			return CacheStrategy.LRU;
+		else if(str.equals("LFU"))
+			return CacheStrategy.LFU;
+		else if(str.equals("FIFO"))
+			return CacheStrategy.FIFO;
+		else
+			return CacheStrategy.None;
 	}
 
-	private boolean initializeServer() {
+	public boolean initializeServer() {
 		logger.info("Initialize server ...");
 		try {
 			serverSocket = new ServerSocket(port);

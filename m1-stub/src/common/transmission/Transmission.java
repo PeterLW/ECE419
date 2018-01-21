@@ -1,14 +1,19 @@
-package Transmit
+package common.transmission;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+
+import logger.LogSetup;
 
 public class Transmission{
 
     private Logger logger = Logger.getRootLogger();
+    private static final int BUFFER_SIZE = 1024;
+    private static final int DROP_SIZE = 1024 * BUFFER_SIZE;
 
     public Transmission() {
 
@@ -21,8 +26,7 @@ public class Transmission{
         logger.info("Send message:\t '" + msg + "'");
     }
 
-    private byte[] receiveMessage(InputStream input) throws IOException {
-
+    public byte[] receiveMessage(InputStream input) throws IOException {
         int index = 0;
         byte[] msgBytes = null, tmp = null;
         byte[] bufferBytes = new byte[BUFFER_SIZE];
