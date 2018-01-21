@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="m1-stub:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/m1_stub_jar</output-path>
+    <root id="archive" name="m1-stub.jar">
+      <element id="module-output" name="m1-stub" />
+    </root>
+  </artifact>
+</component>
