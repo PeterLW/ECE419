@@ -4,7 +4,7 @@ import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
-
+import common.cache.Cache;
 import org.apache.log4j.*;
 
 import common.transmission.Transmission;
@@ -20,24 +20,20 @@ import common.transmission.Transmission;
 public class ClientConnection implements Runnable {
 
 	private static Logger logger = Logger.getRootLogger();
-	
 	private boolean isOpen;
-	private static final int BUFFER_SIZE = 1024;
-	private static final int DROP_SIZE = 128 * BUFFER_SIZE;
-	
+	private  Cache cache;
 	private Socket clientSocket;
-	private InputStream input;
-	private OutputStream output;
-
 	private Transmission transmission;
 
 	/**
 	 * Constructs a new CientConnection object for a given TCP socket.
 	 * @param clientSocket the Socket object for the client connection.
 	 */
-	public ClientConnection(Socket clientSocket) {
+	public ClientConnection(Socket clientSocket, Cache caching) {
 		this.clientSocket = clientSocket;
 		this.isOpen = true;
+		transmission = new Transmission();
+		cache = caching;
 	}
 	
 	/**
@@ -46,19 +42,12 @@ public class ClientConnection implements Runnable {
 	 */
 	public void run() {
 		try {
-			output = clientSocket.getOutputStream();
-			input = clientSocket.getInputStream();
-
-//			transmission.sendMessage(toByteArray(
-//					"Connection to MSRG server established: "
-//					+ clientSocket.getLocalAddress() + " / "
-//					+ clientSocket.getLocalPort()), output);
-			
 			while(isOpen) {
 				try {
-					byte[] latestMsg = transmission.receiveMessage(input);
-					transmission.sendMessage(latestMsg, output);
-					
+					byte[] latestMsg = transmission.receiveMessage(clientSocket);
+					msg_process(latestMsg);
+					//transmission.sendMessage(latestMsg, clientSocket);
+
 				/* connection either terminated by the client or lost due to 
 				 * network problems*/	
 				} catch (IOException ioe) {
@@ -66,15 +55,12 @@ public class ClientConnection implements Runnable {
 					isOpen = false;
 				}				
 			}
-			
-		} catch (IOException ioe) {
+		} catch (Exception ioe) {
 			logger.error("Error! Connection could not be established!", ioe);
 			
 		} finally {
 			try {
 				if (clientSocket != null) {
-					input.close();
-					output.close();
 					clientSocket.close();
 				}
 			} catch (IOException ioe) {
@@ -96,6 +82,25 @@ public class ClientConnection implements Runnable {
 		System.arraycopy(ctrBytes, 0, tmp, bytes.length, ctrBytes.length);
 
 		return tmp;
+	}
+
+	private void msg_process(byte[] msg){
+		String new_msg = new String(msg);
+		String[] tokens = new_msg.split("\\.");
+
+		try {
+			if (tokens[0].equals("PUT")) {
+				transmission.sendMessage(toByteArray("PutSucess"), clientSocket);
+				cache.putKV(tokens[2], tokens[3]);
+			}
+			if (tokens[0].equals("GET")) {
+				String value = cache.getKV(tokens[2]);
+				System.out.println("GET SUCCESS");
+				transmission.sendMessage(toByteArray(value), clientSocket);
+			}
+		}catch (IOException ioe){
+			logger.error("Msg processor error!");
+		}
 	}
 	
 }

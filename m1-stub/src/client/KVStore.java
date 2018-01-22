@@ -86,12 +86,21 @@ public class KVStore implements KVCommInterface {
 		if(isRunning()) {
 			message = new Message(StatusType.PUT, clientId, seqNum, key, value);
 			startTime = System.nanoTime();
-			transmit.sendMessage(toByteArray(gson.toJson(message)), output);
+			transmit.sendMessage(toByteArray(gson.toJson(message)), clientSocket);
 			seqNum++;
 			timeElapsed = System.nanoTime() - startTime;
 			while (timeElapsed < TIMEOUT) {
+				/* right now server isn't built to send a reply, so there's always no reply
+				 * this should probably resend if timeout, but until the server is built to send
+				 * a reply, I don't want to add it yet, this will be an infinite loop
+				 */
 				if(input.available() != 0) {// nonblocking call
-					status = transmit.receiveMessage(input); // receive reply
+					status = transmit.receiveMessage(clientSocket); // receive reply
+					/*
+					 * I don't think it's necessary to pass in the socket?
+					 * if the inputStream was null before, perhaps it was because it was created
+					 * before the socket was connected?
+					 */
 				}
 
 				if (i==200) {
@@ -121,13 +130,25 @@ public class KVStore implements KVCommInterface {
 		if(isRunning()) {
 			message = new Message(StatusType.GET, clientId, seqNum, key);
 			startTime = System.nanoTime();
-			transmit.sendMessage(toByteArray(gson.toJson(message)), output);
+			transmit.sendMessage(toByteArray(gson.toJson(message)), clientSocket);
 			seqNum++;
 
+			System.out.println("test");
 			timeElapsed = System.nanoTime() - startTime;
 			while (timeElapsed < TIMEOUT) {
+				/* right now server isn't built to send a reply, so there's always no reply
+				 * this should probably resend if timeout, but until the server is built to send
+				 * a reply, I don't want to add it yet, this will be an infinite loop
+				 */
+				System.out.println("test1");
 				if(input.available() != 0) {// nonblocking call
-					value = transmit.receiveMessage(input); // receive reply
+					System.out.println("test2");
+					value = transmit.receiveMessage(clientSocket); // receive reply
+					/*
+					 * I don't think it's necessary to pass in the socket?
+					 * if the inputStream was null before, perhaps it was because it was created
+					 * before the socket was connected?
+					 */
 				}
 
 				if (i==200) {

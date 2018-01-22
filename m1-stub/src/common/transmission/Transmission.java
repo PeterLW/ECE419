@@ -3,6 +3,7 @@ package common.transmission;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.Socket;
 
 import org.apache.log4j.Logger;
 
@@ -12,24 +13,34 @@ public class Transmission{
     private static final int BUFFER_SIZE = 1024;
     private static final int DROP_SIZE = 1024 * BUFFER_SIZE;
 
+    OutputStream output;
+    InputStream input;
+
     public Transmission() {
 
     }
 
-    public void sendMessage(byte[] msg, OutputStream output) throws IOException {
+//    public void sendMessage(byte[] msg, OutputStream output) throws IOException {
+    public void sendMessage(byte[] msg, Socket socket) throws IOException {
         byte[] msgBytes = msg;
+        output = socket.getOutputStream();
         output.write(msgBytes, 0, msgBytes.length);
         output.flush();
-        LOGGER.debug("Send message:\t '" + msg + "'");
+        LOGGER.debug("Send message:\t '" + new String(msg) + "'");
     }
 
-    public byte[] receiveMessage(InputStream input) throws IOException {
+//    public byte[] receiveMessage(InputStream input) throws IOException {
+    public byte[] receiveMessage(Socket socket) throws IOException {
         int index = 0;
         byte[] msgBytes = null, tmp = null;
         byte[] bufferBytes = new byte[BUFFER_SIZE];
 
+//        input = socket.getInputStream();
         /* read first char from stream */
-        byte read = (byte) input.read(); // blocks until input data availabl
+//        if (input == null){
+//            System.out.println("wee");
+//        }
+        byte read = (byte) input.read(); // blocks until input data available
         boolean reading = true;
 
         while(read != 13 && reading) {/* carriage return */
@@ -76,7 +87,7 @@ public class Transmission{
 
         msgBytes = tmp;
 
-        LOGGER.info("Receive message:\t '" + msgBytes + "'");
+        LOGGER.info("Receive message:\t '" + new String(msgBytes) + "'");
         return msgBytes;
     }
 }

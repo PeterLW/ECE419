@@ -1,0 +1,109 @@
+2018-01-21 18:10:32,444 INFO  [main] root: Initialize server ...
+2018-01-21 18:10:32,444 INFO  [main] root: Server listening on port: 1200
+2018-01-21 18:14:49,881 INFO  [main] root: Connected to 127.0.0.1 on port 63758
+2018-01-21 18:19:30,378 INFO  [main] root: Initialize server ...
+2018-01-21 18:19:30,378 INFO  [main] root: Server listening on port: 1200
+2018-01-21 18:19:42,220 INFO  [main] root: Connected to 127.0.0.1 on port 63776
+2018-01-21 18:22:35,863 INFO  [main] root: Initialize server ...
+2018-01-21 18:22:35,879 INFO  [main] root: Server listening on port: 1200
+2018-01-21 18:22:47,500 INFO  [main] root: Connected to 127.0.0.1 on port 63784
+2018-01-21 18:32:33,282 INFO  [main] root: Initialize server ...
+2018-01-21 18:32:33,282 INFO  [main] root: Server listening on port: 1200
+2018-01-21 18:32:43,695 INFO  [main] root: Connected to 127.0.0.1 on port 63913
+2018-01-21 18:39:48,223 INFO  [main] root: Initialize server ...
+2018-01-21 18:39:48,230 INFO  [main] root: Server listening on port: 1200
+2018-01-21 18:40:01,045 ERROR [Thread-0] root: Error! Connection could not be established!
+java.lang.NullPointerException
+	at app_kvServer.ClientConnection.run(ClientConnection.java:56)
+	at java.base/java.lang.Thread.run(Thread.java:844)
+2018-01-21 18:40:01,045 INFO  [main] root: Connected to 127.0.0.1 on port 63971
+2018-01-21 18:52:26,741 INFO  [main] root: Initialize server ...
+2018-01-21 18:52:26,748 INFO  [main] root: Server listening on port: 1200
+2018-01-21 18:52:38,272 ERROR [Thread-0] root: Error! Connection could not be established!
+java.lang.NullPointerException
+	at app_kvServer.ClientConnection.run(ClientConnection.java:47)
+	at java.base/java.lang.Thread.run(Thread.java:844)
+2018-01-21 18:52:38,287 INFO  [main] root: Connected to 127.0.0.1 on port 64056
+2018-01-21 18:56:51,133 INFO  [main] root: Initialize server ...
+2018-01-21 18:56:51,149 INFO  [main] root: Server listening on port: 1200
+2018-01-21 18:57:13,145 ERROR [Thread-0] root: Error! Connection could not be established!
+java.lang.NullPointerException
+	at app_kvServer.ClientConnection.run(ClientConnection.java:47)
+	at java.base/java.lang.Thread.run(Thread.java:844)
+2018-01-21 18:57:13,145 INFO  [main] root: Connected to 127.0.0.1 on port 64084
+2018-01-21 18:58:20,952 INFO  [main] root: Initialize server ...
+2018-01-21 18:58:20,952 INFO  [main] root: Server listening on port: 1200
+2018-01-21 18:58:36,959 ERROR [Thread-0] root: Error! Connection could not be established!
+java.lang.NullPointerException
+	at app_kvServer.ClientConnection.run(ClientConnection.java:47)
+	at java.base/java.lang.Thread.run(Thread.java:844)
+2018-01-21 18:58:36,959 INFO  [main] root: Connected to 127.0.0.1 on port 64090
+2018-01-21 19:08:53,649 INFO  [main] root: Initialize server ...
+2018-01-21 19:08:53,649 INFO  [main] root: Server listening on port: 1200
+2018-01-21 19:09:14,298 INFO  [main] root: Connected to 127.0.0.1 on port 64152
+2018-01-21 19:09:26,649 INFO  [Thread-0] root: Receive message:	 '[B@6d7eef8d'
+2018-01-21 19:09:26,649 INFO  [Thread-0] root: Send message:	 '[B@6d7eef8d'
+2018-01-21 19:13:04,773 ERROR [Thread-0] root: Error! Connection lost!
+2018-01-21 19:13:30,835 INFO  [main] root: Connected to 127.0.0.1 on port 64177
+2018-01-21 19:13:35,626 INFO  [Thread-1] root: Receive message:	 '[B@d507bc9'
+2018-01-21 19:13:35,626 INFO  [Thread-1] root: Send message:	 '[B@d507bc9'
+2018-01-21 19:16:41,992 ERROR [Thread-1] root: Error! Connection lost!
+2018-01-21 23:40:25,165 INFO  [main] root: Initialize server ...
+2018-01-21 23:40:25,168 INFO  [main] root: Initialize server ...
+2018-01-21 23:40:25,177 ERROR [main] root: Error! Cannot open server socket:
+2018-01-21 23:40:25,178 ERROR [main] root: Port 1200 is already bound!
+2018-01-21 23:40:25,178 INFO  [main] root: Server stopped.
+2018-01-21 23:40:25,179 ERROR [main] root: Error! Cannot open server socket:
+2018-01-21 23:40:25,180 ERROR [main] root: Port 1200 is already bound!
+2018-01-21 23:40:25,180 INFO  [main] root: Server stopped.
+2018-01-22 02:09:46,359 INFO  [main] root: Initialize server ...
+2018-01-22 02:09:46,370 INFO  [main] root: Server listening on port: 1200
+2018-01-22 02:10:05,773 INFO  [main] root: Connected to 127.0.0.1 on port 51457
+2018-01-22 02:10:10,204 INFO  [Thread-0] root: Receive message:	 <PUT.1.a.b>
+2018-01-22 02:10:10,205 INFO  [Thread-0] root: Send message:	 <PutSucess
+>
+2018-01-22 02:10:16,829 INFO  [Thread-0] root: Receive message:	 <GET1a>
+2018-01-22 02:13:27,708 INFO  [main] root: Initialize server ...
+2018-01-22 02:13:27,722 INFO  [main] root: Server listening on port: 1200
+2018-01-22 02:13:39,303 INFO  [main] root: Connected to 127.0.0.1 on port 51484
+2018-01-22 02:13:44,595 INFO  [Thread-0] root: Receive message:	 <PUT.1.a.b>
+2018-01-22 02:13:44,597 INFO  [Thread-0] root: Send message:	 <PutSucess
+>
+2018-01-22 02:13:58,625 INFO  [Thread-0] root: Receive message:	 <GET1a>
+2018-01-22 02:18:24,474 INFO  [main] root: Initialize server ...
+2018-01-22 02:18:24,484 INFO  [main] root: Server listening on port: 1200
+2018-01-22 02:18:34,219 INFO  [main] root: Connected to 127.0.0.1 on port 51513
+2018-01-22 02:18:39,316 INFO  [Thread-0] root: Receive message:	 <PUT.1.a.b>
+2018-01-22 02:18:39,316 INFO  [Thread-0] root: Send message:	 <PutSucess
+>
+2018-01-22 02:18:43,365 INFO  [Thread-0] root: Receive message:	 <GET1a>
+2018-01-22 02:20:37,483 INFO  [main] root: Initialize server ...
+2018-01-22 02:20:37,493 INFO  [main] root: Server listening on port: 1200
+2018-01-22 02:20:50,446 INFO  [main] root: Connected to 127.0.0.1 on port 51520
+2018-01-22 02:20:53,576 INFO  [Thread-0] root: Receive message:	 <PUT.1.a.b>
+2018-01-22 02:20:53,576 INFO  [Thread-0] root: Send message:	 <PutSucess
+>
+2018-01-22 02:20:57,733 INFO  [Thread-0] root: Receive message:	 <GET.1.a.>
+2018-01-22 02:20:57,734 INFO  [Thread-0] root: Send message:	 <b
+>
+2018-01-22 02:21:07,883 ERROR [Thread-0] root: Error! Connection lost!
+2018-01-22 02:22:07,853 INFO  [main] root: Initialize server ...
+2018-01-22 02:22:07,864 INFO  [main] root: Server listening on port: 1200
+2018-01-22 02:22:14,109 INFO  [main] root: Connected to 127.0.0.1 on port 51526
+2018-01-22 02:22:17,161 INFO  [Thread-0] root: Receive message:	 <PUT.1.a.b>
+2018-01-22 02:22:17,161 INFO  [Thread-0] root: Send message:	 <PutSucess
+>
+2018-01-22 02:22:20,210 INFO  [Thread-0] root: Receive message:	 <GET.1.a.>
+2018-01-22 02:22:20,210 INFO  [Thread-0] root: Send message:	 <b
+>
+2018-01-22 02:22:32,097 ERROR [Thread-0] root: Error! Connection lost!
+2018-01-22 02:23:22,129 INFO  [main] root: Initialize server ...
+2018-01-22 02:23:22,136 INFO  [main] root: Server listening on port: 1200
+2018-01-22 02:23:27,690 INFO  [main] root: Connected to 127.0.0.1 on port 51537
+2018-01-22 02:23:30,524 INFO  [Thread-0] root: Receive message:	 <PUT.1.a.b>
+2018-01-22 02:23:30,525 INFO  [Thread-0] root: Send message:	 <PutSucess
+>
+2018-01-22 02:23:34,161 INFO  [Thread-0] root: Receive message:	 <GET.1.a.>
+2018-01-22 02:23:34,162 INFO  [Thread-0] root: Send message:	 <b
+>
+2018-01-22 02:23:37,572 ERROR [Thread-0] root: Error! Connection lost!
