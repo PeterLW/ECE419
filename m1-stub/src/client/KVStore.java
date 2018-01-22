@@ -17,8 +17,8 @@ public class KVStore implements KVCommInterface {
 
 	private Logger logger = Logger.getRootLogger();
 	private Socket clientSocket;
-	private OutputStream output;
-	private InputStream input;
+//	private OutputStream output;
+//	private InputStream input;
 	private boolean running;
 	private static int client_id = 0;
 
@@ -35,22 +35,18 @@ public class KVStore implements KVCommInterface {
 	 */
 	public KVStore(String address, int port){
 		// TODO Auto-generated method stub
-		try {
-			this.address = address;
-			this.port = port;
-			output = clientSocket.getOutputStream();
-			input = clientSocket.getInputStream();
-			client_id = client_id++;
-			transmit = new Transmission();
-		}catch(IOException ioe){
-			logger.error("Input/Outputstream initialization failed!");
-		}
+		this.address = address;
+		this.port = port;
+		client_id++;
+		transmit = new Transmission();
 	}
 
 	@Override
 	public void connect() throws Exception{
 		// TODO Auto-generated method stub
         clientSocket = new Socket(address, port);
+//		output = clientSocket.getOutputStream();
+//		input = clientSocket.getInputStream();
         setRunning(true);
         logger.info("Connection established");
 	}
@@ -79,12 +75,16 @@ public class KVStore implements KVCommInterface {
 		if(isRunning()) {
             StringBuilder send_msg = new StringBuilder();
             send_msg.append("PUT");
+			send_msg.append(".");
             send_msg.append(Integer.toString(client_id));
+			send_msg.append(".");
             send_msg.append(key);
+            send_msg.append(".");
             send_msg.append(value);
-            transmit.sendMessage(toByteArray(send_msg.toString()), output);
 
-            status = transmit.receiveMessage(input);
+            transmit.sendMessage(toByteArray(send_msg.toString()), clientSocket);
+
+            status = transmit.receiveMessage(clientSocket);
 		}
         KVMessage received_stat = new Message(new String(status));
 		System.out.println(new String(status));
@@ -99,12 +99,14 @@ public class KVStore implements KVCommInterface {
 		if(isRunning()) {
             StringBuilder send_msg = new StringBuilder();
             send_msg.append("GET");
+			send_msg.append(".");
             send_msg.append(Integer.toString(client_id));
+			send_msg.append(".");
             send_msg.append(key);
-            send_msg.append("");
-            transmit.sendMessage(toByteArray(send_msg.toString()), output);
+			send_msg.append(".");
+            transmit.sendMessage(toByteArray(send_msg.toString()), clientSocket);
 
-            value = transmit.receiveMessage(input);
+            value = transmit.receiveMessage(clientSocket);
 		}
         KVMessage received_value = new Message(new String(value));
 		System.out.println(new String(value));

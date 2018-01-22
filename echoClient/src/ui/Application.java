@@ -39,7 +39,6 @@ public class Application implements ClientSocketListener {
 			}
 		}
 	}
-	
 	private void handleCommand(String cmdLine) {
 		String[] tokens = cmdLine.split("\\s+");
 
