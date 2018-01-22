@@ -3,9 +3,7 @@ package app_kvClient;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.UnknownHostException;
-import java.io.InputStream;
-import java.io.OutputStream;
+
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import logger.LogSetup;
@@ -27,7 +25,7 @@ public class KVClient implements IKVClient {
     public void newConnection(String hostname, int port) {
         // TODO Auto-generated method stub
         try {
-            kvStore = new KVStore(hostname, port);
+            kvStore = new KVStore(hostname, port); // API we have to implement
             kvStore.connect();
         } catch (Exception ioe) {
             logger.error("Unable to connect!");
@@ -104,18 +102,18 @@ public class KVClient implements IKVClient {
                 + "ALL | DEBUG | INFO | WARN | ERROR | FATAL | OFF");
     }
 
-    private void handleCommand(String cmdLine) {
+    private void handleCommand(String cmdLine) { // CLI Class probably should just be modifying this is enough .__.
         String[] tokens = cmdLine.split("\\s+");
 
         if(tokens[0].equals("quit")) {
+            stop = true;
             quit();
             System.out.println(PROMPT + "Application exit!");
-
         } else if (tokens[0].equals("connect")){
             if(tokens.length == 3) {
                 String serverAddress = tokens[1];
                 int serverPort = Integer.parseInt(tokens[2]);
-                newConnection(serverAddress, serverPort);
+                this.newConnection(serverAddress, serverPort);
             } else {
                 printError("Invalid number of parameters!");
             }
@@ -126,12 +124,12 @@ public class KVClient implements IKVClient {
                     value.setLength(0);
                     for(int i = 2; i < tokens.length; i++) {
                         value.append(tokens[i]);
-                        if (i != tokens.length -1 ) {
+                        if (i != tokens.length - 1 ) {
                             value.append(" ");
                         }
                     }
                     try {
-                        kvStore.put(tokens[1], value.toString());
+                        kvStore.put(tokens[1], value.toString()); // blocking call
                     }catch(Exception e){
                         printError("Put fail!");
                         logger.warn("Put fail!", e);
@@ -147,7 +145,7 @@ public class KVClient implements IKVClient {
             if(tokens.length == 2) {
                 if(kvStore != null && kvStore.isRunning()){
                     try {
-                        kvStore.get(tokens[1]);
+                        kvStore.get(tokens[1]); // blocking call
                     }catch(Exception e){
                         printError("Get fail!");
                         logger.warn("Get fail!", e);
@@ -178,12 +176,11 @@ public class KVClient implements IKVClient {
 
     public void run(){
         while(!stop) {
-            stdin = new BufferedReader(new InputStreamReader(System.in));
+            stdin = new BufferedReader(new InputStreamReader(System.in)); //Buffered Reader pointed at STDIN
             System.out.print(PROMPT);
-
             try {
-                String cmdLine = stdin.readLine();
-                handleCommand(cmdLine);
+                String cmdLine = stdin.readLine(); // reads input after prompt
+                this.handleCommand(cmdLine);
             } catch (IOException e) {
                 stop = true;
                 printError("CLI does not respond - Application terminated ");
@@ -197,7 +194,7 @@ public class KVClient implements IKVClient {
 
     public static void main(String[] args){
         try {
-            new LogSetup("logs/client.log", Level.ALL);
+            new LogSetup("logs/client.log", Level.INFO); // debug - setting log to info level
             KVClient client = new KVClient();
             client.run();
         } catch (IOException e) {

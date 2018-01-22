@@ -1,11 +1,13 @@
 package app_kvServer;
+import java.io.*;
 import java.net.BindException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+
+import app_kvClient.KVClient;
 import logger.LogSetup;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -17,15 +19,18 @@ public class KVServer implements IKVServer {
     //log info
     private static Logger logger = Logger.getRootLogger();
 
+    private static final String PROMPT = "KVSERVER>";
+
     //connection info
     private int port;
     private ServerSocket serverSocket;
-    private boolean running;
+    private boolean running = false;
+    private boolean stop = false;
 
     //cache info
 	private  int cache_size;
 	private String cache_strategy;
-	Cache caching;
+	private static Cache caching;
 
 	/**
 	 * Start KV Server at given port
@@ -45,7 +50,6 @@ public class KVServer implements IKVServer {
 		this.cache_strategy = strategy;
 		caching = new Cache(cacheSize, strategy);
 	}
-
 
 	public void connect(){
 
@@ -74,24 +78,16 @@ public class KVServer implements IKVServer {
         return this.running;
     }
 
-	public boolean initializeServer() {
-		logger.info("Initialize server ...");
-		try {
-			serverSocket = new ServerSocket(port);
-			logger.info("Server listening on port: "
-					+ serverSocket.getLocalPort());
-			return true;
-
-		} catch (IOException e) {
-			logger.error("Error! Cannot open server socket:");
-			if(e instanceof BindException){
-				logger.error("Port " + port + " is already bound!");
-			}
-			return false;
-		}
+	private CacheStrategy string_to_enum_cache_strategy(String str) {
+		if(str.equals("LRU"))
+			return CacheStrategy.LRU;
+		else if(str.equals("LFU"))
+			return CacheStrategy.LFU;
+		else if(str.equals("FIFO"))
+			return CacheStrategy.FIFO;
+		else
+			return CacheStrategy.None;
 	}
-
-
 
 	@Override
 	public int getPort(){
@@ -113,18 +109,6 @@ public class KVServer implements IKVServer {
 		logger.info("Server Cache Strategy: " + cache_strategy);
 		return string_to_enum_cache_strategy(cache_strategy);
 	}
-
-	public CacheStrategy string_to_enum_cache_strategy(String str) {
-		if(str.equals("LRU"))
-			return CacheStrategy.LRU;
-		else if(str.equals("LFU"))
-			return CacheStrategy.LFU;
-		else if(str.equals("FIFO"))
-			return CacheStrategy.FIFO;
-		else
-			return CacheStrategy.None;
-	}
-
 
 	@Override
     public int getCacheSize(){
@@ -173,6 +157,43 @@ public class KVServer implements IKVServer {
 	}
 
 	@Override
+	public void run(){
+		// TODO Auto-generated method stub
+		this.running = initializeServer();
+		while(!this.stop) {
+			// waits for connection
+			if(this.serverSocket != null) {
+				while(isRunning()){
+					try {
+						Socket client = serverSocket.accept(); // blocking call
+						ClientConnection connection = new ClientConnection(client, caching);
+						logger.info("Connected to " + client.getInetAddress().getHostName()
+								+  " on port " + client.getPort());
+						new Thread(connection).start();
+					} catch (IOException e) {
+						logger.error("Error! " +  "Unable to establish connection. \n", e);
+					}
+				}
+			}
+		}
+	}
+
+	private boolean initializeServer() {
+		logger.info("Initialize server ...");
+		try {
+			this.serverSocket = new ServerSocket(this.port);
+			logger.info("Server listening on port: " + this.serverSocket.getLocalPort());
+			return true;
+		} catch (IOException e) {
+			logger.error("Error! Cannot open server socket:");
+			if(e instanceof BindException){
+				logger.error("Port " + port + " is already bound!");
+			}
+			return false;
+		}
+	}
+
+	@Override
     public void kill(){
 		// TODO Auto-generated method stub
 
@@ -192,9 +213,9 @@ public class KVServer implements IKVServer {
 
 	public static void main(String[] args){
 		try {
-			new LogSetup("logs/server.log", Level.ALL);
-			KVServer kvserver = new KVServer(1200, 4000, "LFU");
-			kvserver.connect();
+			new LogSetup("logs/client.log", Level.INFO); // debug - setting log to info level
+			KVServer server = new KVServer(2000,200,"LRU"); // these should be from cmdline
+			server.run();
 		} catch (IOException e) {
 			System.out.println("Error! Unable to initialize logger!");
 			e.printStackTrace();

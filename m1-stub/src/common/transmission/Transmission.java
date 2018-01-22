@@ -4,14 +4,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 
-import logger.LogSetup;
+import org.apache.log4j.Logger;
 
 public class Transmission{
 
-    private Logger logger = Logger.getRootLogger();
+    private static final Logger LOGGER = Logger.getRootLogger();
     private static final int BUFFER_SIZE = 1024;
     private static final int DROP_SIZE = 1024 * BUFFER_SIZE;
 
@@ -28,7 +26,7 @@ public class Transmission{
         output = socket.getOutputStream();
         output.write(msgBytes, 0, msgBytes.length);
         output.flush();
-        logger.info("Send message:\t <" + new String(msg) + ">");
+        LOGGER.debug("Send message:\t '" + new String(msg) + "'");
     }
 
 //    public byte[] receiveMessage(InputStream input) throws IOException {
@@ -37,9 +35,12 @@ public class Transmission{
         byte[] msgBytes = null, tmp = null;
         byte[] bufferBytes = new byte[BUFFER_SIZE];
 
-        input = socket.getInputStream();
+//        input = socket.getInputStream();
         /* read first char from stream */
-        byte read = (byte) input.read();
+//        if (input == null){
+//            System.out.println("wee");
+//        }
+        byte read = (byte) input.read(); // blocks until input data available
         boolean reading = true;
 
         while(read != 13 && reading) {/* carriage return */
@@ -86,7 +87,7 @@ public class Transmission{
 
         msgBytes = tmp;
 
-        logger.info("Receive message:\t <" + new String(msgBytes) + ">");
+        LOGGER.info("Receive message:\t '" + new String(msgBytes) + "'");
         return msgBytes;
     }
 }

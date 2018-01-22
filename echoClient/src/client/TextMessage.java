@@ -1,12 +1,14 @@
 package client;
 
 import java.io.Serializable;
+import
+import common.messages.KVMessage;
 
 /**
  * Represents a simple text message, which is intended to be received and sent 
  * by the server.
  */
-public class TextMessage implements Serializable {
+public class TextMessage implements KVMessage, Serializable {
 
 	private static final long serialVersionUID = 5549512212003782618L;
 	private String msg;
@@ -76,5 +78,22 @@ public class TextMessage implements Serializable {
 		
 		return tmp;		
 	}
-	
+
+
+	@Override
+	public String getKey() {
+		return null;
+	}
+
+	@Override
+	public String getValue() {
+		return null;
+	}
+
+	@Override
+	public StatusType getStatus() {
+		return null;
+	}
+
+
 }
