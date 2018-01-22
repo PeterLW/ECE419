@@ -12,4 +12,10 @@ public class AdditionalTest extends TestCase {
 	public void testStub() {
 		assertTrue(true);
 	}
+
+	// Message Class
+	@Test
+	public void testMessage(){
+
+	}
 }

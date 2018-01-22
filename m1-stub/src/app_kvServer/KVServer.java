@@ -1,11 +1,10 @@
 package app_kvServer;
+import java.io.*;
 import java.net.BindException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 
+import app_kvClient.KVClient;
 import logger.LogSetup;
 
 import org.apache.log4j.Level;
@@ -18,10 +17,13 @@ public class KVServer implements IKVServer {
     //log info
     private static Logger logger = Logger.getRootLogger();
 
+    private static final String PROMPT = "KVSERVER>";
+
     //connection info
     private int port;
     private ServerSocket serverSocket;
-    private boolean running;
+    private boolean running = false;
+    private boolean stop = false;
 
     //cache info
     private CacheStrategy cache_strategy;
@@ -46,35 +48,11 @@ public class KVServer implements IKVServer {
 	}
 
 
-	public void connect(){
-
-		running = initializeServer();
-
-		if(serverSocket != null) {
-			while(isRunning()){
-				try {
-					Socket client = serverSocket.accept();
-					ClientConnection connection = new ClientConnection(client);
-					new Thread(connection).start();
-
-					logger.info("Connected to "
-							+ client.getInetAddress().getHostName()
-							+  " on port " + client.getPort());
-				} catch (IOException e) {
-					logger.error("Error! " +
-							"Unable to establish connection. \n", e);
-				}
-			}
-		}
-		logger.info("Server stopped.");
-	}
-
     public boolean isRunning() {
         return this.running;
     }
 
-	public CacheStrategy string_to_enum_cache_strategy(String str) {
-
+	private CacheStrategy string_to_enum_cache_strategy(String str) {
 		if(str.equals("LRU"))
 			return CacheStrategy.LRU;
 		else if(str.equals("LFU"))
@@ -84,24 +62,6 @@ public class KVServer implements IKVServer {
 		else
 			return CacheStrategy.None;
 	}
-
-	public boolean initializeServer() {
-		logger.info("Initialize server ...");
-		try {
-			serverSocket = new ServerSocket(port);
-			logger.info("Server listening on port: "
-					+ serverSocket.getLocalPort());
-			return true;
-
-		} catch (IOException e) {
-			logger.error("Error! Cannot open server socket:");
-			if(e instanceof BindException){
-				logger.error("Port " + port + " is already bound!");
-			}
-			return false;
-		}
-	}
-
 
 
 	@Override
@@ -162,6 +122,43 @@ public class KVServer implements IKVServer {
 	}
 
 	@Override
+	public void run(){
+		// TODO Auto-generated method stub
+		this.running = initializeServer();
+		while(!this.stop) {
+			// waits for connection
+			if(this.serverSocket != null) {
+				while(isRunning()){
+					try {
+						Socket client = serverSocket.accept(); // blocking call
+						ClientConnection connection = new ClientConnection(client);
+						logger.info("Connected to " + client.getInetAddress().getHostName()
+								+  " on port " + client.getPort());
+						new Thread(connection).start();
+					} catch (IOException e) {
+						logger.error("Error! " +  "Unable to establish connection. \n", e);
+					}
+				}
+			}
+		}
+	}
+
+	private boolean initializeServer() {
+		logger.info("Initialize server ...");
+		try {
+			this.serverSocket = new ServerSocket(this.port);
+			logger.info("Server listening on port: " + this.serverSocket.getLocalPort());
+			return true;
+		} catch (IOException e) {
+			logger.error("Error! Cannot open server socket:");
+			if(e instanceof BindException){
+				logger.error("Port " + port + " is already bound!");
+			}
+			return false;
+		}
+	}
+
+	@Override
     public void kill(){
 		// TODO Auto-generated method stub
 	}
@@ -169,6 +166,18 @@ public class KVServer implements IKVServer {
 	@Override
     public void close(){
 		// TODO Auto-generated method stub
+	}
+
+	public static void main(String[] args){
+		try {
+			new LogSetup("logs/client.log", Level.INFO); // debug - setting log to info level
+			KVServer server = new KVServer(1111,200,"LRU"); // these should be from cmdline
+			server.run();
+		} catch (IOException e) {
+			System.out.println("Error! Unable to initialize logger!");
+			e.printStackTrace();
+			System.exit(1);
+		}
 	}
 
 

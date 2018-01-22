@@ -3,29 +3,32 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.net.UnknownHostException;
-import java.util.HashSet;
-import java.util.Set;
+
+import com.google.gson.Gson;
 import common.messages.KVMessage;
 import common.messages.Message;
 import org.apache.log4j.Logger;
 
 import common.transmission.Transmission;
+import common.messages.KVMessage.StatusType;
+
 
 public class KVStore implements KVCommInterface {
-
 
 	private Logger logger = Logger.getRootLogger();
 	private Socket clientSocket;
 	private OutputStream output;
 	private InputStream input;
 	private boolean running;
-	private static int client_id = 0;
+	private static int clientId = 0;
+	private int seqNum = 0;
 
 	String address;
 	int port;
 
+	private Message message = null;
 	private Transmission transmit;
+	private Gson gson = null;
 
 	/**
 	 * Initialize KVStore with address and port of KVServer
@@ -35,22 +38,21 @@ public class KVStore implements KVCommInterface {
 	 */
 	public KVStore(String address, int port){
 		// TODO Auto-generated method stub
-		try {
-			this.address = address;
-			this.port = port;
-			output = clientSocket.getOutputStream();
-			input = clientSocket.getInputStream();
-			client_id = client_id++;
-			transmit = new Transmission();
-		}catch(IOException ioe){
-			logger.error("Input/Outputstream initialization failed!");
-		}
+		this.address = address;
+		this.port = port;
+		this.clientId = clientId++;
+		this.transmit = new Transmission();
+		this.gson = new Gson();
+
+		logger.error("Input/Outputstream initialization failed!");
 	}
 
 	@Override
 	public void connect() throws Exception{
 		// TODO Auto-generated method stub
         clientSocket = new Socket(address, port);
+		this.output = clientSocket.getOutputStream();
+		this.input = clientSocket.getInputStream();
         setRunning(true);
         logger.info("Connection established");
 	}
@@ -77,12 +79,11 @@ public class KVStore implements KVCommInterface {
 		byte[] status={};
 
 		if(isRunning()) {
-            StringBuilder send_msg = new StringBuilder();
-            send_msg.append("PUT");
-            send_msg.append(Integer.toString(client_id));
-            send_msg.append(key);
-            send_msg.append(value);
-            transmit.sendMessage(toByteArray(send_msg.toString()), output);
+			message = new Message(StatusType.PUT, clientId, seqNum, key, value);
+			logger.debug(gson.toJson(message));
+			System.out.println(gson.toJson(message));
+
+			transmit.sendMessage(toByteArray(gson.toJson(message)), output);
 
             status = transmit.receiveMessage(input);
 		}
@@ -99,7 +100,7 @@ public class KVStore implements KVCommInterface {
 		if(isRunning()) {
             StringBuilder send_msg = new StringBuilder();
             send_msg.append("GET");
-            send_msg.append(Integer.toString(client_id));
+            send_msg.append(Integer.toString(clientId));
             send_msg.append(key);
             send_msg.append("");
             transmit.sendMessage(toByteArray(send_msg.toString()), output);
