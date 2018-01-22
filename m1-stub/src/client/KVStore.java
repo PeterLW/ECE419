@@ -3,6 +3,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.util.Date;
 
 import com.google.gson.Gson;
 import common.messages.KVMessage;
@@ -15,7 +16,9 @@ import common.messages.KVMessage.StatusType;
 
 public class KVStore implements KVCommInterface {
 
-	private Logger logger = Logger.getRootLogger();
+	private static final Logger LOGGER = Logger.getRootLogger();
+	private final long TIMEOUT = 6000000000; // idk set this later - nanoseconds
+
 	private Socket clientSocket;
 	private OutputStream output;
 	private InputStream input;
@@ -44,7 +47,7 @@ public class KVStore implements KVCommInterface {
 		this.transmit = new Transmission();
 		this.gson = new Gson();
 
-		logger.error("Input/Outputstream initialization failed!");
+		LOGGER.error("Input/Outputstream initialization failed!");
 	}
 
 	@Override
@@ -54,7 +57,7 @@ public class KVStore implements KVCommInterface {
 		this.output = clientSocket.getOutputStream();
 		this.input = clientSocket.getInputStream();
         setRunning(true);
-        logger.info("Connection established");
+        LOGGER.info("Connection established");
 	}
 
 	@Override
@@ -62,14 +65,14 @@ public class KVStore implements KVCommInterface {
 		// TODO Auto-generated method stub
 		try{
 			setRunning(false);
-			logger.info("tearing down the connection ...");
+			LOGGER.info("tearing down the connection ...");
 			if (clientSocket != null){
 				clientSocket.close();
 				clientSocket = null;
-				logger.info("connection closed!");
+				LOGGER.info("connection closed!");
 			}
 		} catch (IOException ioe) {
-			logger.error("Unable to close connection!");
+			LOGGER.error("Unable to close connection!");
 		}
 }
 
@@ -77,15 +80,30 @@ public class KVStore implements KVCommInterface {
 	public KVMessage put(String key, String value) throws Exception {
 		// TODO Auto-generated method stub
 		byte[] status={};
+		long startTime = 0, timeElapsed = 0;
+		int i = 0;
 
 		if(isRunning()) {
 			message = new Message(StatusType.PUT, clientId, seqNum, key, value);
-			logger.debug(gson.toJson(message));
-			System.out.println(gson.toJson(message));
-
+			startTime = System.nanoTime();
 			transmit.sendMessage(toByteArray(gson.toJson(message)), output);
+			seqNum++;
+			timeElapsed = System.nanoTime() - startTime;
+			while (timeElapsed < TIMEOUT) {
+				if(input.available() != 0) {// nonblocking call
+					status = transmit.receiveMessage(input); // receive reply
+				}
 
-            status = transmit.receiveMessage(input);
+				if (i==200) {
+					/* nanoTime is only accurate if called ~ms or so,
+					 * so didn't want it to call too often
+					 * alternative: TimeUnit.SECONDS.sleep(1)
+					 */
+					timeElapsed = System.nanoTime() - startTime;
+					i = 0;
+				}
+				i++;
+			}
 		}
         KVMessage received_stat = new Message(new String(status));
 		System.out.println(new String(status));
@@ -96,20 +114,36 @@ public class KVStore implements KVCommInterface {
 	public KVMessage get(String key) throws Exception {
 		// TODO Auto-generated method stub
 		byte[] value = {};
+		long startTime = 0, timeElapsed = 0;
+		int i = 0;
 
 		if(isRunning()) {
-            StringBuilder send_msg = new StringBuilder();
-            send_msg.append("GET");
-            send_msg.append(Integer.toString(clientId));
-            send_msg.append(key);
-            send_msg.append("");
-            transmit.sendMessage(toByteArray(send_msg.toString()), output);
+			message = new Message(StatusType.GET, clientId, seqNum, key);
+			startTime = System.nanoTime();
+			transmit.sendMessage(toByteArray(gson.toJson(message)), output);
+			seqNum++;
 
-            value = transmit.receiveMessage(input);
+			timeElapsed = System.nanoTime() - startTime;
+			while (timeElapsed < TIMEOUT) {
+				if(input.available() != 0) {// nonblocking call
+					value = transmit.receiveMessage(input); // receive reply
+				}
+
+				if (i==200) {
+					/* nanoTime is only accurate if called ~ms or so,
+					 * so didn't want it to call too often
+					 * alternative: TimeUnit.SECONDS.sleep(1)
+					 */
+					timeElapsed = System.nanoTime() - startTime;
+					i = 0;
+				}
+				i++;
+			}
 		}
+
         KVMessage received_value = new Message(new String(value));
 		System.out.println(new String(value));
-		return received_value;//note: for debugging, later needs to be changed to KVMessage type.
+		return received_value; //note: for debugging, later needs to be changed to KVMessage type.
 	}
 
 	public boolean isRunning() {

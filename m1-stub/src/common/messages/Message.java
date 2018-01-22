@@ -18,16 +18,25 @@ public class Message implements KVMessage {
         this.value = value;
     }
 
+    public Message(StatusType status,int clientId, int seq, String key) {
+        this.status = status;
+        this.clientId = clientId;
+        this.seq = seq;
+        this.key = key;
+    }
+
+    public Message(){}
+
     public Message(String dummy) {
         this.dummy = dummy;
     }
 
     @Override
-    public String getKey(){return null;}
+    public String getKey(){return this.key;}
 
     @Override
-    public String getValue(){return null;}
+    public String getValue(){return this.value;}
 
     @Override
-    public StatusType getStatus(){return StatusType.GET;}
+    public StatusType getStatus(){return this.status;}
 }

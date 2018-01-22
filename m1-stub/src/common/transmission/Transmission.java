@@ -4,14 +4,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-
-import logger.LogSetup;
 
 public class Transmission{
 
-    private Logger logger = Logger.getRootLogger();
+    private static final Logger LOGGER = Logger.getRootLogger();
     private static final int BUFFER_SIZE = 1024;
     private static final int DROP_SIZE = 1024 * BUFFER_SIZE;
 
@@ -23,7 +20,7 @@ public class Transmission{
         byte[] msgBytes = msg;
         output.write(msgBytes, 0, msgBytes.length);
         output.flush();
-        logger.info("Send message:\t '" + msg + "'");
+        LOGGER.debug("Send message:\t '" + msg + "'");
     }
 
     public byte[] receiveMessage(InputStream input) throws IOException {
@@ -32,7 +29,7 @@ public class Transmission{
         byte[] bufferBytes = new byte[BUFFER_SIZE];
 
         /* read first char from stream */
-        byte read = (byte) input.read();
+        byte read = (byte) input.read(); // blocks until input data availabl
         boolean reading = true;
 
         while(read != 13 && reading) {/* carriage return */
@@ -79,7 +76,7 @@ public class Transmission{
 
         msgBytes = tmp;
 
-        logger.info("Receive message:\t '" + msgBytes + "'");
+        LOGGER.info("Receive message:\t '" + msgBytes + "'");
         return msgBytes;
     }
 }
