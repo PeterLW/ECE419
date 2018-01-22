@@ -10,6 +10,7 @@ public class Message implements KVMessage {
     @Setter private String value;
 
     public Message(StatusType status,int clientId, int seq, String key,String value) {
+        // might throw exception... or do message validation in Transmission class...
         this.status = status;
         this.clientId = clientId;
         this.seq = seq;
@@ -25,7 +26,13 @@ public class Message implements KVMessage {
     }
 
     public Message(){}
-    
+
+    /* checks to make sure valid variables are not null, for StatusType
+     */
+    public boolean isValid(){
+        return true;
+    }
+
     @Override
     public String getKey(){return this.key;}
 
