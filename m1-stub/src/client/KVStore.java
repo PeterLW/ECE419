@@ -105,7 +105,8 @@ public class KVStore implements KVCommInterface {
 				i++;
 			}
 		}
-        KVMessage received_stat = new Message(new String(status));
+
+        Message received_stat = gson.fromJson(new String(status),Message.class);
 		System.out.println(new String(status));
 		return received_stat;
 	}
@@ -141,7 +142,7 @@ public class KVStore implements KVCommInterface {
 			}
 		}
 
-        KVMessage received_value = new Message(new String(value));
+        Message received_value = gson.fromJson(new String(value),Message.class);
 		System.out.println(new String(value));
 		return received_value; //note: for debugging, later needs to be changed to KVMessage type.
 	}

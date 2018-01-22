@@ -3,7 +3,6 @@ package common.messages;
 import lombok.Setter;
 
 public class Message implements KVMessage {
-    String dummy;
     private StatusType status;
     @Setter private int seq;
     @Setter private int clientId;
@@ -26,11 +25,7 @@ public class Message implements KVMessage {
     }
 
     public Message(){}
-
-    public Message(String dummy) {
-        this.dummy = dummy;
-    }
-
+    
     @Override
     public String getKey(){return this.key;}
 
