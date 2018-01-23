@@ -1,4 +1,4 @@
-package app_kvServer;
+package common.disk;
 
 public class DBManager {
 
@@ -10,7 +10,12 @@ public class DBManager {
         return true;
     }
 
-    public boolean getKV(String key){
+    public String getKV(String key){
         return true;
     }
+
+    public boolean is_in_disk(String key){return true; }
+
+    public void clear_storage(){return;}
+
 }

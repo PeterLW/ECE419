@@ -20,7 +20,6 @@ public class Transmission{
 
     }
 
-//    public void sendMessage(byte[] msg, OutputStream output) throws IOException {
     public void sendMessage(byte[] msg, Socket socket) throws IOException {
         byte[] msgBytes = msg;
         output = socket.getOutputStream();
@@ -29,17 +28,19 @@ public class Transmission{
         LOGGER.debug("Send message:\t '" + new String(msg) + "'");
     }
 
-//    public byte[] receiveMessage(InputStream input) throws IOException {
-    public byte[] receiveMessage(Socket socket) throws IOException {
+//    public void sendMessage(Message msg) throws IOException {
+//        byte[] msgBytes = msg.getMsgBytes();
+//        output.write(msgBytes, 0, msgBytes.length);
+//        output.flush();
+//        LOGGER.debug("Send message:\t '" + new String(msg) + "'");
+//    }
+
+    public Message receiveMessage(Socket socket) throws IOException {
         int index = 0;
         byte[] msgBytes = null, tmp = null;
         byte[] bufferBytes = new byte[BUFFER_SIZE];
+        input = socket.getInputStream();
 
-//        input = socket.getInputStream();
-        /* read first char from stream */
-//        if (input == null){
-//            System.out.println("wee");
-//        }
         byte read = (byte) input.read(); // blocks until input data available
         boolean reading = true;
 
@@ -86,8 +87,9 @@ public class Transmission{
         }
 
         msgBytes = tmp;
-
+        Message recv_msg = gson.fromJson(msgBytes.toString(), Message.class);
         LOGGER.info("Receive message:\t '" + new String(msgBytes) + "'");
-        return msgBytes;
-    }
+
+        return recv_msg;
 }
+

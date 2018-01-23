@@ -13,16 +13,18 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import app_kvServer.ClientConnection;
 import common.cache.Cache;
+import common.disk.DBManager;
 
 public class KVServer implements IKVServer {
 
     //log info
     private static Logger logger = Logger.getRootLogger();
-
     private static final String PROMPT = "KVSERVER>";
+    private static DBManager db_manger;
 
     //connection info
     private int port;
+    private String hostname = null;
     private ServerSocket serverSocket;
     private boolean running = false;
     private boolean stop = false;
@@ -48,7 +50,9 @@ public class KVServer implements IKVServer {
 		this.port = port;
 		this.cache_size = cacheSize;
 		this.cache_strategy = strategy;
-		caching = new Cache(cacheSize, strategy);
+        this.db_manger = new DBManager();
+		this.caching = new Cache(cacheSize, strategy,this.db_manger);
+
 	}
 
 	public void connect(){
@@ -98,15 +102,15 @@ public class KVServer implements IKVServer {
 
 	@Override
     public String getHostname(){
-		// TODO Auto-generated method stub
-		logger.info("Server hostname: " + serverSocket.getInetAddress().getHostName());
-		return serverSocket.getInetAddress().getHostName();
+		// TODO Auto-generated method stubc
+		logger.info("Server hostname: " + hostname);
+		return hostname;
 	}
 
 	@Override
     public CacheStrategy getCacheStrategy(){
 		// TODO Auto-generated method stub
-		logger.info("Server Cache Strategy: " + cache_strategy);
+        logger.info("Server ("+hostname+","+port+") : Cache Strategy is "+ cache_strategy);
 		return string_to_enum_cache_strategy(cache_strategy);
 	}
 
@@ -119,7 +123,7 @@ public class KVServer implements IKVServer {
 	@Override
     public boolean inStorage(String key){
 		// TODO Auto-generated method stub
-		return false;
+		return db_manger.is_in_disk(key);
 	}
 
 	@Override
@@ -131,29 +135,33 @@ public class KVServer implements IKVServer {
 	@Override
     public String getKV(String key) throws Exception{
 		// TODO Auto-generated method stub
-		if(caching.in_cahce(key))
-			return caching.getKV(key);
-		else {
-			System.out.println("NOT IN CACHE");
-			return "NOT IN CACHE";
-		}
+        return caching.getKV(key);
 	}
 
 	@Override
     public void putKV(String key, String value) throws Exception{
 		// TODO Auto-generated method stub
-		caching.putKV(key, value);
+        if(caching.putKV(key, value) == true){
+            logger.info("Server ("+hostname+","+port+") : Success in putKV");
+        }
+        else{
+            logger.info("Server ("+hostname+","+port+") : Error in putKV");
+        }
+        return;
 	}
 
 	@Override
     public void clearCache(){
 		// TODO Auto-generated method stub
 		caching.clear();
+		return;
 	}
 
 	@Override
     public void clearStorage(){
 		// TODO Auto-generated method stub
+        db_manger.clear_storage();
+        return;
 	}
 
 	@Override
@@ -182,6 +190,7 @@ public class KVServer implements IKVServer {
 		logger.info("Initialize server ...");
 		try {
 			this.serverSocket = new ServerSocket(this.port);
+            this.hostname = serverSocket.getInetAddress().getHostName();
 			logger.info("Server listening on port: " + this.serverSocket.getLocalPort());
 			return true;
 		} catch (IOException e) {
@@ -194,9 +203,16 @@ public class KVServer implements IKVServer {
 	}
 
 	@Override
-    public void kill(){
+    public void kill(){ //here kill( ) will be same as close( ) as we are using write-through cache
 		// TODO Auto-generated method stub
-
+        running = false;
+        try {
+            serverSocket.close();
+        } catch (IOException e) {
+            logger.error("Error! " +
+                    "Unable to close socket on port: " + port, e);
+        }
+    return;
 	}
 
 	@Override
@@ -209,6 +225,7 @@ public class KVServer implements IKVServer {
 			logger.error("Error! " +
 					"Unable to close socket on port: " + port, e);
 		}
+		return;
 	}
 
 	public static void main(String[] args){

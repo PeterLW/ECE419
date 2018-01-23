@@ -7,6 +7,7 @@ import org.apache.log4j.Logger;
 import common.cache.FIFO;
 import common.cache.LFU;
 import common.cache.LRU;
+import common.disk.DBManager;
 
 public class Cache{
 
@@ -16,30 +17,32 @@ public class Cache{
     private static LRU lru_cache = null;
     private static LFU lfu_cache = null;
     private static FIFO fifo_cache = null;
+    private static DBManager data_base_mgr = null;
 
 
-    public Cache(int size, String cache_strategy) {
+    public Cache(int size, String cache_strategy, DBManager data_base_mgr) {
         this.cache_size = size;
         this.strategy = cache_strategy;
+        this.data_base_mgr = data_base_mgr;
 
         if(cache_strategy.equals("FIFO"))
-            fifo_cache = new FIFO(size);
+            fifo_cache = new FIFO(size,data_base_mgr);
         else if(cache_strategy.equals("LFU"))
-            lfu_cache = new LFU(size);
+            lfu_cache = new LFU(size,data_base_mgr);
         else if(cache_strategy.equals("LRU"))
-            lru_cache = new LRU(size);
+            lru_cache = new LRU(size,data_base_mgr);
         else
             logger.error("Error: Invalid cache strategy !");
     }
 
-    public void putKV(String key, String value){
+    public boolean putKV(String key, String value){
 
         if(strategy.equals("FIFO"))
-            fifo_cache.putKV(key,value);
+            return fifo_cache.putKV(key,value);
         else if(strategy.equals("LFU"))
-            lfu_cache.putKV(key,value);
+            return lfu_cache.putKV(key,value);
        else
-            lru_cache.putKV(key,value);
+            return lru_cache.putKV(key,value);
     }
 
     public String getKV(String key){
@@ -74,5 +77,6 @@ public class Cache{
     public int get_cache_size(){
         return cache_size;
     }
+
 
 }

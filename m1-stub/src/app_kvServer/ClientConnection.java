@@ -44,10 +44,12 @@ public class ClientConnection implements Runnable {
 		try {
 			while(isOpen) {
 				try {
-					byte[] latestMsg = transmission.receiveMessage(clientSocket);
-					msg_process(latestMsg);
-					//transmission.sendMessage(latestMsg, clientSocket);
 
+
+					Message latestMsg = transmission.receiveMessage(clientSocket);
+//					byte[] latestMsg = transmission.receiveMessage(clientSocket);
+					msg_process(latestMsg);
+				}
 				/* connection either terminated by the client or lost due to 
 				 * network problems*/	
 				} catch (IOException ioe) {
@@ -84,23 +86,48 @@ public class ClientConnection implements Runnable {
 		return tmp;
 	}
 
-	private void msg_process(byte[] msg){
-		String new_msg = new String(msg);
-		String[] tokens = new_msg.split("\\.");
+	private void msg_process(Message msg){
 
 		try {
-			if (tokens[0].equals("PUT")) {
-				transmission.sendMessage(toByteArray("PutSucess"), clientSocket);
-				cache.putKV(tokens[2], tokens[3]);
+			Message return_msg = null;
+			if (msg.getStatus() == StatusType.PUT) {
+
+				if (cache.in_cahce(msg.getKey()) == true) {
+
+					if (cache.putKV(msg.getKey(), msg.getValue()) == true) {
+						logger.info("PUT_UPDATE: <"+msg.getKey()+","+msg.getValue()+">");
+						return_msg = new Message(StatusType.PUT_UPDATE, msg.getClientID(), msg.getSeq(), msg.getKey(), msg.getValue());
+					} else {
+						logger.info("PUT_ERROR: <"+msg.getKey()+","+msg.getValue()+">");
+						return_msg = new Message(StatusType.PUT_ERROR, msg.getClientID(), msg.getSeq(), msg.getKey(), msg.getValue());
+					}
+				} else {
+					if (cache.putKV(msg.getKey(), msg.getValue()) == true) {
+						logger.info("PUT_SUCCESS: <"+msg.getKey()+","+msg.getValue()+">");
+						return_msg = new Message(StatusType.PUT_SUCCESS, msg.getClientID(), msg.getSeq(), msg.getKey(), msg.getValue());
+					} else {
+						logger.info("PUT_ERROR: <"+msg.getKey()+","+msg.getValue()+">");
+						return_msg = new Message(StatusType.PUT_ERROR, msg.getClientID(), msg.getSeq(), msg.getKey(), msg.getValue());
+					}
+				}
 			}
-			if (tokens[0].equals("GET")) {
-				String value = cache.getKV(tokens[2]);
-				System.out.println("GET SUCCESS");
-				transmission.sendMessage(toByteArray(value), clientSocket);
+			else{
+
+				String value = cache.getKV(msg.getKey());
+				if (value != null) {
+					logger.info("GET_SUCCESS: <"+msg.getKey()+","+ value +">");
+					return_msg = new Message(StatusType.GET_SUCCESS, msg.getClientID(), msg.getSeq(), msg.getKey(), value);
+				} else {
+					logger.info("GET_ERROR: <"+msg.getKey()+",null>");
+					return_msg = new Message(StatusType.GET_ERROR, msg.getClientID(), msg.getSeq(), msg.getKey(), null);
+				}
 			}
+
+			transmission.sendMessage(toByteArray(gson.toJson(return_msg)), clientSocket);
+
 		}catch (IOException ioe){
 			logger.error("Msg processor error!");
 		}
 	}
-	
+	return;
 }

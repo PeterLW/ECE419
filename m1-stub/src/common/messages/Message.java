@@ -37,6 +37,12 @@ public class Message implements KVMessage {
     public String getKey(){return this.key;}
 
     @Override
+    public String getClientID(){return this.clientId;}
+
+    @Override
+    public String getSeq(){return this.seq;}
+
+    @Override
     public String getValue(){return this.value;}
 
     @Override

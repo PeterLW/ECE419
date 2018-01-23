@@ -1,15 +1,22 @@
 package common.cache;
 import common.cache.Node;
+import common.disk.DBManager;
 import java.util.*;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+import logger.LogSetup;
 
 public class LRU {
+    private static Logger logger = Logger.getRootLogger();
     int capacity;
+    private DBManager database_mgr = null;
     static HashMap<String, Node> map = new HashMap<String, Node>();
     Node head=null;
     Node end=null;
 
-    public LRU(int capacity) {
+    public LRU(int capacity, DBManager database_mgr) {
         this.capacity = capacity;
+        this.database_mgr = database_mgr;
     }
 
     public String getKV(String key) {
@@ -19,10 +26,30 @@ public class LRU {
             setHead(n);
             return n.value;
         }
-        return null;
+        else{
+            logger.info("key-value pair of "+key+" does not exist in cache");
+            String value = database_mgr.getKV(key);
+            if(value == null){
+                logger.error("key-value pair of "+key+" does not exist in disk");
+                return null;
+            }
+            else{
+                //put the <key,pair> to cache now to avoid accessing disk again
+                Node created = new Node(key, value);
+                if(map.size()>=capacity){
+                    map.remove(end.key);
+                    remove(end);
+                    setHead(created);
+                }else{
+                    setHead(created);
+                }
+                map.put(key, created);
+                return value;
+            }
+        }
     }
 
-    public void remove(Node n){
+    private void remove(Node n){
         if(n.pre!=null){
             n.pre.next = n.next;
         }else{
@@ -35,7 +62,7 @@ public class LRU {
         }
     }
 
-    public void setHead(Node n){
+    private void setHead(Node n){
         n.next = head;
         n.pre = null;
 
@@ -46,7 +73,7 @@ public class LRU {
             end = head;
     }
 
-    public void putKV(String key, String value) {
+    public boolean putKV(String key, String value) {
         if(map.containsKey(key)){
             Node old = map.get(key);
             old.value = value;
@@ -55,16 +82,23 @@ public class LRU {
         }else{
             Node created = new Node(key, value);
             if(map.size()>=capacity){
-                map.remove(end.key);
-                remove(end);
-                setHead(created);
-
+                    map.remove(end.key);
+                    remove(end);
+                    setHead(created);
             }else{
                 setHead(created);
             }
 
             map.put(key, created);
         }
+        //here we update the disk to synchronize with the cache. In this way, we no longer need to save the data to be evitcted.
+        if(database_mgr.storeKV(key,value) == false){
+            logger.error("Error: failed to update <"+key+","+value+"> to disk");
+        }
+        else {
+            logger.info("<" + key + "," + value + "> has been updated to disk");
+        }
+        return true;
     }
 
     public void clear(){

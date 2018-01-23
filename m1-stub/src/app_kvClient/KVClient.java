@@ -129,7 +129,10 @@ public class KVClient implements IKVClient {
                         }
                     }
                     try {
-                        kvStore.put(tokens[1], value.toString()); // blocking call
+                        Message msg = kvStore.put(tokens[1], value.toString()); // blocking call
+                        if(msg == null){
+                            printError("Communication for PUT failed");
+                        }
                     }catch(Exception e){
                         printError("Put fail!");
                         logger.warn("Put fail!", e);
@@ -145,7 +148,10 @@ public class KVClient implements IKVClient {
             if(tokens.length == 2) {
                 if(kvStore != null && kvStore.isRunning()){
                     try {
-                        kvStore.get(tokens[1]); // blocking call
+                        Message msg = kvStore.get(tokens[1]); // blocking call
+                        if(msg == null){
+                            printError("Communication for GET failed");
+                        }
                     }catch(Exception e){
                         printError("Get fail!");
                         logger.warn("Get fail!", e);
