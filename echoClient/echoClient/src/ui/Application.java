@@ -57,10 +57,10 @@ public class Application implements ClientSocketListener {
 					connect(serverAddress, serverPort);
 				} catch(NumberFormatException nfe) {
 					printError("No valid address. Port must be a number!");
-					logger.info("Unable to parse argument <port>", nfe);
+					logger.error("Unable to parse argument <port>", nfe);
 				} catch (UnknownHostException e) {
 					printError("Unknown Host!");
-					logger.info("Unknown Host!", e);
+					logger.error("Unknown Host!", e);
 				} catch (IOException e) {
 					printError("Could not establish connection!");
 					logger.warn("Could not establish connection!", e);

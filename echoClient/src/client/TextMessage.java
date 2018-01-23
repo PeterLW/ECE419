@@ -1,7 +1,6 @@
 package client;
 
 import java.io.Serializable;
-import
 import common.messages.KVMessage;
 
 /**
