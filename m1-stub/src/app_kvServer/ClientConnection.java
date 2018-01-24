@@ -11,9 +11,11 @@ import common.messages.KVMessage;
 import common.messages.KVMessage.StatusType;
 import common.messages.Message;
 import org.apache.log4j.*;
-
+import common.messages.Message;
+import common.messages.KVMessage;
+import common.messages.KVMessage.StatusType;
 import common.transmission.Transmission;
-
+import com.google.gson.Gson;
 
 /**
  * Represents a connection end point for a particular client that is 
@@ -26,28 +28,31 @@ public class ClientConnection implements Runnable {
 
 	private static Logger logger = Logger.getRootLogger();
 	private boolean isOpen;
-	private  Cache cache;
+	private Gson gson = null;
+	private Cache cache;
 	private Socket clientSocket;
 	private Transmission transmission;
 
 	/**
 	 * Constructs a new CientConnection object for a given TCP socket.
+	 *
 	 * @param clientSocket the Socket object for the client connection.
 	 */
 	public ClientConnection(Socket clientSocket, Cache caching) {
 		this.clientSocket = clientSocket;
 		this.isOpen = true;
-		transmission = new Transmission();
-		cache = caching;
+		this.transmission = new Transmission();
+		this.gson = new Gson();
+		this.cache = caching;
 	}
-	
+
 	/**
-	 * Initializes and starts the client connection. 
+	 * Initializes and starts the client connection.
 	 * Loops until the connection is closed or aborted by the client.
 	 */
 	public void run() {
 		try {
-			while(isOpen) {
+			while (isOpen) {
 				try {
 					Message latestMsg = transmission.receiveMessage(clientSocket);
 //					byte[] latestMsg = transmission.receiveMessage(clientSocket);
@@ -57,7 +62,7 @@ public class ClientConnection implements Runnable {
 				} catch (IOException ioe) {
 					logger.error("Error! Connection lost!");
 					isOpen = false;
-				}				
+				}
 			}
 		} catch (Exception ioe) {
 			logger.error("Error! Connection could not be established!", ioe);
@@ -76,7 +81,7 @@ public class ClientConnection implements Runnable {
 	private static final char LINE_FEED = 0x0A;
 	private static final char RETURN = 0x0D;
 
-	private byte[] toByteArray(String s){
+	private byte[] toByteArray(String s) {
 		byte[] bytes = s.getBytes();
 		byte[] ctrBytes = new byte[]{LINE_FEED, RETURN};
 		byte[] tmp = new byte[bytes.length + ctrBytes.length];
@@ -87,7 +92,7 @@ public class ClientConnection implements Runnable {
 		return tmp;
 	}
 
-	private void msg_process(Message msg){
+	private void msg_process(Message msg) {
 
 		try {
 			Message return_msg = null;
@@ -96,37 +101,36 @@ public class ClientConnection implements Runnable {
 				if (cache.in_cahce(msg.getKey()) == true) {
 
 					if (cache.putKV(msg.getKey(), msg.getValue()) == true) {
-						logger.info("PUT_UPDATE: <"+msg.getKey()+","+msg.getValue()+">");
-						return_msg = new Message(KVMessage.StatusType.PUT_UPDATE, msg.getClientID(), msg.getSeq(), msg.getKey(), msg.getValue());
+						logger.info("PUT_UPDATE: <" + msg.getKey() + "," + msg.getValue() + ">");
+						return_msg = new Message(StatusType.PUT_UPDATE, msg.getClientID(), msg.getSeq(), msg.getKey(), msg.getValue());
 					} else {
-						logger.info("PUT_ERROR: <"+msg.getKey()+","+msg.getValue()+">");
-						return_msg = new Message(KVMessage.StatusType.PUT_ERROR, msg.getClientID(), msg.getSeq(), msg.getKey(), msg.getValue());
+						logger.info("PUT_ERROR: <" + msg.getKey() + "," + msg.getValue() + ">");
+						return_msg = new Message(StatusType.PUT_ERROR, msg.getClientID(), msg.getSeq(), msg.getKey(), msg.getValue());
 					}
 				} else {
 					if (cache.putKV(msg.getKey(), msg.getValue()) == true) {
-						logger.info("PUT_SUCCESS: <"+msg.getKey()+","+msg.getValue()+">");
-						return_msg = new Message(KVMessage.StatusType.PUT_SUCCESS, msg.getClientID(), msg.getSeq(), msg.getKey(), msg.getValue());
+						logger.info("PUT_SUCCESS: <" + msg.getKey() + "," + msg.getValue() + ">");
+						return_msg = new Message(StatusType.PUT_SUCCESS, msg.getClientID(), msg.getSeq(), msg.getKey(), msg.getValue());
 					} else {
-						logger.info("PUT_ERROR: <"+msg.getKey()+","+msg.getValue()+">");
-						return_msg = new Message(KVMessage.StatusType.PUT_ERROR, msg.getClientID(), msg.getSeq(), msg.getKey(), msg.getValue());
+						logger.info("PUT_ERROR: <" + msg.getKey() + "," + msg.getValue() + ">");
+						return_msg = new Message(StatusType.PUT_ERROR, msg.getClientID(), msg.getSeq(), msg.getKey(), msg.getValue());
 					}
 				}
-			}
-			else{
+			} else {
 
 				String value = cache.getKV(msg.getKey());
 				if (value != null) {
-					logger.info("GET_SUCCESS: <"+msg.getKey()+","+ value +">");
+					logger.info("GET_SUCCESS: <" + msg.getKey() + "," + value + ">");
 					return_msg = new Message(StatusType.GET_SUCCESS, msg.getClientID(), msg.getSeq(), msg.getKey(), value);
 				} else {
-					logger.info("GET_ERROR: <"+msg.getKey()+",null>");
+					logger.info("GET_ERROR: <" + msg.getKey() + ",null>");
 					return_msg = new Message(StatusType.GET_ERROR, msg.getClientID(), msg.getSeq(), msg.getKey(), null);
 				}
 			}
 			Gson gson = new Gson();
 			transmission.sendMessage(toByteArray(gson.toJson(return_msg)), clientSocket);
 
-		}catch (IOException ioe){
+		} catch (IOException ioe) {
 			logger.error("Msg processor error!");
 		}
 	}

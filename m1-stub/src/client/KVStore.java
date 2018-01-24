@@ -17,7 +17,7 @@ import common.messages.KVMessage.StatusType;
 public class KVStore implements KVCommInterface {
 
 	private static final Logger LOGGER = Logger.getRootLogger();
-	private final long TIMEOUT = 60000000; // idk set this later - nanoseconds
+	private final int TIMEOUT = 60000000; // idk set this later - nanoseconds
 
 	private Socket clientSocket;
 	private OutputStream output;

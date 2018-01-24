@@ -1,5 +1,5 @@
 package common.transmission;
-
+import com.google.gson.Gson;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -7,6 +7,7 @@ import java.net.Socket;
 
 import com.google.gson.Gson;
 import common.messages.Message;
+import common.messages.KVMessage.StatusType;
 import org.apache.log4j.Logger;
 
 public class Transmission {
@@ -14,12 +15,13 @@ public class Transmission {
     private static final Logger LOGGER = Logger.getRootLogger();
     private static final int BUFFER_SIZE = 1024;
     private static final int DROP_SIZE = 1024 * BUFFER_SIZE;
-
+    private Gson gson = null;
     OutputStream output;
     InputStream input;
 
     public Transmission() {
 
+        this.gson = new Gson();
     }
 
     public void sendMessage(byte[] msg, Socket socket) throws IOException {

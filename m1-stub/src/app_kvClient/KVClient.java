@@ -8,7 +8,7 @@ import common.messages.Message;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import logger.LogSetup;
-
+import common.messages.Message;
 import client.KVCommInterface;
 import client.KVStore;
 
