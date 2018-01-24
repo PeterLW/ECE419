@@ -88,7 +88,7 @@ public class KVStore implements KVCommInterface {
 			//transmit.sendMessage(message), clientSocket);
 			seqNum++;
 
-			clientSocket.setSoTimeout(TIMEOUT);
+			clientSocket.setSoTimeout((int)TIMEOUT);
 			try {
 				received_stat = transmit.receiveMessage(clientSocket); // receive reply, note receiveMessage( ) is a blocking function
 				finish = true;
@@ -115,7 +115,7 @@ public class KVStore implements KVCommInterface {
 	}
 
 	@Override
-	public KVMessage get(String key) throws Exception {
+	public Message get(String key) throws Exception {
 		// TODO Auto-generated method stub
 		Message received_stat=null;
 		boolean finish = false;
@@ -125,7 +125,7 @@ public class KVStore implements KVCommInterface {
 			transmit.sendMessage(toByteArray(gson.toJson(message)), clientSocket);
 			seqNum++;
 
-			clientSocket.setSoTimeout(TIMEOUT);
+			clientSocket.setSoTimeout((int)TIMEOUT);
 			try {
 				received_stat = transmit.receiveMessage(clientSocket); // receive reply, note receiveMessage( ) is a blocking function
 				finish = true;

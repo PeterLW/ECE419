@@ -63,7 +63,7 @@ public class LFU{
 
     public boolean putKV(String key, String value) {
         if(cap<=0)
-            return;
+            return false;
         if(vals.containsKey(key)) {
             vals.put(key, value);
             getKV(key);

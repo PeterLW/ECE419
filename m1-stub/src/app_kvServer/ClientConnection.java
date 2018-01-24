@@ -4,7 +4,12 @@ import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
+
+import com.google.gson.Gson;
 import common.cache.Cache;
+import common.messages.KVMessage;
+import common.messages.KVMessage.StatusType;
+import common.messages.Message;
 import org.apache.log4j.*;
 
 import common.transmission.Transmission;
@@ -44,14 +49,11 @@ public class ClientConnection implements Runnable {
 		try {
 			while(isOpen) {
 				try {
-
-
 					Message latestMsg = transmission.receiveMessage(clientSocket);
 //					byte[] latestMsg = transmission.receiveMessage(clientSocket);
 					msg_process(latestMsg);
-				}
-				/* connection either terminated by the client or lost due to 
-				 * network problems*/	
+				/* connection either terminated by the client or lost due to
+				 * network problems*/
 				} catch (IOException ioe) {
 					logger.error("Error! Connection lost!");
 					isOpen = false;
@@ -59,7 +61,6 @@ public class ClientConnection implements Runnable {
 			}
 		} catch (Exception ioe) {
 			logger.error("Error! Connection could not be established!", ioe);
-			
 		} finally {
 			try {
 				if (clientSocket != null) {
@@ -90,24 +91,24 @@ public class ClientConnection implements Runnable {
 
 		try {
 			Message return_msg = null;
-			if (msg.getStatus() == StatusType.PUT) {
+			if (msg.getStatus() == KVMessage.StatusType.PUT) {
 
 				if (cache.in_cahce(msg.getKey()) == true) {
 
 					if (cache.putKV(msg.getKey(), msg.getValue()) == true) {
 						logger.info("PUT_UPDATE: <"+msg.getKey()+","+msg.getValue()+">");
-						return_msg = new Message(StatusType.PUT_UPDATE, msg.getClientID(), msg.getSeq(), msg.getKey(), msg.getValue());
+						return_msg = new Message(KVMessage.StatusType.PUT_UPDATE, msg.getClientID(), msg.getSeq(), msg.getKey(), msg.getValue());
 					} else {
 						logger.info("PUT_ERROR: <"+msg.getKey()+","+msg.getValue()+">");
-						return_msg = new Message(StatusType.PUT_ERROR, msg.getClientID(), msg.getSeq(), msg.getKey(), msg.getValue());
+						return_msg = new Message(KVMessage.StatusType.PUT_ERROR, msg.getClientID(), msg.getSeq(), msg.getKey(), msg.getValue());
 					}
 				} else {
 					if (cache.putKV(msg.getKey(), msg.getValue()) == true) {
 						logger.info("PUT_SUCCESS: <"+msg.getKey()+","+msg.getValue()+">");
-						return_msg = new Message(StatusType.PUT_SUCCESS, msg.getClientID(), msg.getSeq(), msg.getKey(), msg.getValue());
+						return_msg = new Message(KVMessage.StatusType.PUT_SUCCESS, msg.getClientID(), msg.getSeq(), msg.getKey(), msg.getValue());
 					} else {
 						logger.info("PUT_ERROR: <"+msg.getKey()+","+msg.getValue()+">");
-						return_msg = new Message(StatusType.PUT_ERROR, msg.getClientID(), msg.getSeq(), msg.getKey(), msg.getValue());
+						return_msg = new Message(KVMessage.StatusType.PUT_ERROR, msg.getClientID(), msg.getSeq(), msg.getKey(), msg.getValue());
 					}
 				}
 			}
@@ -122,12 +123,11 @@ public class ClientConnection implements Runnable {
 					return_msg = new Message(StatusType.GET_ERROR, msg.getClientID(), msg.getSeq(), msg.getKey(), null);
 				}
 			}
-
+			Gson gson = new Gson();
 			transmission.sendMessage(toByteArray(gson.toJson(return_msg)), clientSocket);
 
 		}catch (IOException ioe){
 			logger.error("Msg processor error!");
 		}
 	}
-	return;
 }

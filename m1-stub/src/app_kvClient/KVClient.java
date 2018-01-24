@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
+import common.messages.Message;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import logger.LogSetup;

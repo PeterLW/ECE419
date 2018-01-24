@@ -5,9 +5,11 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 
+import com.google.gson.Gson;
+import common.messages.Message;
 import org.apache.log4j.Logger;
 
-public class Transmission{
+public class Transmission {
 
     private static final Logger LOGGER = Logger.getRootLogger();
     private static final int BUFFER_SIZE = 1024;
@@ -44,10 +46,10 @@ public class Transmission{
         byte read = (byte) input.read(); // blocks until input data available
         boolean reading = true;
 
-        while(read != 13 && reading) {/* carriage return */
+        while (read != 13 && reading) {/* carriage return */
             /* if buffer filled, copy to msg array */
-            if(index == BUFFER_SIZE) {
-                if(msgBytes == null){
+            if (index == BUFFER_SIZE) {
+                if (msgBytes == null) {
                     tmp = new byte[BUFFER_SIZE];
                     System.arraycopy(bufferBytes, 0, tmp, 0, BUFFER_SIZE);
                 } else {
@@ -63,13 +65,13 @@ public class Transmission{
             }
 
             /* only read valid characters, i.e. letters and numbers */
-            if((read > 31 && read < 127)) {
+            if ((read > 31 && read < 127)) {
                 bufferBytes[index] = read;
                 index++;
             }
 
             /* stop reading is DROP_SIZE is reached */
-            if(msgBytes != null && msgBytes.length + index >= DROP_SIZE) {
+            if (msgBytes != null && msgBytes.length + index >= DROP_SIZE) {
                 reading = false;
             }
 
@@ -77,7 +79,7 @@ public class Transmission{
             read = (byte) input.read();
         }
 
-        if(msgBytes == null){ //if message shorter than buffersize, bufferBytes won't be conpied to msgBytes
+        if (msgBytes == null) { //if message shorter than buffersize, bufferBytes won't be conpied to msgBytes
             tmp = new byte[index];
             System.arraycopy(bufferBytes, 0, tmp, 0, index);
         } else { //after exiting while loop, fetch last portion of data in bufferBytes
@@ -87,9 +89,10 @@ public class Transmission{
         }
 
         msgBytes = tmp;
+        Gson gson = new Gson();
         Message recv_msg = gson.fromJson(msgBytes.toString(), Message.class);
         LOGGER.info("Receive message:\t '" + new String(msgBytes) + "'");
-
         return recv_msg;
+    }
 }
 

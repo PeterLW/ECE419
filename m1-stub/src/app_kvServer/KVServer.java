@@ -18,7 +18,7 @@ import common.disk.DBManager;
 public class KVServer implements IKVServer {
 
     //log info
-    private static Logger logger = Logger.getRootLogger();
+    private static final Logger logger = Logger.getRootLogger();
     private static final String PROMPT = "KVSERVER>";
     private static DBManager db_manger;
 
@@ -123,7 +123,7 @@ public class KVServer implements IKVServer {
 	@Override
     public boolean inStorage(String key){
 		// TODO Auto-generated method stub
-		return db_manger.is_in_disk(key);
+		return db_manger.isExists(key);
 	}
 
 	@Override
@@ -160,7 +160,7 @@ public class KVServer implements IKVServer {
 	@Override
     public void clearStorage(){
 		// TODO Auto-generated method stub
-        db_manger.clear_storage();
+        db_manger.clearStorage();
         return;
 	}
 
