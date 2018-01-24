@@ -39,12 +39,9 @@ public class Application implements ClientSocketListener {
 			}
 		}
 	}
-<<<<<<< HEAD
-	private void handleCommand(String cmdLine) {
-=======
-	
+
 	private void handleCommand(String cmdLine) { // CLI Class probably should just be modifying this is enough .__.
->>>>>>> master
+
 		String[] tokens = cmdLine.split("\\s+");
 
 		if(tokens[0].equals("quit")) {	

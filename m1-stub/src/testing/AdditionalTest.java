@@ -21,12 +21,15 @@ public class AdditionalTest extends TestCase {
 		Message m = new Message(KVMessage.StatusType.GET, 1, 2, "11", "vaaaa");
 		Gson gson = new Gson();
 		String json = gson.toJson(m);
-		System.out.println(json);
 
-		String in = "'{\"status\":\"GET\",\"seq\":2,\"clientId\":1,\"key\":\"11\",\"value\":\"vaaaa\"}'";
-		System.out.println(in);
+		String expected = "{\"status\":\"GET\",\"seq\":2,\"clientId\":1,\"key\":\"11\",\"value\":\"vaaaa\"}";
 
-		Message a = gson.fromJson(in,Message.class);
-		assertEquals(0,1);
+		assertEquals(json,expected);
+	}
+
+
+	@Test
+	public void testDbManager(){
+		
 	}
 }

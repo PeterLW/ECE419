@@ -1,26 +1,21 @@
 package app_kvServer;
-import java.io.*;
 import java.net.BindException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import common.messages.Message;
-import app_kvClient.KVClient;
+
 import logger.LogSetup;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import app_kvServer.ClientConnection;
 import common.cache.Cache;
 import common.disk.DBManager;
 
 public class KVServer implements IKVServer {
 
     //log info
-    private static final Logger logger = Logger.getRootLogger();
     private static final String PROMPT = "KVSERVER>";
-    private static DBManager db_manger;
+    private static final Logger LOGGER = Logger.getRootLogger();
+    private static DBManager dbManager;
 
     //connection info
     private int port;
@@ -30,8 +25,8 @@ public class KVServer implements IKVServer {
     private boolean stop = false;
 
     //cache info
-	private  int cache_size;
-	private String cache_strategy;
+	private  int cacheSize;
+	private String cacheStrategy;
 	private static Cache caching;
 
 	/**
@@ -48,34 +43,11 @@ public class KVServer implements IKVServer {
 	public KVServer(int port, int cacheSize, String strategy) {
 		// TODO Auto-generated method stub
 		this.port = port;
-		this.cache_size = cacheSize;
-		this.cache_strategy = strategy;
-        this.db_manger = new DBManager();
-		this.caching = new Cache(cacheSize, strategy,this.db_manger);
+		this.cacheSize = cacheSize;
+		this.cacheStrategy = strategy;
+        this.dbManager = new DBManager();
+		this.caching = new Cache(cacheSize, strategy,this.dbManager);
 
-	}
-
-	public void connect(){
-
-		running = initializeServer();
-
-		if(serverSocket != null) {
-			while(isRunning()){
-				try {
-					Socket client = serverSocket.accept();
-					ClientConnection connection = new ClientConnection(client, caching);
-					new Thread(connection).start();
-
-					logger.info("Connected to "
-							+ client.getInetAddress().getHostName()
-							+  " on port " + client.getPort());
-				} catch (IOException e) {
-					logger.error("Error! " +
-							"Unable to establish connection. \n", e);
-				}
-			}
-		}
-		logger.info("Server stopped.");
 	}
 
     public boolean isRunning() {
@@ -96,34 +68,34 @@ public class KVServer implements IKVServer {
 	@Override
 	public int getPort(){
 		// TODO Auto-generated method stub
-		logger.info("Server port: " + port);
+		LOGGER.info("Server port: " + port);
 		return port;
 	}
 
 	@Override
     public String getHostname(){
 		// TODO Auto-generated method stubc
-		logger.info("Server hostname: " + hostname);
+		LOGGER.info("Server hostname: " + hostname);
 		return hostname;
 	}
 
 	@Override
     public CacheStrategy getCacheStrategy(){
 		// TODO Auto-generated method stub
-        logger.info("Server ("+hostname+","+port+") : Cache Strategy is "+ cache_strategy);
-		return string_to_enum_cache_strategy(cache_strategy);
+        LOGGER.info("Server ("+hostname+","+port+") : Cache Strategy is "+ cacheStrategy);
+		return string_to_enum_cache_strategy(cacheStrategy);
 	}
 
 	@Override
     public int getCacheSize(){
 		// TODO Auto-generated method stub
-		return cache_size;
+		return cacheSize;
 	}
 
 	@Override
     public boolean inStorage(String key){
 		// TODO Auto-generated method stub
-		return db_manger.isExists(key);
+		return dbManager.isExists(key);
 	}
 
 	@Override
@@ -142,10 +114,10 @@ public class KVServer implements IKVServer {
     public void putKV(String key, String value) throws Exception{
 		// TODO Auto-generated method stub
         if(caching.putKV(key, value) == true){
-            logger.info("Server ("+hostname+","+port+") : Success in putKV");
+            LOGGER.info("Server ("+hostname+","+port+") : Success in putKV");
         }
         else{
-            logger.info("Server ("+hostname+","+port+") : Error in putKV");
+            LOGGER.info("Server ("+hostname+","+port+") : Error in putKV");
         }
         return;
 	}
@@ -160,7 +132,7 @@ public class KVServer implements IKVServer {
 	@Override
     public void clearStorage(){
 		// TODO Auto-generated method stub
-        db_manger.clearStorage();
+        dbManager.clearStorage();
         return;
 	}
 
@@ -174,11 +146,11 @@ public class KVServer implements IKVServer {
 					try {
 						Socket client = serverSocket.accept(); // blocking call
 						ClientConnection connection = new ClientConnection(client, caching);
-						logger.info("Connected to " + client.getInetAddress().getHostName()
+						LOGGER.info("Connected to " + client.getInetAddress().getHostName()
 								+  " on port " + client.getPort());
 						new Thread(connection).start();
 					} catch (IOException e) {
-						logger.error("Error! " +  "Unable to establish connection. \n", e);
+						LOGGER.error("Error! " +  "Unable to establish connection. \n", e);
 					}
 				}
 			}
@@ -186,16 +158,16 @@ public class KVServer implements IKVServer {
 	}
 
 	private boolean initializeServer() {
-		logger.info("Initialize server ...");
+		LOGGER.info("Initialize server ...");
 		try {
 			this.serverSocket = new ServerSocket(this.port);
             this.hostname = serverSocket.getInetAddress().getHostName();
-			logger.info("Server listening on port: " + this.serverSocket.getLocalPort());
+			LOGGER.info("Server listening on port: " + this.serverSocket.getLocalPort());
 			return true;
 		} catch (IOException e) {
-			logger.error("Error! Cannot open server socket:");
+			LOGGER.error("Error! Cannot open server socket:");
 			if(e instanceof BindException){
-				logger.error("Port " + port + " is already bound!");
+				LOGGER.error("Port " + port + " is already bound!");
 			}
 			return false;
 		}
@@ -208,7 +180,7 @@ public class KVServer implements IKVServer {
         try {
             serverSocket.close();
         } catch (IOException e) {
-            logger.error("Error! " +
+            LOGGER.error("Error! " +
                     "Unable to close socket on port: " + port, e);
         }
     return;
@@ -221,7 +193,7 @@ public class KVServer implements IKVServer {
 		try {
 			serverSocket.close();
 		} catch (IOException e) {
-			logger.error("Error! " +
+			LOGGER.error("Error! " +
 					"Unable to close socket on port: " + port, e);
 		}
 		return;
@@ -229,7 +201,7 @@ public class KVServer implements IKVServer {
 
 	public static void main(String[] args){
 		try {
-			new LogSetup("logs/client.log", Level.INFO); // debug - setting log to info level
+			new LogSetup("logs/.log", Level.INFO); // debug - setting log to info level
 			KVServer server = new KVServer(2000,200,"LRU"); // these should be from cmdline
 			server.run();
 		} catch (IOException e) {
