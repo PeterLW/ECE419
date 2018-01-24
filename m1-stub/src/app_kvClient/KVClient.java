@@ -14,13 +14,20 @@ import client.KVStore;
 
 public class KVClient implements IKVClient {
 
-    private static Logger logger = Logger.getLogger(KVClient.class);
+    private static final Logger LOGGER = Logger.getLogger(KVClient.class);
     private static final String PROMPT = "KVCLIENT> ";
     private BufferedReader stdin;
 
     private KVStore kvStore;
     private boolean stop = false;
 
+    static {
+        try {
+            new LogSetup("logs/application.log", Level.ERROR);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     @Override
     public void newConnection(String hostname, int port) {
@@ -29,7 +36,7 @@ public class KVClient implements IKVClient {
             kvStore = new KVStore(hostname, port); // API we have to implement
             kvStore.connect();
         } catch (Exception ioe) {
-            logger.error("Unable to connect!");
+            LOGGER.error("Unable to connect!");
         }
     }
 
@@ -49,21 +56,22 @@ public class KVClient implements IKVClient {
     public void logLevel(String levelString) {
 
         if(levelString.equals(Level.ALL.toString())) {
-            logger.setLevel(Level.ALL);
+            LOGGER.setLevel(Level.ALL);
         } else if(levelString.equals(Level.DEBUG.toString())) {
-            logger.setLevel(Level.DEBUG);
+            LOGGER.setLevel(Level.DEBUG);
         } else if(levelString.equals(Level.INFO.toString())) {
-            logger.setLevel(Level.INFO);
+            LOGGER.setLevel(Level.INFO);
         } else if(levelString.equals(Level.WARN.toString())) {
-            logger.setLevel(Level.WARN);
+            LOGGER.setLevel(Level.WARN);
         } else if(levelString.equals(Level.ERROR.toString())) {
-            logger.setLevel(Level.ERROR);
+            LOGGER.setLevel(Level.ERROR);
         } else if(levelString.equals(Level.FATAL.toString())) {
-            logger.setLevel(Level.FATAL);
+            LOGGER.setLevel(Level.FATAL);
         } else if(levelString.equals(Level.OFF.toString())) {
-            logger.setLevel(Level.OFF);
+            LOGGER.setLevel(Level.OFF);
         } else {
             printError(LogSetup.UNKNOWN_LEVEL.toString());
+            printPossibleLogLevels();
         }
     }
 
@@ -97,10 +105,8 @@ public class KVClient implements IKVClient {
     }
 
     private void printPossibleLogLevels() {
-        System.out.println(PROMPT
-                + "Possible log levels are:");
-        System.out.println(PROMPT
-                + "ALL | DEBUG | INFO | WARN | ERROR | FATAL | OFF");
+        System.out.println(PROMPT + "Possible log levels are:");
+        System.out.println(PROMPT + "ALL | DEBUG | INFO | WARN | ERROR | FATAL | OFF");
     }
 
     private void handleCommand(String cmdLine) { // CLI Class probably should just be modifying this is enough .__.
@@ -136,7 +142,7 @@ public class KVClient implements IKVClient {
                         }
                     }catch(Exception e){
                         printError("Put fail!");
-                        logger.warn("Put fail!", e);
+                        LOGGER.warn("Put fail!", e);
                     }
                 } else {
                     printError("Not connected!");
@@ -155,7 +161,7 @@ public class KVClient implements IKVClient {
                         }
                     }catch(Exception e){
                         printError("Get fail!");
-                        logger.warn("Get fail!", e);
+                        LOGGER.warn("Get fail!", e);
                     }
                 } else {
                     printError("Not connected!");
@@ -187,8 +193,7 @@ public class KVClient implements IKVClient {
                 printError("Invalid storage device to be cleared");
             }
         }
-        else
-        } {
+        else {
             printError("Unknown command");
             help();
         }
@@ -213,15 +218,9 @@ public class KVClient implements IKVClient {
     }
 
     public static void main(String[] args){
-        try {
-            new LogSetup("logs/application.log", Level.INFO); // debug - setting log to info level
-            KVClient client = new KVClient();
-            client.run();
-        } catch (IOException e) {
-            System.out.println("Error! Unable to initialize logger!");
-            e.printStackTrace();
-            System.exit(1);
-        }
+        KVClient client = new KVClient();
+        client.run();
+        System.exit(1);
     }
 
 }

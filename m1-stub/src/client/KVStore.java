@@ -3,12 +3,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.util.Date;
-import java.util.concurrent.TimeUnit;
 
-import app_kvServer.KVServer;
 import com.google.gson.Gson;
-import common.messages.KVMessage;
 import common.messages.Message;
 import logger.LogSetup;
 import org.apache.log4j.Level;
@@ -39,7 +35,7 @@ public class KVStore implements KVCommInterface {
 
 	static {
 		try {
-			new LogSetup("logs/client/kvStore.log", Level.ERROR);
+			new LogSetup("logs/application.log", Level.INFO);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -84,15 +80,15 @@ public class KVStore implements KVCommInterface {
 		} catch (IOException ioe) {
 			LOGGER.error("Unable to close connection!");
 		}
-}
-
-	@Override
-	public boolean clear(String device){
-
-		if(device.equals("cache")){
-			return
-		}
 	}
+
+	public boolean clear(String device){
+		if(device.equals("cache")){
+			return true; // ??
+		}
+		return false;
+	}
+
 	@Override
 	public Message put(String key, String value) throws Exception {
 		// TODO Auto-generated method stub

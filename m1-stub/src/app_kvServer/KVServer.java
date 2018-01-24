@@ -40,6 +40,16 @@ public class KVServer implements IKVServer {
 	 *           and "LFU".
 	 */
 
+	static {
+		try {
+			new LogSetup("logs/application.log", Level.INFO);
+		} catch (IOException e) {
+			System.out.println("Error! Unable to initialize logger!");
+			e.printStackTrace();
+			System.exit(1);
+		}
+	}
+
 	public KVServer(int port, int cacheSize, String strategy) {
 		// TODO Auto-generated method stub
 		this.port = port;
@@ -181,8 +191,7 @@ public class KVServer implements IKVServer {
             serverSocket.close();
             System.exit(0);
         } catch (IOException e) {
-            LOGGER.error("Error! " +
-                    "Unable to close socket on port: " + port, e);
+            LOGGER.error("Error! " + "Unable to close socket on port: " + port, e);
         }
     return;
 	}
@@ -194,22 +203,14 @@ public class KVServer implements IKVServer {
 		try {
 			serverSocket.close();
 		} catch (IOException e) {
-			LOGGER.error("Error! " +
-					"Unable to close socket on port: " + port, e);
+			LOGGER.error("Error! " + "Unable to close socket on port: " + port, e);
 		}
 		return;
 	}
 
 	public static void main(String[] args){
-		try {
-			new LogSetup("logs/application.log", Level.INFO); // debug - setting log to info level
 			KVServer server = new KVServer(2000,2,"LRU"); // these should be from cmdline
-
 			server.run();
-		} catch (IOException e) {
-			System.out.println("Error! Unable to initialize logger!");
-			e.printStackTrace();
-			System.exit(1);
-		}
+
 	}
 }

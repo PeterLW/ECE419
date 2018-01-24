@@ -1,8 +1,6 @@
 package app_kvServer;
 
-import java.io.InputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.net.Socket;
 
 import com.google.gson.Gson;
@@ -12,11 +10,7 @@ import common.messages.KVMessage.StatusType;
 import common.messages.Message;
 import logger.LogSetup;
 import org.apache.log4j.*;
-import common.messages.Message;
-import common.messages.KVMessage;
-import common.messages.KVMessage.StatusType;
 import common.transmission.Transmission;
-import com.google.gson.Gson;
 
 /**
  * Represents a connection end point for a particular client that is 
@@ -27,7 +21,7 @@ import com.google.gson.Gson;
  */
 public class ClientConnection implements Runnable {
 
-	private static Logger logger = Logger.getRootLogger();
+	private static final Logger LOGGER = Logger.getLogger(ClientConnection.class);
 	private boolean isOpen;
 	private Gson gson = null;
 	private Cache cache;
@@ -36,7 +30,7 @@ public class ClientConnection implements Runnable {
 
 	static {
 		try {
-			new LogSetup("logs/server/server.log", Level.ERROR);
+			new LogSetup("logs/application.log", Level.INFO);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -70,7 +64,7 @@ public class ClientConnection implements Runnable {
 				/* connection either terminated by the client or lost due to
 				 * network problems*/
 				} catch (IOException ioe) {
-					logger.error("Error! Connection lost!");
+					LOGGER.error("Error! Connection lost!");
 					isOpen = false;
 				}
 			}
@@ -79,7 +73,7 @@ public class ClientConnection implements Runnable {
 					clientSocket.close();
 				}
 			} catch (IOException ioe) {
-				logger.error("Error! Unable to tear down connection!", ioe);
+				LOGGER.error("Error! Unable to tear down connection!", ioe);
 			}
 	}
 
@@ -111,19 +105,19 @@ public class ClientConnection implements Runnable {
 							System.out.println("msg value = "+msg.getValue());
 
 							if (cache.putKV(msg.getKey(), msg.getValue()) == true) {
-								logger.info("PUT_UPDATE: <" + msg.getKey() + "," + msg.getValue() + ">");
+								LOGGER.info("PUT_UPDATE: <" + msg.getKey() + "," + msg.getValue() + ">");
 								return_msg = new Message(StatusType.PUT_UPDATE, msg.getClientID(), msg.getSeq(), msg.getKey(), msg.getValue());
 							} else {
-								logger.info("PUT_ERROR: <" + msg.getKey() + "," + msg.getValue() + ">");
+								LOGGER.info("PUT_ERROR: <" + msg.getKey() + "," + msg.getValue() + ">");
 								return_msg = new Message(StatusType.PUT_ERROR, msg.getClientID(), msg.getSeq(), msg.getKey(), msg.getValue());
 							}
 						}
 						else {
 							if (cache.cache_delete(msg.getKey()) == true) {
-								logger.info("DELETE_SUCCESS: <" + msg.getKey() + "," + cache.getKV(msg.getKey()) + ">");
+								LOGGER.info("DELETE_SUCCESS: <" + msg.getKey() + "," + cache.getKV(msg.getKey()) + ">");
 								return_msg = new Message(StatusType.DELETE_SUCCESS, msg.getClientID(), msg.getSeq(), msg.getKey(), cache.getKV(msg.getKey()));
 							} else {
-								logger.info("DELETE_ERROR: <" + msg.getKey() + "," + cache.getKV(msg.getKey()) + ">");
+								LOGGER.info("DELETE_ERROR: <" + msg.getKey() + "," + cache.getKV(msg.getKey()) + ">");
 								return_msg = new Message(StatusType.DELETE_ERROR, msg.getClientID(), msg.getSeq(), msg.getKey(), cache.getKV(msg.getKey()));
 							}
 						}
@@ -131,15 +125,15 @@ public class ClientConnection implements Runnable {
 					else {
 						if (msg.getValue() != null && msg.getValue().isEmpty() == false) {
 							if (cache.putKV(msg.getKey(), msg.getValue()) == true) {
-								logger.info("PUT_SUCCESS: <" + msg.getKey() + "," + msg.getValue() + ">");
+								LOGGER.info("PUT_SUCCESS: <" + msg.getKey() + "," + msg.getValue() + ">");
 								return_msg = new Message(StatusType.PUT_SUCCESS, msg.getClientID(), msg.getSeq(), msg.getKey(), msg.getValue());
 							} else {
-								logger.info("PUT_ERROR: <" + msg.getKey() + "," + msg.getValue() + ">");
+								LOGGER.info("PUT_ERROR: <" + msg.getKey() + "," + msg.getValue() + ">");
 								return_msg = new Message(StatusType.PUT_ERROR, msg.getClientID(), msg.getSeq(), msg.getKey(), msg.getValue());
 							}
 						}
 						else{
-							logger.info("DELETE_ERROR: <" + msg.getKey() + ", null >");
+							LOGGER.info("DELETE_ERROR: <" + msg.getKey() + ", null >");
 							return_msg = new Message(StatusType.DELETE_ERROR, msg.getClientID(), msg.getSeq(), msg.getKey(), null);
 						}
 					}
@@ -148,10 +142,10 @@ public class ClientConnection implements Runnable {
 
 					String value = cache.getKV(msg.getKey());
 					if (value != null) {
-						logger.info("GET_SUCCESS: <" + msg.getKey() + "," + value + ">");
+						LOGGER.info("GET_SUCCESS: <" + msg.getKey() + "," + value + ">");
 						return_msg = new Message(StatusType.GET_SUCCESS, msg.getClientID(), msg.getSeq(), msg.getKey(), value);
 					} else {
-						logger.info("GET_ERROR: <" + msg.getKey() + ",null>");
+						LOGGER.info("GET_ERROR: <" + msg.getKey() + ",null>");
 						return_msg = new Message(StatusType.GET_ERROR, msg.getClientID(), msg.getSeq(), msg.getKey(), null);
 					}
 				}
@@ -162,7 +156,7 @@ public class ClientConnection implements Runnable {
 				}
 			}
 			else{
-				logger.info("message received is null");
+				LOGGER.info("message received is null");
 			}
 
 	}
