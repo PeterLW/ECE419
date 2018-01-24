@@ -16,14 +16,17 @@ public class AdditionalTest extends TestCase {
 		assertTrue(true);
 	}
 
-	// Message Class
-//	@Test
-//	@DisplayName("Not an actual test, for ensuring small stuff works")
-//	public void testMessage(){
-//		Message m = new Message(KVMessage.StatusType.GET, 1, 2, "11", "vaaaa");
-//		Gson gson = new Gson();
-//		String json = gson.toJson(m);
-//		System.out.println(json);
-//		assertEquals(0,1);
-//	}
+	@Test
+	public void testMessage(){
+		Message m = new Message(KVMessage.StatusType.GET, 1, 2, "11", "vaaaa");
+		Gson gson = new Gson();
+		String json = gson.toJson(m);
+		System.out.println(json);
+
+		String in = "'{\"status\":\"GET\",\"seq\":2,\"clientId\":1,\"key\":\"11\",\"value\":\"vaaaa\"}'";
+		System.out.println(in);
+
+		Message a = gson.fromJson(in,Message.class);
+		assertEquals(0,1);
+	}
 }

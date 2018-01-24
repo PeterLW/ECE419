@@ -6,30 +6,40 @@ import java.io.OutputStream;
 import java.net.Socket;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import common.messages.Message;
 import common.messages.KVMessage.StatusType;
 import org.apache.log4j.Logger;
 
 public class Transmission {
+    /*
+     *
+     */
 
     private static final Logger LOGGER = Logger.getRootLogger();
     private static final int BUFFER_SIZE = 1024;
     private static final int DROP_SIZE = 1024 * BUFFER_SIZE;
-    private Gson gson = null;
+    private static Gson gson = null;
     OutputStream output;
     InputStream input;
 
     public Transmission() {
-
         this.gson = new Gson();
     }
 
-    public void sendMessage(byte[] msg, Socket socket) throws IOException {
+    public boolean sendMessage(byte[] msg, Socket socket) {
         byte[] msgBytes = msg;
-        output = socket.getOutputStream();
-        output.write(msgBytes, 0, msgBytes.length);
-        output.flush();
+        try {
+            output = socket.getOutputStream();
+            output.write(msgBytes, 0, msgBytes.length);
+            output.flush();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
         LOGGER.debug("Send message:\t '" + new String(msg) + "'");
+        return true;
     }
 
 //    public void sendMessage(Message msg) throws IOException {
@@ -91,9 +101,8 @@ public class Transmission {
         }
 
         msgBytes = tmp;
-        Gson gson = new Gson();
-        Message recv_msg = gson.fromJson(msgBytes.toString(), Message.class);
-        LOGGER.info("Receive message:\t '" + new String(msgBytes) + "'");
+        String msg_in_str = new String(msgBytes);
+        Message recv_msg = gson.fromJson(msg_in_str, Message.class);
         return recv_msg;
     }
 }

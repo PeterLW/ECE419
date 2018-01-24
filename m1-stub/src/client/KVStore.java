@@ -46,8 +46,6 @@ public class KVStore implements KVCommInterface {
 		this.clientId = clientId++;
 		this.transmit = new Transmission();
 		this.gson = new Gson();
-
-		LOGGER.error("Input/Outputstream initialization failed!");
 	}
 
 	@Override

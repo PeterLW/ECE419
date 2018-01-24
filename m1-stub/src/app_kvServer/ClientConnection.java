@@ -51,7 +51,7 @@ public class ClientConnection implements Runnable {
 	 * Loops until the connection is closed or aborted by the client.
 	 */
 	public void run() {
-		try {
+
 			while (isOpen) {
 				try {
 					Message latestMsg = transmission.receiveMessage(clientSocket);
@@ -64,9 +64,6 @@ public class ClientConnection implements Runnable {
 					isOpen = false;
 				}
 			}
-		} catch (Exception ioe) {
-			logger.error("Error! Connection could not be established!", ioe);
-		} finally {
 			try {
 				if (clientSocket != null) {
 					clientSocket.close();
@@ -74,7 +71,6 @@ public class ClientConnection implements Runnable {
 			} catch (IOException ioe) {
 				logger.error("Error! Unable to tear down connection!", ioe);
 			}
-		}
 	}
 
 	//temp use for debugging
@@ -94,44 +90,53 @@ public class ClientConnection implements Runnable {
 
 	private void msg_process(Message msg) {
 
-		try {
-			Message return_msg = null;
-			if (msg.getStatus() == KVMessage.StatusType.PUT) {
+			if(msg != null) {
 
-				if (cache.in_cahce(msg.getKey()) == true) {
+				Message return_msg = null;
+				if (msg.getStatus() == KVMessage.StatusType.PUT) {
 
-					if (cache.putKV(msg.getKey(), msg.getValue()) == true) {
-						logger.info("PUT_UPDATE: <" + msg.getKey() + "," + msg.getValue() + ">");
-						return_msg = new Message(StatusType.PUT_UPDATE, msg.getClientID(), msg.getSeq(), msg.getKey(), msg.getValue());
+					if (cache.in_cahce(msg.getKey()) == true) {
+
+						if (cache.putKV(msg.getKey(), msg.getValue()) == true) {
+							logger.info("PUT_UPDATE: <" + msg.getKey() + "," + msg.getValue() + ">");
+							return_msg = new Message(StatusType.PUT_UPDATE, msg.getClientID(), msg.getSeq(), msg.getKey(), msg.getValue());
+						} else {
+							logger.info("PUT_ERROR: <" + msg.getKey() + "," + msg.getValue() + ">");
+							return_msg = new Message(StatusType.PUT_ERROR, msg.getClientID(), msg.getSeq(), msg.getKey(), msg.getValue());
+						}
 					} else {
-						logger.info("PUT_ERROR: <" + msg.getKey() + "," + msg.getValue() + ">");
-						return_msg = new Message(StatusType.PUT_ERROR, msg.getClientID(), msg.getSeq(), msg.getKey(), msg.getValue());
+						if (cache.putKV(msg.getKey(), msg.getValue()) == true) {
+							logger.info("PUT_SUCCESS: <" + msg.getKey() + "," + msg.getValue() + ">");
+							return_msg = new Message(StatusType.PUT_SUCCESS, msg.getClientID(), msg.getSeq(), msg.getKey(), msg.getValue());
+						} else {
+							logger.info("PUT_ERROR: <" + msg.getKey() + "," + msg.getValue() + ">");
+							return_msg = new Message(StatusType.PUT_ERROR, msg.getClientID(), msg.getSeq(), msg.getKey(), msg.getValue());
+						}
 					}
 				} else {
-					if (cache.putKV(msg.getKey(), msg.getValue()) == true) {
-						logger.info("PUT_SUCCESS: <" + msg.getKey() + "," + msg.getValue() + ">");
-						return_msg = new Message(StatusType.PUT_SUCCESS, msg.getClientID(), msg.getSeq(), msg.getKey(), msg.getValue());
+
+					String value = cache.getKV(msg.getKey());
+					if (value != null) {
+						logger.info("GET_SUCCESS: <" + msg.getKey() + "," + value + ">");
+						return_msg = new Message(StatusType.GET_SUCCESS, msg.getClientID(), msg.getSeq(), msg.getKey(), value);
 					} else {
-						logger.info("PUT_ERROR: <" + msg.getKey() + "," + msg.getValue() + ">");
-						return_msg = new Message(StatusType.PUT_ERROR, msg.getClientID(), msg.getSeq(), msg.getKey(), msg.getValue());
+						logger.info("GET_ERROR: <" + msg.getKey() + ",null>");
+						return_msg = new Message(StatusType.GET_ERROR, msg.getClientID(), msg.getSeq(), msg.getKey(), null);
 					}
 				}
-			} else {
-
-				String value = cache.getKV(msg.getKey());
-				if (value != null) {
-					logger.info("GET_SUCCESS: <" + msg.getKey() + "," + value + ">");
-					return_msg = new Message(StatusType.GET_SUCCESS, msg.getClientID(), msg.getSeq(), msg.getKey(), value);
-				} else {
-					logger.info("GET_ERROR: <" + msg.getKey() + ",null>");
-					return_msg = new Message(StatusType.GET_ERROR, msg.getClientID(), msg.getSeq(), msg.getKey(), null);
+				Gson gson = new Gson();
+				boolean success = transmission.sendMessage(toByteArray(gson.toJson(return_msg)), clientSocket);
+				if (!success) {
+					System.out.println("Send message failed");
 				}
 			}
-			Gson gson = new Gson();
-			transmission.sendMessage(toByteArray(gson.toJson(return_msg)), clientSocket);
+			else{
+				logger.info("message received is null");
+			}
 
-		} catch (IOException ioe) {
-			logger.error("Msg processor error!");
-		}
+
+
+
+
 	}
 }
