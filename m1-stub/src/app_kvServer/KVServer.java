@@ -213,6 +213,4 @@ public class KVServer implements IKVServer {
 			System.exit(1);
 		}
 	}
-
-
 }

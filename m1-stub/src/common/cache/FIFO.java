@@ -55,6 +55,11 @@ public class FIFO{
             return fifo.get(key);
     }
 
+    public synchronized boolean delete(String key){
+
+        return database_mgr.deleteKV(key);
+
+    }
     public void clear(){
         fifo.clear();
     }

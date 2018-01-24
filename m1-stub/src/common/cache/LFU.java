@@ -61,6 +61,11 @@ public class LFU{
         }
     }
 
+    public synchronized boolean delete(String key){
+
+        return database_mgr.deleteKV(key);
+
+    }
     public synchronized boolean putKV(String key, String value) {
         if(cap<=0)
             return false;

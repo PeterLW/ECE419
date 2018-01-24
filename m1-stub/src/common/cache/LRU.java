@@ -73,6 +73,12 @@ public class LRU {
             end = head;
     }
 
+    public synchronized boolean delete(String key){
+
+        return database_mgr.deleteKV(key);
+
+    }
+
     public synchronized boolean putKV(String key, String value) {
         if(map.containsKey(key)){
             Node old = map.get(key);

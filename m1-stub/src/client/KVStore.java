@@ -135,7 +135,7 @@ public class KVStore implements KVCommInterface {
 			}finally {
 
 				if(received_stat != null && finish == true){
-					LOGGER.info(gson.toJson(message));
+					LOGGER.info(gson.toJson(received_stat));
 					return received_stat;
 				}
 				else{

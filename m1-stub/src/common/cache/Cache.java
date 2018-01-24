@@ -74,6 +74,16 @@ public class Cache{
             return lru_cache.in_LRU(key);
     }
 
+    public boolean cache_delete(String key){
+
+        if(strategy.equals("FIFO"))
+            return fifo_cache.delete(key);
+        else if(strategy.equals("LFU"))
+            return lfu_cache.delete(key);
+        else
+            return lru_cache.delete(key);
+    }
+
     public int get_cache_size(){
         return cache_size;
     }

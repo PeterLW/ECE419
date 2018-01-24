@@ -97,23 +97,44 @@ public class ClientConnection implements Runnable {
 
 					if (cache.in_cache(msg.getKey()) == true) {
 
-						if (cache.putKV(msg.getKey(), msg.getValue()) == true) {
-							logger.info("PUT_UPDATE: <" + msg.getKey() + "," + msg.getValue() + ">");
-							return_msg = new Message(StatusType.PUT_UPDATE, msg.getClientID(), msg.getSeq(), msg.getKey(), msg.getValue());
-						} else {
-							logger.info("PUT_ERROR: <" + msg.getKey() + "," + msg.getValue() + ">");
-							return_msg = new Message(StatusType.PUT_ERROR, msg.getClientID(), msg.getSeq(), msg.getKey(), msg.getValue());
+						if (msg.getValue() != null && msg.getValue().isEmpty() == false) {
+							System.out.println("msg value = "+msg.getValue());
+
+							if (cache.putKV(msg.getKey(), msg.getValue()) == true) {
+								logger.info("PUT_UPDATE: <" + msg.getKey() + "," + msg.getValue() + ">");
+								return_msg = new Message(StatusType.PUT_UPDATE, msg.getClientID(), msg.getSeq(), msg.getKey(), msg.getValue());
+							} else {
+								logger.info("PUT_ERROR: <" + msg.getKey() + "," + msg.getValue() + ">");
+								return_msg = new Message(StatusType.PUT_ERROR, msg.getClientID(), msg.getSeq(), msg.getKey(), msg.getValue());
+							}
 						}
-					} else {
-						if (cache.putKV(msg.getKey(), msg.getValue()) == true) {
-							logger.info("PUT_SUCCESS: <" + msg.getKey() + "," + msg.getValue() + ">");
-							return_msg = new Message(StatusType.PUT_SUCCESS, msg.getClientID(), msg.getSeq(), msg.getKey(), msg.getValue());
-						} else {
-							logger.info("PUT_ERROR: <" + msg.getKey() + "," + msg.getValue() + ">");
-							return_msg = new Message(StatusType.PUT_ERROR, msg.getClientID(), msg.getSeq(), msg.getKey(), msg.getValue());
+						else {
+							if (cache.cache_delete(msg.getKey()) == true) {
+								logger.info("DELETE_SUCCESS: <" + msg.getKey() + "," + cache.getKV(msg.getKey()) + ">");
+								return_msg = new Message(StatusType.DELETE_SUCCESS, msg.getClientID(), msg.getSeq(), msg.getKey(), cache.getKV(msg.getKey()));
+							} else {
+								logger.info("DELETE_ERROR: <" + msg.getKey() + "," + cache.getKV(msg.getKey()) + ">");
+								return_msg = new Message(StatusType.DELETE_ERROR, msg.getClientID(), msg.getSeq(), msg.getKey(), cache.getKV(msg.getKey()));
+							}
 						}
 					}
-				} else {
+					else {
+						if (msg.getValue() != null && msg.getValue().isEmpty() == false) {
+							if (cache.putKV(msg.getKey(), msg.getValue()) == true) {
+								logger.info("PUT_SUCCESS: <" + msg.getKey() + "," + msg.getValue() + ">");
+								return_msg = new Message(StatusType.PUT_SUCCESS, msg.getClientID(), msg.getSeq(), msg.getKey(), msg.getValue());
+							} else {
+								logger.info("PUT_ERROR: <" + msg.getKey() + "," + msg.getValue() + ">");
+								return_msg = new Message(StatusType.PUT_ERROR, msg.getClientID(), msg.getSeq(), msg.getKey(), msg.getValue());
+							}
+						}
+						else{
+							logger.info("DELETE_ERROR: <" + msg.getKey() + ", null >");
+							return_msg = new Message(StatusType.DELETE_ERROR, msg.getClientID(), msg.getSeq(), msg.getKey(), null);
+						}
+					}
+				}
+				else {
 
 					String value = cache.getKV(msg.getKey());
 					if (value != null) {
