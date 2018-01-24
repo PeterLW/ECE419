@@ -1,4 +1,5 @@
 package common.cache;
+import java.io.IOException;
 import java.util.*;
 import logger.LogSetup;
 
@@ -11,13 +12,21 @@ import common.disk.DBManager;
 
 public class Cache{
 
-    private static Logger logger = Logger.getRootLogger();
+    private static final Logger logger = Logger.getLogger(Cache.class);
     private static int cache_size;
     private static String strategy;
     private static LRU lru_cache = null;
     private static LFU lfu_cache = null;
     private static FIFO fifo_cache = null;
     private static DBManager data_base_mgr = null;
+
+    static {
+        try {
+            new logger.LogSetup("logs/storage.log", Level.INFO);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
 
     public Cache(int size, String cache_strategy, DBManager data_base_mgr) {

@@ -5,9 +5,13 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
+
+import app_kvServer.KVServer;
 import com.google.gson.Gson;
 import common.messages.KVMessage;
 import common.messages.Message;
+import logger.LogSetup;
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import common.transmission.Transmission;
@@ -32,6 +36,14 @@ public class KVStore implements KVCommInterface {
 	private Message message = null;
 	private Transmission transmit;
 	private Gson gson = null;
+
+	static {
+		try {
+			new LogSetup("logs/client/kvStore.log", Level.ERROR);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 
 	/**
 	 * Initialize KVStore with address and port of KVServer
@@ -74,6 +86,13 @@ public class KVStore implements KVCommInterface {
 		}
 }
 
+	@Override
+	public boolean clear(String device){
+
+		if(device.equals("cache")){
+			return
+		}
+	}
 	@Override
 	public Message put(String key, String value) throws Exception {
 		// TODO Auto-generated method stub

@@ -14,7 +14,7 @@ import client.KVStore;
 
 public class KVClient implements IKVClient {
 
-    private static Logger logger = Logger.getRootLogger();
+    private static Logger logger = Logger.getLogger(KVClient.class);
     private static final String PROMPT = "KVCLIENT> ";
     private BufferedReader stdin;
 
@@ -175,7 +175,20 @@ public class KVClient implements IKVClient {
             }
         } else if(tokens[0].equals("help")) {
             help();
-        } else {
+        }
+        else if(tokens[0].equals("clear")){
+            if(tokens[1].equals("cache")) {
+                kvStore.clear("cache");
+            }
+            else if(tokens[1].equals("disk")) {
+                kvStore.clear("disk");
+            }
+            else {
+                printError("Invalid storage device to be cleared");
+            }
+        }
+        else
+        } {
             printError("Unknown command");
             help();
         }
@@ -201,7 +214,7 @@ public class KVClient implements IKVClient {
 
     public static void main(String[] args){
         try {
-            new LogSetup("logs/client.log", Level.INFO); // debug - setting log to info level
+            new LogSetup("logs/application.log", Level.INFO); // debug - setting log to info level
             KVClient client = new KVClient();
             client.run();
         } catch (IOException e) {

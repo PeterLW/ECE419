@@ -30,6 +30,6 @@ public class AdditionalTest extends TestCase {
 
 	@Test
 	public void testDbManager(){
-		
+
 	}
 }
