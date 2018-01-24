@@ -119,7 +119,7 @@ public class KVStore implements KVCommInterface {
 		boolean finish = false;
 
 		if(isRunning()) {
-			message = new Message(StatusType.GET, clientId, seqNum, key);
+			message = new Message(StatusType.GET, clientId, seqNum, key,null);
 			transmit.sendMessage(toByteArray(gson.toJson(message)), clientSocket);
 			seqNum++;
 

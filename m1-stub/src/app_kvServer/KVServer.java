@@ -101,7 +101,7 @@ public class KVServer implements IKVServer {
 	@Override
     public boolean inCache(String key){
 		// TODO Auto-generated method stub
-		return caching.in_cahce(key);
+		return caching.in_cache(key);
 	}
 
 	@Override
@@ -179,6 +179,7 @@ public class KVServer implements IKVServer {
         running = false;
         try {
             serverSocket.close();
+            System.exit(0);
         } catch (IOException e) {
             LOGGER.error("Error! " +
                     "Unable to close socket on port: " + port, e);
@@ -201,8 +202,10 @@ public class KVServer implements IKVServer {
 
 	public static void main(String[] args){
 		try {
-			new LogSetup("logs/.log", Level.INFO); // debug - setting log to info level
-			KVServer server = new KVServer(2000,200,"LRU"); // these should be from cmdline
+
+			new LogSetup("logs/client.log", Level.INFO); // debug - setting log to info level
+			KVServer server = new KVServer(2000,2,"LRU"); // these should be from cmdline
+
 			server.run();
 		} catch (IOException e) {
 			System.out.println("Error! Unable to initialize logger!");

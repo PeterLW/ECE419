@@ -24,7 +24,7 @@ public class LFU{
     }
 
 
-    public String getKV(String key) {
+    public synchronized String getKV(String key) {
 
         if (vals.containsKey(key) == true) {
 
@@ -61,7 +61,7 @@ public class LFU{
         }
     }
 
-    public boolean putKV(String key, String value) {
+    public synchronized boolean putKV(String key, String value) {
         if(cap<=0)
             return false;
         if(vals.containsKey(key)) {

@@ -95,7 +95,7 @@ public class ClientConnection implements Runnable {
 				Message return_msg = null;
 				if (msg.getStatus() == KVMessage.StatusType.PUT) {
 
-					if (cache.in_cahce(msg.getKey()) == true) {
+					if (cache.in_cache(msg.getKey()) == true) {
 
 						if (cache.putKV(msg.getKey(), msg.getValue()) == true) {
 							logger.info("PUT_UPDATE: <" + msg.getKey() + "," + msg.getValue() + ">");
@@ -133,10 +133,6 @@ public class ClientConnection implements Runnable {
 			else{
 				logger.info("message received is null");
 			}
-
-
-
-
 
 	}
 }

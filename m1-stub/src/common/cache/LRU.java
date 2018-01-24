@@ -19,7 +19,7 @@ public class LRU {
         this.database_mgr = database_mgr;
     }
 
-    public String getKV(String key) {
+    public synchronized String getKV(String key) {
         if(map.containsKey(key)){
             Node n = map.get(key);
             remove(n);
@@ -73,7 +73,7 @@ public class LRU {
             end = head;
     }
 
-    public boolean putKV(String key, String value) {
+    public synchronized boolean putKV(String key, String value) {
         if(map.containsKey(key)){
             Node old = map.get(key);
             old.value = value;

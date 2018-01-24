@@ -97,7 +97,7 @@ public class DBManager {
 
         if (!keyFile.exists()) {
             LOGGER.error("Attempting to access key, but key (" + key + ") does not exist in database.");
-            return "";
+            return null;
         }
 
         List <String> outputLines = null;
@@ -105,7 +105,7 @@ public class DBManager {
             outputLines = Files.readAllLines(keyFile.toPath());
         } catch (IOException e) {
             e.printStackTrace();
-            return "";
+            return null;
         }
 
         if (outputLines.size() == 1) {

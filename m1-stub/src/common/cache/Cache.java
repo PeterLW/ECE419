@@ -65,7 +65,7 @@ public class Cache{
             lru_cache.clear();
     }
 
-    public boolean in_cahce(String key){
+    public boolean in_cache(String key){
         if(strategy.equals("FIFO"))
             return fifo_cache.in_fifo(key);
         else if(strategy.equals("LFU"))

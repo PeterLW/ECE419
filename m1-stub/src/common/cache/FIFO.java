@@ -18,7 +18,7 @@ public class FIFO{
         this.fifo = new LinkedHashMap<String,String>();
     }
 
-    public boolean putKV(String key, String value){
+    public synchronized boolean putKV(String key, String value){
         if(fifo.size() >= size){
             fifo.remove(fifo.entrySet().iterator().next().getKey());
         }
@@ -33,7 +33,7 @@ public class FIFO{
         return true;
     }
 
-    public String getKV(String key){
+    public synchronized String getKV(String key){
 
         if(fifo.containsKey(key) == false) {
             logger.info("key-value pair of "+key+" does not exist in cache");

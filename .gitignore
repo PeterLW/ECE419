@@ -1,6 +1,8 @@
 *.idea*
 *.iml
 out/*
-*.class
+*.class*
 */logs/*
 *.DS_Store*
+*m1-server.jar
+*m1-client.jar
