@@ -10,6 +10,7 @@ import common.cache.Cache;
 import common.messages.KVMessage;
 import common.messages.KVMessage.StatusType;
 import common.messages.Message;
+import logger.LogSetup;
 import org.apache.log4j.*;
 import common.messages.Message;
 import common.messages.KVMessage;
@@ -33,6 +34,14 @@ public class ClientConnection implements Runnable {
 	private Socket clientSocket;
 	private Transmission transmission;
 
+	static {
+		try {
+			new LogSetup("logs/server/server.log", Level.ERROR);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
 	/**
 	 * Constructs a new CientConnection object for a given TCP socket.
 	 *
@@ -45,6 +54,7 @@ public class ClientConnection implements Runnable {
 		this.gson = new Gson();
 		this.cache = caching;
 	}
+
 
 	/**
 	 * Initializes and starts the client connection.

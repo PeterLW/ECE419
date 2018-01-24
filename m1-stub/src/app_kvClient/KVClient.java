@@ -14,7 +14,7 @@ import client.KVStore;
 
 public class KVClient implements IKVClient {
 
-    private static Logger logger = Logger.getRootLogger();
+    private static Logger logger = Logger.getLogger(KVClient.class);
     private static final String PROMPT = "KVCLIENT> ";
     private BufferedReader stdin;
 
@@ -201,7 +201,7 @@ public class KVClient implements IKVClient {
 
     public static void main(String[] args){
         try {
-            new LogSetup("logs/client.log", Level.INFO); // debug - setting log to info level
+            new LogSetup("logs/application.log", Level.INFO); // debug - setting log to info level
             KVClient client = new KVClient();
             client.run();
         } catch (IOException e) {

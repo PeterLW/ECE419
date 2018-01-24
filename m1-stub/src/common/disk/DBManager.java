@@ -18,13 +18,12 @@ public class DBManager {
     /* writes Files in
      * UTF-8 encoding
      */
-
     private final static String ROOT_PATH =  "DBRoot";
-    private static final Logger LOGGER = Logger.getRootLogger();
+    private static final Logger LOGGER = Logger.getLogger(DBManager.class);
 
     static {
         try {
-            new logger.LogSetup("logs/logs/dbmanager.log", Level.INFO);
+            new logger.LogSetup("logs/storage.log", Level.INFO);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -121,24 +120,24 @@ public class DBManager {
     }
 
 
-//    public static void main(String[] args){
-//        File currDir = new File (String.valueOf(Paths.get(".")));
-//        System.out.println(currDir.getAbsoluteFile());
-//
-//        DBManager db = new DBManager();
-//        db.storeKV("a","badsf");
-//        db.storeKV("aaaa","badssf");
-//        db.storeKV("asdfs","baadsf");
-//        System.out.println(db.getKV("a"));
-//        System.out.println(db.getKV("abb"));
-//
-//        System.out.println("~~");
-//
-//        System.out.println(db.isExists("aaaa"));
-//        db.deleteKV("aaaa");
-//        System.out.println(db.isExists("aaaa"));
-//
-//        db.clearStorage();
-//
-//    }
+    public static void main(String[] args){
+        File currDir = new File (String.valueOf(Paths.get(".")));
+        System.out.println(currDir.getAbsoluteFile());
+
+        DBManager db = new DBManager();
+        db.storeKV("a","badsf");
+        db.storeKV("aaaa","badssf");
+        db.storeKV("asdfs","baadsf");
+        System.out.println(db.getKV("a"));
+        System.out.println(db.getKV("abb"));
+
+        System.out.println("~~");
+
+        System.out.println(db.isExists("aaaa"));
+        db.deleteKV("aaaa");
+        System.out.println(db.isExists("aaaa"));
+
+        db.clearStorage();
+
+    }
 }

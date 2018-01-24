@@ -9,19 +9,27 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import common.messages.Message;
 import common.messages.KVMessage.StatusType;
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 public class Transmission {
     /*
      *
      */
-
-    private static final Logger LOGGER = Logger.getRootLogger();
+    private static final Logger LOGGER = Logger.getLogger(Transmission.class);
     private static final int BUFFER_SIZE = 1024;
     private static final int DROP_SIZE = 1024 * BUFFER_SIZE;
     private static Gson gson = null;
     OutputStream output;
     InputStream input;
+
+    static {
+        try {
+            new logger.LogSetup("logs/application.log", Level.INFO);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     public Transmission() {
         this.gson = new Gson();
