@@ -1,8 +1,8 @@
 package common.disk;
 
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
-import javax.print.DocFlavor;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -22,7 +22,13 @@ public class DBManager {
     private final static String ROOT_PATH =  "DBRoot";
     private static final Logger LOGGER = Logger.getRootLogger();
 
-    private File rootDirectory = null;
+    static {
+        try {
+            new logger.LogSetup("logs/logs/dbmanager.log", Level.INFO);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     public DBManager(){
         if (!initializeDB()){
@@ -31,19 +37,22 @@ public class DBManager {
     }
 
     public boolean clearStorage() {
+        File[] allFiles = new File(ROOT_PATH).listFiles();
+        for (File f: allFiles){
+            f.delete();
+        }
         return true;
     }
 
     public boolean isExists(String key) {
-//        File keyFile =
-        return true;
+        File keyFile = new File(String.valueOf(Paths.get(ROOT_PATH,key)));
+        if (keyFile.exists()){
+            return true;
+        }
+        return false;
     }
 
     private boolean initializeDB(){
-        if (rootDirectory != null && rootDirectory.exists()){
-            return true;
-        }
-
         File rootDirectory = new File(ROOT_PATH);
         if (rootDirectory.exists()) {
             return true;
@@ -55,8 +64,7 @@ public class DBManager {
 
     public boolean storeKV(String key, String value) {
         File keyFile = new File(String.valueOf(Paths.get(ROOT_PATH,key)));
-        System.out.println(keyFile.getAbsoluteFile());
-        LOGGER.info("Attempting to store key" + key + " in file: " + keyFile.getAbsolutePath());
+        LOGGER.info("Attempting to store key (" + key + ") in file: " + keyFile.getAbsolutePath());
 
         OpenOption[] options = new OpenOption[] {StandardOpenOption.WRITE, StandardOpenOption.CREATE};
         List<String> lines = Arrays.asList(value);
@@ -66,16 +74,29 @@ public class DBManager {
             e.printStackTrace();
             return false;
         }
+
+        return true;
+    }
+
+    public boolean deleteKV(String key){
+        File keyFile = new File(String.valueOf(Paths.get(ROOT_PATH,key)));
+        LOGGER.info("Attempting to delete key: " + key);
+
+        if (!keyFile.exists()) {
+            LOGGER.error("Attempting to delete key, but key (" + key + ") does not exist in database.");
+            return false;
+        }
+
+        keyFile.delete();
         return true;
     }
 
     public String getKV(String key){
         File keyFile = new File(String.valueOf(Paths.get(ROOT_PATH,key)));
-        System.out.println(keyFile.getAbsoluteFile());
-        LOGGER.info("Attempting to access key" + key + " in file: " + keyFile.getAbsolutePath());
+            LOGGER.info("Attempting to access key" + key + " in file: " + keyFile.getAbsolutePath());
 
         if (!keyFile.exists()) {
-            LOGGER.error("Key " + key + " does not exist in database.");
+            LOGGER.error("Attempting to access key, but key (" + key + ") does not exist in database.");
             return "";
         }
 
@@ -92,10 +113,11 @@ public class DBManager {
         }
 
         StringJoiner sj = new StringJoiner("\n");
-//        sj.
+        for (String lines : outputLines) {
+            sj.add(lines);
+        }
 
-
-        return "";
+        return sj.toString();
     }
 
     public static void main(String[] args){
@@ -104,6 +126,19 @@ public class DBManager {
 
         DBManager db = new DBManager();
         db.storeKV("a","badsf");
+        db.storeKV("aaaa","badssf");
+        db.storeKV("asdfs","baadsf");
+        System.out.println(db.getKV("a"));
+        System.out.println(db.getKV("abb"));
+
+        System.out.println("~~");
+
+        System.out.println(db.isExists("aaaa"));
+        db.deleteKV("aaaa");
+        System.out.println(db.isExists("aaaa"));
+
+        db.clearStorage();
+
     }
 
 }
