@@ -4,10 +4,10 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.io.IOException;
 
+import common.cache.CacheManager;
 import logger.LogSetup;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import common.cache.Cache;
 import common.disk.DBManager;
 
 public class KVServer implements IKVServer {
@@ -24,10 +24,12 @@ public class KVServer implements IKVServer {
     private boolean running = false;
     private boolean stop = false;
 
+    private static int numConnectedClients = 0;
+
     //cache info
 	private int cacheSize;
 	private String cacheStrategy;
-	private static Cache caching;
+	private static CacheManager caching;
 
 	/**
 	 * Start KV Server at given port
@@ -55,8 +57,8 @@ public class KVServer implements IKVServer {
 		this.port = port;
 		this.cacheSize = cacheSize;
 		this.cacheStrategy = strategy;
-        this.dbManager = new DBManager();
-		this.caching = new Cache(cacheSize, strategy,this.dbManager);
+        dbManager = new DBManager();
+		caching = new CacheManager(cacheSize, strategy,dbManager);
 
 	}
 
@@ -92,7 +94,7 @@ public class KVServer implements IKVServer {
 	@Override
     public CacheStrategy getCacheStrategy(){
 		// TODO Auto-generated method stub
-        LOGGER.info("Server ("+hostname+","+port+") : Cache Strategy is "+ cacheStrategy);
+        LOGGER.info("Server ("+hostname+","+port+") : CacheManager Strategy is "+ cacheStrategy);
 		return string_to_enum_cache_strategy(cacheStrategy);
 	}
 
@@ -111,7 +113,7 @@ public class KVServer implements IKVServer {
 	@Override
     public boolean inCache(String key){
 		// TODO Auto-generated method stub
-		return caching.in_cache(key);
+		return caching.inCache(key);
 	}
 
 	@Override
@@ -129,21 +131,18 @@ public class KVServer implements IKVServer {
         else{
             LOGGER.info("Server ("+hostname+","+port+") : Error in putKV");
         }
-        return;
 	}
 
 	@Override
     public void clearCache(){
 		// TODO Auto-generated method stub
 		caching.clear();
-		return;
 	}
 
 	@Override
     public void clearStorage(){
 		// TODO Auto-generated method stub
         dbManager.clearStorage();
-        return;
 	}
 
 	public void run(){
@@ -155,7 +154,8 @@ public class KVServer implements IKVServer {
 				while(isRunning()){
 					try {
 						Socket client = serverSocket.accept(); // blocking call
-						ClientConnection connection = new ClientConnection(client, caching);
+						numConnectedClients++;
+						ClientConnection connection = new ClientConnection(client, caching, numConnectedClients);
 						LOGGER.info("Connected to " + client.getInetAddress().getHostName()
 								+  " on port " + client.getPort());
 						new Thread(connection).start();
@@ -193,7 +193,6 @@ public class KVServer implements IKVServer {
         } catch (IOException e) {
             LOGGER.error("Error! " + "Unable to close socket on port: " + port, e);
         }
-    return;
 	}
 
 	@Override
@@ -205,7 +204,6 @@ public class KVServer implements IKVServer {
 		} catch (IOException e) {
 			LOGGER.error("Error! " + "Unable to close socket on port: " + port, e);
 		}
-		return;
 	}
 
 	public static void main(String[] args){

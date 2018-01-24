@@ -92,7 +92,7 @@ public class DBManager {
 
     public String getKV(String key){
         File keyFile = new File(String.valueOf(Paths.get(ROOT_PATH,key)));
-            LOGGER.info("Attempting to access key" + key + " in file: " + keyFile.getAbsolutePath());
+            LOGGER.info("Attempting to access key (" + key + ") in file: " + keyFile.getAbsolutePath());
 
         if (!keyFile.exists()) {
             LOGGER.error("Attempting to access key, but key (" + key + ") does not exist in database.");

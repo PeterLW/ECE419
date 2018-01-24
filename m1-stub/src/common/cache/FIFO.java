@@ -24,7 +24,7 @@ public class FIFO{
         }
         fifo.put(key,value);
         //update the disk
-        if(database_mgr.storeKV(key,value) == false){
+        if(!database_mgr.storeKV(key,value)){
             logger.error("Error: failed to update <"+key+","+value+"> to disk");
         }
         else {
@@ -35,7 +35,7 @@ public class FIFO{
 
     public synchronized String getKV(String key){
 
-        if(fifo.containsKey(key) == false) {
+        if(!fifo.containsKey(key)) {
             logger.info("key-value pair of "+key+" does not exist in cache");
             String value = database_mgr.getKV(key);
             if(value == null){
@@ -56,7 +56,6 @@ public class FIFO{
     }
 
     public synchronized boolean delete(String key){
-
         return database_mgr.deleteKV(key);
 
     }

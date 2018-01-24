@@ -51,7 +51,6 @@ public class KVStore implements KVCommInterface {
 		// TODO Auto-generated method stub
 		this.address = address;
 		this.port = port;
-		this.clientId = clientId++;
 		this.transmit = new Transmission();
 		this.gson = new Gson();
 	}
@@ -63,7 +62,7 @@ public class KVStore implements KVCommInterface {
 		this.output = clientSocket.getOutputStream();
 		this.input = clientSocket.getInputStream();
         setRunning(true);
-        LOGGER.info("Connection established");
+        LOGGER.info("Connection established, client_id: " + this.clientId);
 	}
 
 	@Override
