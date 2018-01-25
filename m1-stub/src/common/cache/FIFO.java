@@ -5,7 +5,7 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import logger.LogSetup;
 
-public class FIFO{
+public class FIFO implements CacheStructure{
     int size;
     private static LinkedHashMap<String,String> fifo;
     private static Logger logger = Logger.getRootLogger();
@@ -55,7 +55,7 @@ public class FIFO{
             return fifo.get(key);
     }
 
-    public synchronized boolean delete(String key){
+    public synchronized boolean deleteKV(String key){
         return database_mgr.deleteKV(key);
 
     }
@@ -63,7 +63,7 @@ public class FIFO{
         fifo.clear();
     }
 
-    public boolean in_fifo(String key){
+    public boolean inCacheStructure(String key){
         return fifo.containsKey(key);
     }
 

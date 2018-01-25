@@ -122,7 +122,7 @@ public class ClientConnection implements Runnable {
 					return_msg = new Message(StatusType.PUT_ERROR, msg.getClientID(), msg.getSeq(), msg.getKey(), msg.getValue());
 				}
 			} else {
-				if (CacheManager.cache_delete(msg.getKey())) {
+				if (CacheManager.deleteFromCache(msg.getKey())) {
 					LOGGER.info("DELETE_SUCCESS: <" + msg.getKey() + "," + CacheManager.getKV(msg.getKey()) + ">");
 					return_msg = new Message(StatusType.DELETE_SUCCESS, msg.getClientID(), msg.getSeq(), msg.getKey(), CacheManager.getKV(msg.getKey()));
 				} else {

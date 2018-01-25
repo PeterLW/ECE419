@@ -6,7 +6,7 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import logger.LogSetup;
 
-public class LRU {
+public class LRU implements CacheStructure{
     private static Logger logger = Logger.getRootLogger();
     int capacity;
     private DBManager database_mgr = null;
@@ -73,7 +73,7 @@ public class LRU {
             end = head;
     }
 
-    public synchronized boolean delete(String key){
+    public synchronized boolean deleteKV(String key){
 
         return database_mgr.deleteKV(key);
 
@@ -111,7 +111,7 @@ public class LRU {
         map.clear();
     }
 
-    public boolean in_LRU(String key){
+    public boolean inCacheStructure(String key){
         return map.containsKey(key);
     }
 

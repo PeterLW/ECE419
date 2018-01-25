@@ -190,6 +190,9 @@ public class KVServer implements IKVServer {
         try {
             serverSocket.close();
             System.exit(0);
+			/*
+			 * Are you sure we are supposed to use System.exit()?
+			 */
         } catch (IOException e) {
             LOGGER.error("Error! " + "Unable to close socket on port: " + port, e);
         }
