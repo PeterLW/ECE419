@@ -93,9 +93,11 @@ public class LRU implements CacheStructure{
             Node n = map.get(key);
             remove(n);
             map.remove(key);
+            return database_mgr.deleteKV(key);
         }
-        return database_mgr.deleteKV(key);
-
+        else{
+            return false;
+        }
     }
 
     @Override

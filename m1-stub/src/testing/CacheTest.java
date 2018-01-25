@@ -16,7 +16,7 @@ public class CacheTest extends TestCase{
 
     public void testInsert(){
        DBManager db = new DBManager();
-       CacheManager cm = new CacheManager(10,"LFU",db);
+       CacheManager cm = new CacheManager(10,"FIFO",db);
 
        for (int i = 0; i < 10; i ++) {
            cm.putKV(Integer.toString(i), "b");
@@ -34,7 +34,7 @@ public class CacheTest extends TestCase{
 
     public void testUpdate(){
         DBManager db = new DBManager();
-        CacheManager cm = new CacheManager(10,"LFU",db);
+        CacheManager cm = new CacheManager(10,"FIFO",db);
 
         for (int i = 0; i < 10; i ++) {
             assertTrue(cm.putKV(Integer.toString(i), "b"));
@@ -58,7 +58,7 @@ public class CacheTest extends TestCase{
 
     public void testDelete(){
         DBManager db = new DBManager();
-        CacheManager cm = new CacheManager(10,"LFU",db);
+        CacheManager cm = new CacheManager(10,"FIFO",db);
 
         for (int i = 0; i < 10; i ++) {
             assertTrue(cm.putKV(Integer.toString(i), "b"));
@@ -79,11 +79,15 @@ public class CacheTest extends TestCase{
         for (int i = 0; i < 20; i ++) {
             assertFalse(cm.deleteFromCache(Integer.toString(i)));
         }
+
+        for (int i = 0; i < 10; i ++) {
+            assertFalse(cm.inCache(null));
+        }
     }
 
     public void testGet(){
         DBManager db = new DBManager();
-        CacheManager cm = new CacheManager(10,"LFU",db);
+        CacheManager cm = new CacheManager(10,"FIFO",db);
 
         for (int i = 0; i < 10; i ++) {
             assertTrue(cm.putKV(Integer.toString(i), "b"));

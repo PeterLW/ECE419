@@ -57,8 +57,13 @@ public class FIFO implements CacheStructure{
     @Override
     public synchronized boolean deleteKV(String key){
 
-        fifo.remove(key);
-        return database_mgr.deleteKV(key);
+        if (fifo.containsKey(key)) {
+            fifo.remove(key);
+            return database_mgr.deleteKV(key);
+        }
+        else{
+            return false;
+        }
     }
 
     @Override
