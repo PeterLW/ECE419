@@ -1,8 +1,6 @@
 package common.cache;
 import java.io.IOException;
 
-import logger.LogSetup;
-import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import common.disk.DBManager;
 
@@ -14,27 +12,22 @@ public class CacheManager {
     private static CacheStructure cacheStructure = null;
     private static DBManager dbManager = null;
 
-    static {
-        try {
-            new logger.LogSetup("logs/storage.log", Level.DEBUG);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     public CacheManager(int size, String cache_strategy, DBManager db_manager) {
         cache_size = size;
         strategy = cache_strategy;
         this.dbManager = db_manager;
 
-        if(cache_strategy.toUpperCase().equals("FIFO"))
+        if(cache_strategy.toUpperCase().equals("FIFO")) {
             cacheStructure = new FIFO(size, dbManager);
-        else if(cache_strategy.toUpperCase().equals("LFU"))
+        }
+        else if(cache_strategy.toUpperCase().equals("LFU")) {
             cacheStructure = new LFU(size, dbManager);
-        else if(cache_strategy.toUpperCase().equals("LRU"))
+        }
+        else if(cache_strategy.toUpperCase().equals("LRU")) {
             cacheStructure = new LRU(size, dbManager);
-        else
+        } else {
             logger.error("Error: Invalid cache strategy !");
+        }
     }
 
     public boolean putKV(String key, String value){
@@ -58,14 +51,13 @@ public class CacheManager {
         if(key.isEmpty() || key == null){
             return false;
         }
-        System.out.println(key);
         if (inCache(key) || dbManager.isExists(key)){
             return true;
         }
         return false;
     }
 
-    public boolean deleteFromCache(String key){
+    public boolean deleteRV(String key){
        return cacheStructure.deleteKV(key);
     }
 

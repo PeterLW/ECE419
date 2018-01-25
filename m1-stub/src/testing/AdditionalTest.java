@@ -121,6 +121,7 @@ public class AdditionalTest extends TestCase {
 		assertTrue(db.isExists("a2"));
 		assertTrue(db.isExists("a1"));
 		assertTrue(db.isExists("a3"));
+
 	}
 
 	@Test
@@ -143,4 +144,6 @@ public class AdditionalTest extends TestCase {
 		assertFalse(a2.exists());
 		assertFalse(a3.exists());
 	}
+
+
 }

@@ -44,7 +44,7 @@ public class KVServer implements IKVServer {
 
 	static {
 		try {
-			new LogSetup("logs/application.log", Level.INFO);
+			new LogSetup("logs/server.log", Level.INFO);
 		} catch (IOException e) {
 			System.out.println("Error! Unable to initialize logger!");
 			e.printStackTrace();

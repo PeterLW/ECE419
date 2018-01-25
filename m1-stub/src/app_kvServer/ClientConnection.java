@@ -29,15 +29,6 @@ public class ClientConnection implements Runnable {
 	private Transmission transmission;
 	private int clientId;
 
-	static {
-		try {
-			LOGGER = new LogSetup("logs/storage.log",Level.DEBUG).logger;
-			LOGGER.setAdditivity(false);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
 	/**
 	 * Constructs a new CientConnection object for a given TCP socket.
 	 *
@@ -122,7 +113,7 @@ public class ClientConnection implements Runnable {
 					return_msg = new Message(StatusType.PUT_ERROR, msg.getClientID(), msg.getSeq(), msg.getKey(), msg.getValue());
 				}
 			} else {
-				if (CacheManager.deleteFromCache(msg.getKey())) {
+				if (CacheManager.deleteRV(msg.getKey())) {
 					LOGGER.info("DELETE_SUCCESS: <" + msg.getKey() + "," + CacheManager.getKV(msg.getKey()) + ">");
 					return_msg = new Message(StatusType.DELETE_SUCCESS, msg.getClientID(), msg.getSeq(), msg.getKey(), CacheManager.getKV(msg.getKey()));
 				} else {

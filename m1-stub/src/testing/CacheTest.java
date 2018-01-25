@@ -1,16 +1,9 @@
 package testing;
 
-import com.google.gson.Gson;
 import common.cache.CacheManager;
 import common.disk.DBManager;
-import common.messages.KVMessage;
-import common.messages.Message;
-import org.junit.Test;
 
 import junit.framework.TestCase;
-
-import java.io.File;
-import java.nio.file.Paths;
 
 public class CacheTest extends TestCase{
 
@@ -69,7 +62,7 @@ public class CacheTest extends TestCase{
         }
 
         for (int i = 0; i < 10; i ++) {
-            assertTrue(cm.deleteFromCache(Integer.toString(i)));
+            assertTrue(cm.deleteRV(Integer.toString(i)));
         }
 
         for (int i = 0; i < 10; i ++) {
@@ -77,7 +70,7 @@ public class CacheTest extends TestCase{
         }
 
         for (int i = 0; i < 20; i ++) {
-            assertFalse(cm.deleteFromCache(Integer.toString(i)));
+            assertFalse(cm.deleteRV(Integer.toString(i)));
         }
 
         for (int i = 0; i < 10; i ++) {
@@ -104,7 +97,7 @@ public class CacheTest extends TestCase{
         }
 
         for (int i = 0; i < 10; i ++) {
-           assertTrue(cm.deleteFromCache(Integer.toString(i)));
+           assertTrue(cm.deleteRV(Integer.toString(i)));
         }
 
         for (int i = 0; i < 10; i ++) {

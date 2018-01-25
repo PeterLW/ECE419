@@ -10,7 +10,7 @@ import org.apache.log4j.Logger;
 
 import logging.LogSetup;
 
-import client.ClientThread;
+import client.Client;
 import client.ClientSocketListener;
 import client.TextMessage;
 
@@ -19,7 +19,7 @@ public class Application implements ClientSocketListener {
 	private static Logger logger = Logger.getRootLogger();
 	private static final String PROMPT = "EchoClient> ";
 	private BufferedReader stdin;
-	private ClientThread client = null;
+	private Client client = null;
 	private boolean stop = false;
 	
 	private String serverAddress;
@@ -126,7 +126,7 @@ public class Application implements ClientSocketListener {
 		}else if(tokens[0].equals("get")){
 			if(tokens.length == 2) {
 				if(client != null && client.isRunning()){
-					get(tokens[1])
+					get(tokens[1]);
 				} else {
 					printError("Not connected!");
 				}
