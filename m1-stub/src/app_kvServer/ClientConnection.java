@@ -98,10 +98,13 @@ public class ClientConnection implements Runnable {
 	}
 
 	private boolean checkValidValue(Message msg) {
-		if (msg.getValue() != null && !(msg.getValue().isEmpty())){
+		String value = msg.getValue();
+
+		if (value != null && !(value.isEmpty()) && (value.equals("null") == false) && (value.equals("NULL") == false)){
 			/*
 			 * @Aaron, if I do 'put a ' will the client send this as value = null?
 			 */
+            LOGGER.info("checkValidValue(): value = "+value);
 			return true;
 		}
 		return false;

@@ -54,6 +54,10 @@ public class CacheManager {
     }
 
     public boolean doesKeyExist(String key) {
+
+        if(key.isEmpty() || key == null || key.equals("null") || key.equals("NULL")){
+            return false;
+        }
         System.out.println(key);
         if (inCache(key) || dbManager.isExists(key)){
             return true;
