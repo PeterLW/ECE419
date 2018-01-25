@@ -88,13 +88,13 @@ public class KVStore implements KVCommInterface {
 		Message received_stat = null;
 		boolean finish = false;
 
-		if(isRunning()) {
+		if (isRunning()) {
 			message = new Message(StatusType.PUT, clientId, seqNum, key, value);
 			transmit.sendMessage(toByteArray(gson.toJson(message)), clientSocket);
 			//transmit.sendMessage(message), clientSocket);
 			seqNum++;
 
-			clientSocket.setSoTimeout((int)TIMEOUT);
+			clientSocket.setSoTimeout((int) TIMEOUT);
 			try {
 				received_stat = transmit.receiveMessage(clientSocket); // receive reply, note receiveMessage( ) is a blocking function
 				finish = true;
@@ -103,18 +103,16 @@ public class KVStore implements KVCommInterface {
 				// read timed out - you may throw an exception of your choice
 				finish = false;
 
-			}finally {
+			} finally {
 
-				if(received_stat != null && finish == true){
+				if (received_stat != null && finish == true) {
 					LOGGER.info(gson.toJson(message));
 					return received_stat;
-				}
-				else{
+				} else {
 					LOGGER.error("Timeout: PUT message failed");
 				}
 			}
-		}
-		else{
+		} else {
 			LOGGER.error("Connection lost: PUT message failed");
 		}
 		return null;
