@@ -23,13 +23,13 @@ public class Transmission {
     OutputStream output;
     InputStream input;
 
-    static {
-        try {
-            new logger.LogSetup("logs/application.log", Level.INFO);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+//    static {
+//        try {
+//            new logger.LogSetup("logs/application.log", Level.INFO);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//    }
 
     public Transmission() {
         this.gson = new Gson();

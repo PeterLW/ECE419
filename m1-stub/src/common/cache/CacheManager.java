@@ -1,17 +1,26 @@
 package common.cache;
 import java.io.IOException;
 
+import logger.LogSetup;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import common.disk.DBManager;
 
 public class CacheManager {
 
-    private static final Logger logger = Logger.getLogger(CacheManager.class);
+    private static Logger logger = Logger.getLogger(CacheManager.class);
     private static int cache_size;
     private static String strategy;
     private static CacheStructure cacheStructure = null;
     private static DBManager dbManager = null;
+
+    static {
+        try {
+            new logger.LogSetup("logs/storage.log", Level.DEBUG);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     public CacheManager(int size, String cache_strategy, DBManager db_manager) {
         cache_size = size;

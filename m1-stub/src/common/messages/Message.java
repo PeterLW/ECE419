@@ -1,16 +1,8 @@
 package common.messages;
 
-import common.disk.DBManager;
-import logger.LogSetup;
 import lombok.Setter;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-
-import java.io.IOException;
 
 public class Message implements KVMessage {
-
-    private static final Logger LOGGER = Logger.getLogger(DBManager.class);
 
     private StatusType status;
     @Setter private int seq = -1;
@@ -18,13 +10,6 @@ public class Message implements KVMessage {
     @Setter private String key;
     @Setter private String value;
 
-    static {
-        try {
-            new LogSetup("logs/application.log", Level.INFO);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 
     public Message(StatusType status, int clientId, int seq, String key,String value) {
         // might throw exception... or do message validation in Transmission class...

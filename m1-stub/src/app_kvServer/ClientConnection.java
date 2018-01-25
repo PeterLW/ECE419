@@ -21,7 +21,7 @@ import common.transmission.Transmission;
  */
 public class ClientConnection implements Runnable {
 
-	private static final Logger LOGGER = Logger.getLogger(ClientConnection.class);
+	private static Logger LOGGER;
 	private boolean isOpen;
 	private Gson gson = null;
 	private CacheManager CacheManager;
@@ -31,7 +31,8 @@ public class ClientConnection implements Runnable {
 
 	static {
 		try {
-			new LogSetup("logs/application.log", Level.INFO);
+			LOGGER = new LogSetup("logs/storage.log",Level.DEBUG).logger;
+			LOGGER.setAdditivity(false);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -92,7 +93,7 @@ public class ClientConnection implements Runnable {
 
 			boolean success = transmission.sendMessage(toByteArray(gson.toJson(return_msg)), clientSocket);
 			if (!success) {
-				System.out.println("Send message failed");
+				LOGGER.error("Send message failed");
 			}
 	}
 
