@@ -3,12 +3,11 @@ package common;
 import common.cache.CacheManager;
 import common.disk.DBManager;
 
-import java.awt.desktop.SystemSleepEvent;
 import java.lang.*;
 
-
-//NOTE： You need to make the "strategy", "cache_size", "cacheStructure" variables in Cache Class non-static to run the benchmark
-//Also, need to comment out the log message in the putKV/getKV of FIFO.java, LFU.java, LRU.java
+//instructions:
+//You need to make the "strategy", "cache_size", "cacheStructure" variables in CacheManager Class non-static to run the benchmark
+//Also, need to comment out the log message in the putKV/getKV of FIFO.java, LFU.java, LRU.java, and log message storeKV/getKV of DBManager.java
 
 public class CacheBenchmark {
 
@@ -60,8 +59,8 @@ public class CacheBenchmark {
             long end = System.currentTimeMillis();
 
             result[0] = end - start;
-            db.clearStorage();
             fifo.clear();
+            db.clearStorage();
 
             //LRU Test*********************************************
             start = System.currentTimeMillis();
@@ -74,8 +73,8 @@ public class CacheBenchmark {
             end = System.currentTimeMillis();
 
             result[1] = end - start;
-            db.clearStorage();
             lru.clear();
+            db.clearStorage();
 
             //LFU Test*************************************************
             start = System.currentTimeMillis();
@@ -88,8 +87,8 @@ public class CacheBenchmark {
             end = System.currentTimeMillis();
 
             result[2] = end - start;
-            db.clearStorage();
             lfu.clear();
+            db.clearStorage();
 
         }catch(Exception e){
             System.out.println("CacheBenchmark: PUT/GET exception!");
@@ -112,7 +111,7 @@ public class CacheBenchmark {
         long[] result = new long[3];
         double ratio;
         long times;
-        int cache_size = 500;
+        int cache_size = 10000;
 
         //80% put, 20% get
         System.out.println("*************************************80% put, 20% get*******************************************");
@@ -134,10 +133,10 @@ public class CacheBenchmark {
         result = cb.run_benchmark();
         print_result(result, ratio, times);
 
-//        times = 10000;
-//        cb = new CacheBenchmark(ratio, times, cache_size);
-//        result = cb.run_benchmark();
-//        print_result(result, ratio, times);
+        times = 10000;
+        cb = new CacheBenchmark(ratio, times, cache_size);
+        result = cb.run_benchmark();
+        print_result(result, ratio, times);
 
 
         //50% put, 50% get
@@ -160,10 +159,10 @@ public class CacheBenchmark {
         result = cb.run_benchmark();
         print_result(result, ratio, times);
 
-//        times = 10000;
-//        cb = new CacheBenchmark(ratio, times, cache_size);
-//        result = cb.run_benchmark();
-//        print_result(result, ratio, times);
+        times = 10000;
+        cb = new CacheBenchmark(ratio, times, cache_size);
+        result = cb.run_benchmark();
+        print_result(result, ratio, times);
 
         //20% put, 80% get
         System.out.println("*************************************20% put, 80% get*******************************************");
@@ -185,10 +184,10 @@ public class CacheBenchmark {
         result = cb.run_benchmark();
         print_result(result, ratio, times);
 
-//        times = 10000;
-//        cb = new CacheBenchmark(ratio, times, cache_size);
-//        result = cb.run_benchmark();
-//        print_result(result, ratio, times);
+        times = 10000;
+        cb = new CacheBenchmark(ratio, times, cache_size);
+        result = cb.run_benchmark();
+        print_result(result, ratio, times);
 
     }
 
