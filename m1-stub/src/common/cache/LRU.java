@@ -98,6 +98,11 @@ public class LRU implements CacheStructure{
     @Override
     public synchronized boolean deleteKV(String key){
 
+        if(map.containsKey(key)) {
+            Node n = map.get(key);
+            remove(n);
+            map.remove(key);
+        }
         return database_mgr.deleteKV(key);
 
     }

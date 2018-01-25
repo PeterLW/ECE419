@@ -43,6 +43,7 @@ public class LFU implements CacheStructure{
         System.out.println();
     }
 
+
     @Override
     public synchronized String getKV(String key) {
 
@@ -79,8 +80,21 @@ public class LFU implements CacheStructure{
         }
     }
 
+    public synchronized void keyDelete(String key){
+
+        if (vals.containsKey(key)) {
+            vals.remove(key);
+            int count = counts.get(key);
+            lists.get(count).remove(key);
+            counts.remove(key);
+        }
+        return;
+    }
+
     @Override
     public synchronized boolean deleteKV(String key){
+
+        keyDelete(key);
         return database_mgr.deleteKV(key);
     }
 

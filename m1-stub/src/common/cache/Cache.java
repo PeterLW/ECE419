@@ -55,6 +55,7 @@ public class Cache{
                 return lru_cache.putKV(key, value);
         }
         else{
+            logger.error("Error: Invalid key !");
             return false;
         }
     }
@@ -70,11 +71,12 @@ public class Cache{
                 return lru_cache.getKV(key);
         }
         else{
+            logger.error("Error: Invalid key !");
             return null;
         }
     }
 
-    public void clearCache(){
+    public void clear(){
 
         if(strategy.equals("FIFO"))
             fifo_cache.clear();
@@ -95,19 +97,25 @@ public class Cache{
                 return lru_cache.inCacheStructure(key);
         }
         else{
+            logger.error("Error: Invalid key !");
             return false;
         }
     }
 
     public boolean cacheDelete(String key){
 
-        //
-        if(strategy.equals("FIFO"))
-            return fifo_cache.deleteKV(key);
-        else if(strategy.equals("LFU"))
-            return lfu_cache.deleteKV(key);
-        else
-            return lru_cache.deleteKV(key);
+        if(assertKey(key)) {
+            if (strategy.equals("FIFO"))
+                return fifo_cache.deleteKV(key);
+            else if (strategy.equals("LFU"))
+                return lfu_cache.deleteKV(key);
+            else
+                return lru_cache.deleteKV(key);
+        }
+        else{
+            logger.error("Error: Invalid key !");
+            return false;
+        }
     }
 
     public boolean assertKey(String key){
