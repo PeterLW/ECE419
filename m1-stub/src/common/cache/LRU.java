@@ -9,21 +9,12 @@ import org.apache.log4j.Logger;
 import logger.LogSetup;
 
 public class LRU implements CacheStructure{
-    private final static Logger logger = Logger.getLogger(LRU.class);
+    private static Logger logger = Logger.getLogger(LRU.class);
     int capacity;
     private DBManager database_mgr = null;
     static HashMap<String, Node> map = new HashMap<String, Node>();
     Node head=null;
     Node end=null;
-
-    static {
-        try {
-            new logger.LogSetup("logs/storage.log", Level.INFO);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    } 
-
 
     public LRU(int capacity, DBManager database_mgr) {
         this.capacity = capacity;

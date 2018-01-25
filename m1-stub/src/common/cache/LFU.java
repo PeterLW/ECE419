@@ -14,15 +14,6 @@ public class LFU implements CacheStructure{
     private int min = -1;
     private DBManager database_mgr=null;
 
-    static {
-        try {
-            new logger.LogSetup("logs/storage.log", Level.INFO);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-
     public LFU(int capacity, DBManager database_mgr) {
         this.capacity = capacity;
         this.database_mgr = database_mgr;

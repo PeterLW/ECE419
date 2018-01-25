@@ -12,14 +12,6 @@ public class FIFO implements CacheStructure{
     private static Logger logger = Logger.getLogger(FIFO.class);
     private DBManager database_mgr=null;
 
-    static {
-        try {
-            new logger.LogSetup("logs/storage.log", Level.DEBUG);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     public FIFO(int size, DBManager database_mgr) {
         this.size = size;
         this.database_mgr = database_mgr;

@@ -14,7 +14,7 @@ import org.apache.log4j.PatternLayout;
 public class LogSetup {
 
 	public static final String UNKNOWN_LEVEL = "UnknownLevel";
-	private static Logger logger = Logger.getRootLogger();
+	public static Logger logger = Logger.getRootLogger();
 	private String logdir;
 	
 	/**
@@ -33,12 +33,14 @@ public class LogSetup {
 
 	private void initialize(Level level) throws IOException {
 		PatternLayout layout = new PatternLayout( "%d{ISO8601} %-5p [%t] %c: %m%n" );
-		FileAppender fileAppender = new FileAppender( layout, logdir, true );		
+		FileAppender fileAppender = new FileAppender( layout, logdir, true );
 	    
 	    ConsoleAppender consoleAppender = new ConsoleAppender(layout);
 		logger.addAppender(consoleAppender);
 		logger.addAppender(fileAppender);
 		logger.setLevel(level);
+		logger.setAdditivity(false);
+
 	}
 	
 	public static boolean isValidLevel(String levelString) {

@@ -19,15 +19,7 @@ public class DBManager {
      * UTF-8 encoding
      */
     private final static String ROOT_PATH =  "DBRoot";
-    private static final Logger LOGGER = Logger.getLogger(DBManager.class);
-
-    static {
-        try {
-            new logger.LogSetup("logs/storage.log", Level.DEBUG);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+    private static Logger LOGGER = Logger.getLogger(DBManager.class);
 
     public DBManager(){
         if (!initializeDB()){
