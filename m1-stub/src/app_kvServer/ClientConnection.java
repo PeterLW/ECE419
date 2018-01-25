@@ -83,7 +83,6 @@ public class ClientConnection implements Runnable {
 				LOGGER.info("message received is null");
 				return;
 			}
-
 			Message return_msg = null;
 			if (msg.getStatus() == KVMessage.StatusType.PUT) {
 				return_msg = handlePut(msg);

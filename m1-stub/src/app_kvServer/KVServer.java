@@ -104,10 +104,15 @@ public class KVServer implements IKVServer {
 		return cacheSize;
 	}
 
-	@Override
+    @Override
     public boolean inStorage(String key){
 		// TODO Auto-generated method stub
-		return dbManager.isExists(key);
+        if(key == null || key.isEmpty() == true) {
+            return dbManager.isExists(key);
+        }
+        else{
+            return false;
+        }
 	}
 
 	@Override
@@ -137,6 +142,7 @@ public class KVServer implements IKVServer {
     public void clearCache(){
 		// TODO Auto-generated method stub
 		caching.clear();
+		return;
 	}
 
 	@Override
@@ -184,15 +190,12 @@ public class KVServer implements IKVServer {
 	}
 
 	@Override
-    public void kill(){ //here kill( ) will be same as close( ) as we are using write-through cache
+    public void kill(){ //here kill( ) will be same as close( ) as we are using write-through cache. For now, leave it as the same as close()
 		// TODO Auto-generated method stub
         running = false;
         try {
             serverSocket.close();
-            System.exit(0);
-			/*
-			 * Are you sure we are supposed to use System.exit()?
-			 */
+
         } catch (IOException e) {
             LOGGER.error("Error! " + "Unable to close socket on port: " + port, e);
         }

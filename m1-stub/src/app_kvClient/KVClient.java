@@ -182,18 +182,7 @@ public class KVClient implements IKVClient {
         } else if(tokens[0].equals("help")) {
             help();
         }
-        else if(tokens[0].equals("clear")){
-            if(tokens[1].equals("cache")) {
-                kvStore.clear("cache");
-            }
-            else if(tokens[1].equals("disk")) {
-                kvStore.clear("disk");
-            }
-            else {
-                printError("Invalid storage device to be cleared");
-            }
-        }
-        else {
+        else{
             printError("Unknown command");
             help();
         }

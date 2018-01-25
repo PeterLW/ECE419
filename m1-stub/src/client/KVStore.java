@@ -81,12 +81,6 @@ public class KVStore implements KVCommInterface {
 		}
 	}
 
-	public boolean clear(String device){
-		if(device.equals("cache")){
-			return true; // ??
-		}
-		return false;
-	}
 
 	@Override
 	public Message put(String key, String value) throws Exception {
