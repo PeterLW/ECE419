@@ -21,10 +21,10 @@ public class CacheManager {
         }
     }
 
-    public CacheManager(int size, String cache_strategy, DBManager dbManager) {
+    public CacheManager(int size, String cache_strategy, DBManager db_manager) {
         cache_size = size;
         strategy = cache_strategy;
-        dbManager = dbManager;
+        this.dbManager = db_manager;
 
         if(cache_strategy.equals("FIFO"))
             cacheStructure = new FIFO(size, dbManager);
@@ -53,6 +53,7 @@ public class CacheManager {
     }
 
     public boolean doesKeyExist(String key) {
+        System.out.println(key);
         if (inCache(key) || dbManager.isExists(key)){
             return true;
         }

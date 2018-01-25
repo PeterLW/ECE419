@@ -212,6 +212,5 @@ public class KVServer implements IKVServer {
 	public static void main(String[] args){
 			KVServer server = new KVServer(2000,2,"LRU"); // these should be from cmdline
 			server.run();
-
 	}
 }

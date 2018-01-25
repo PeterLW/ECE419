@@ -57,26 +57,25 @@ public class ClientConnection implements Runnable {
 	 * Loops until the connection is closed or aborted by the client.
 	 */
 	public void run() {
-			while (isOpen) {
-				try {
-					Message latestMsg = transmission.receiveMessage(clientSocket);
-					processMessage(latestMsg);
+		while (isOpen) {
+			try {
+				Message latestMsg = transmission.receiveMessage(clientSocket);
+				processMessage(latestMsg);
 				/* connection either terminated by the client or lost due to
 				 * network problems*/
-				} catch (IOException ioe) {
-					LOGGER.error("Error! Connection lost with client " + this.clientId);
-					isOpen = false;
-				} finally {
-					try {
-						if (clientSocket != null) {
-							clientSocket.close();
-						}
-					} catch (IOException ioe) {
-						LOGGER.error("Error! Unable to tear down connection!", ioe);
+			} catch (IOException ioe) {
+				LOGGER.error("Error! Connection lost with client " + this.clientId);
+				isOpen = false;
+				ioe.printStackTrace();
+				try {
+					if (clientSocket != null) {
+						clientSocket.close();
 					}
+				} catch (IOException ie) {
+					LOGGER.error("Error! Unable to tear down connection!", ioe);
 				}
 			}
-
+		}
 	}
 
 	private void processMessage(Message msg) {
