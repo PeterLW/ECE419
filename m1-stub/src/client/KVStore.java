@@ -16,8 +16,8 @@ import common.messages.KVMessage.StatusType;
 
 public class KVStore implements KVCommInterface {
 
-	private static final Logger LOGGER = Logger.getLogger(KVStore.class);
-	private final int TIMEOUT = 60000000; // idk set this later - nanoseconds
+	private static Logger LOGGER = Logger.getRootLogger();
+	private final int TIMEOUT = 10000; // idk set this later - nanoseconds
 
 	private Socket clientSocket;
 	private OutputStream output;
@@ -32,14 +32,6 @@ public class KVStore implements KVCommInterface {
 	private Message message = null;
 	private Transmission transmit;
 	private Gson gson = null;
-
-	static {
-		try {
-			new LogSetup("logs/application.log", Level.INFO);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
 
 	/**
 	 * Initialize KVStore with address and port of KVServer
@@ -94,7 +86,7 @@ public class KVStore implements KVCommInterface {
 			//transmit.sendMessage(message), clientSocket);
 			seqNum++;
 
-			clientSocket.setSoTimeout((int) TIMEOUT);
+			clientSocket.setSoTimeout(TIMEOUT);
 			try {
 				received_stat = transmit.receiveMessage(clientSocket); // receive reply, note receiveMessage( ) is a blocking function
 				finish = true;
@@ -129,7 +121,7 @@ public class KVStore implements KVCommInterface {
 			transmit.sendMessage(toByteArray(gson.toJson(message)), clientSocket);
 			seqNum++;
 
-			clientSocket.setSoTimeout((int)TIMEOUT);
+			clientSocket.setSoTimeout(TIMEOUT);
 			try {
 				received_stat = transmit.receiveMessage(clientSocket); // receive reply, note receiveMessage( ) is a blocking function
 				finish = true;

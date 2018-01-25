@@ -14,14 +14,6 @@ public class CacheManager {
     private static CacheStructure cacheStructure = null;
     private static DBManager dbManager = null;
 
-    static {
-        try {
-            new logger.LogSetup("logs/storage.log", Level.DEBUG);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     public CacheManager(int size, String cache_strategy, DBManager db_manager) {
         cache_size = size;
         strategy = cache_strategy;
@@ -54,18 +46,16 @@ public class CacheManager {
     }
 
     public boolean doesKeyExist(String key) {
-
         if(key.isEmpty() || key == null || key.equals("null") || key.equals("NULL")){
             return false;
         }
-        System.out.println(key);
         if (inCache(key) || dbManager.isExists(key)){
             return true;
         }
         return false;
     }
 
-    public boolean deleteFromCache(String key){
+    public boolean deleteRV(String key){
        return cacheStructure.deleteKV(key);
     }
 

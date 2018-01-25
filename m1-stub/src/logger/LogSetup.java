@@ -14,7 +14,7 @@ import org.apache.log4j.PatternLayout;
 public class LogSetup {
 
 	public static final String UNKNOWN_LEVEL = "UnknownLevel";
-	public static Logger logger = Logger.getRootLogger();
+	public final static Logger logger = Logger.getRootLogger();
 	private String logdir;
 	
 	/**
@@ -40,7 +40,6 @@ public class LogSetup {
 		logger.addAppender(fileAppender);
 		logger.setLevel(level);
 		logger.setAdditivity(false);
-
 	}
 	
 	public static boolean isValidLevel(String levelString) {

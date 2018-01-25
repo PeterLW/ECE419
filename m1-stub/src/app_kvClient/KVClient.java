@@ -14,7 +14,7 @@ import client.KVStore;
 
 public class KVClient implements IKVClient {
 
-    private static final Logger LOGGER = Logger.getLogger(KVClient.class);
+    private static Logger LOGGER = Logger.getRootLogger();
     private static final String PROMPT = "KVCLIENT> ";
     private BufferedReader stdin;
 
@@ -23,9 +23,11 @@ public class KVClient implements IKVClient {
 
     static {
         try {
-            new LogSetup("logs/application.log", Level.ERROR);
+            new LogSetup("logs/client.log", Level.INFO);
         } catch (IOException e) {
+            System.out.println("Error! Unable to initialize logger!");
             e.printStackTrace();
+            System.exit(1);
         }
     }
 
