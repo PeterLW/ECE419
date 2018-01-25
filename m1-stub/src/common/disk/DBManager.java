@@ -23,7 +23,7 @@ public class DBManager {
 
     static {
         try {
-            new logger.LogSetup("logs/storage.log", Level.INFO);
+            new logger.LogSetup("logs/storage.log", Level.DEBUG);
         } catch (IOException e) {
             e.printStackTrace();
         }

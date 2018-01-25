@@ -1,24 +1,46 @@
 package common.cache;
 import common.cache.Node;
 import common.disk.DBManager;
+
+import java.io.IOException;
 import java.util.*;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import logger.LogSetup;
 
 public class LRU implements CacheStructure{
-    private static Logger logger = Logger.getRootLogger();
+    private final static Logger logger = Logger.getLogger(LRU.class);
     int capacity;
     private DBManager database_mgr = null;
     static HashMap<String, Node> map = new HashMap<String, Node>();
     Node head=null;
     Node end=null;
 
+    static {
+        try {
+            new logger.LogSetup("logs/storage.log", Level.INFO);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    } 
+
+
     public LRU(int capacity, DBManager database_mgr) {
         this.capacity = capacity;
         this.database_mgr = database_mgr;
     }
 
+    @Override
+    public void printCacheKeys(){
+        Set<String> keys = map.keySet();
+        System.out.println("Printing keys in LRU Cache, capacity: " + capacity);
+        for (String key : keys) {
+            System.out.print(key + ", ");
+        }
+        System.out.println();
+    }
+
+    @Override
     public synchronized String getKV(String key) {
         if(map.containsKey(key)){
             Node n = map.get(key);
@@ -73,12 +95,14 @@ public class LRU implements CacheStructure{
             end = head;
     }
 
+    @Override
     public synchronized boolean deleteKV(String key){
 
         return database_mgr.deleteKV(key);
 
     }
 
+    @Override
     public synchronized boolean putKV(String key, String value) {
         if(map.containsKey(key)){
             Node old = map.get(key);
@@ -107,10 +131,12 @@ public class LRU implements CacheStructure{
         return true;
     }
 
+    @Override
     public void clear(){
         map.clear();
     }
 
+    @Override
     public boolean inCacheStructure(String key){
         return map.containsKey(key);
     }

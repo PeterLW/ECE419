@@ -12,4 +12,5 @@ public interface CacheStructure {
 
    boolean inCacheStructure(String key);
 
+   void printCacheKeys();
 }

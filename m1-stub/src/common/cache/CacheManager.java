@@ -13,24 +13,16 @@ public class CacheManager {
     private static CacheStructure cacheStructure = null;
     private static DBManager dbManager = null;
 
-    static {
-        try {
-            new logger.LogSetup("logs/storage.log", Level.INFO);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     public CacheManager(int size, String cache_strategy, DBManager db_manager) {
         cache_size = size;
         strategy = cache_strategy;
         this.dbManager = db_manager;
 
-        if(cache_strategy.equals("FIFO"))
+        if(cache_strategy.toUpperCase().equals("FIFO"))
             cacheStructure = new FIFO(size, dbManager);
-        else if(cache_strategy.equals("LFU"))
+        else if(cache_strategy.toUpperCase().equals("LFU"))
             cacheStructure = new LFU(size, dbManager);
-        else if(cache_strategy.equals("LRU"))
+        else if(cache_strategy.toUpperCase().equals("LRU"))
             cacheStructure = new LRU(size, dbManager);
         else
             logger.error("Error: Invalid cache strategy !");
@@ -68,5 +60,10 @@ public class CacheManager {
         return cache_size;
     }
 
-
+    public String getReplacementPolicy() {
+        return strategy;
+    }
+    public void printCacheKeys() {
+        cacheStructure.printCacheKeys();
+    }
 }
