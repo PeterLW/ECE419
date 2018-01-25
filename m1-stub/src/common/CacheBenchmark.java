@@ -9,6 +9,13 @@ import java.lang.*;
 //You need to make the "strategy", "cache_size", "cacheStructure" variables in CacheManager Class non-static to run the benchmark
 //Also, need to comment out the log message in the putKV/getKV of FIFO.java, LFU.java, LRU.java, and log message storeKV/getKV of DBManager.java
 
+
+
+//NOTE： You need to make the "strategy" and "cache_size" variables in Cache Class non-static to run the benchmark
+//Also, need to comment out some log message correspondingly for better visualization
+//(See the output to figure out what logs need to be commented out)
+
+
 public class CacheBenchmark {
 
     private DBManager db = new DBManager();
@@ -32,14 +39,6 @@ public class CacheBenchmark {
         lfu = new CacheManager(cache_size, "LFU",db);
     }
 
-    public CacheBenchmark() {
-        put_ratio = 0.5;
-        times = 100;
-        cache_size = 1000;
-        fifo = new CacheManager(cache_size, "FIFO",db);
-        lru = new CacheManager(cache_size, "LRU",db);
-        lfu = new CacheManager(cache_size, "LFU",db);
-    }
 
     public long[] run_benchmark(){
         long put_times = (long)(times * put_ratio);

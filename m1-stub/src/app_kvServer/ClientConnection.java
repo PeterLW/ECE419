@@ -97,23 +97,21 @@ public class ClientConnection implements Runnable {
 			}
 	}
 
-	private boolean checkValidValue(Message msg) {
-		String value = msg.getValue();
+    private boolean checkValidMsgValue(Message msg) {
 
-		if (value != null && !(value.isEmpty()) && (value.equals("null") == false) && (value.equals("NULL") == false)){
-			/*
-			 * @Aaron, if I do 'put a ' will the client send this as value = null?
-			 */
-            LOGGER.info("checkValidValue(): value = "+value);
-			return true;
-		}
-		return false;
-	}
+	    String value = msg.getValue();
+
+        if(value == null || value.isEmpty() || value.equals("null") || value.equals("NULL")){
+            return false;
+        }
+        return true;
+    }
+
 
 	private Message handlePut (Message msg) {
 		Message return_msg = null;
 		if (CacheManager.doesKeyExist(msg.getKey())) {
-			if (checkValidValue(msg)) {
+			if (checkValidMsgValue(msg)) {
 				System.out.println("msg value = "+msg.getValue());
 
 				if (CacheManager.putKV(msg.getKey(), msg.getValue())) {
@@ -133,7 +131,7 @@ public class ClientConnection implements Runnable {
 				}
 			}
 		} else {
-			if (checkValidValue(msg)) {
+            if (checkValidMsgValue(msg)) {
 				if (CacheManager.putKV(msg.getKey(), msg.getValue())) {
 					LOGGER.info("PUT_SUCCESS: <" + msg.getKey() + "," + msg.getValue() + ">");
 					return_msg = new Message(StatusType.PUT_SUCCESS, msg.getClientID(), msg.getSeq(), msg.getKey(), msg.getValue());
@@ -176,5 +174,7 @@ public class ClientConnection implements Runnable {
 
 		return tmp;
 	}
+
+
 
 }
