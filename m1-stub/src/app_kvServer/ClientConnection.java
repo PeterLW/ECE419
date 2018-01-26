@@ -41,6 +41,9 @@ public class ClientConnection implements Runnable {
 		this.transmission = new Transmission();
 		this.gson = new Gson();
 		this.CacheManager = caching;
+
+		String clientIdString = Integer.toString(clientId);
+		transmission.sendMessage(toByteArray(clientIdString),clientSocket);
 	}
 
 
@@ -64,7 +67,7 @@ public class ClientConnection implements Runnable {
 						clientSocket.close();
 					}
 				} catch (IOException ie) {
-					LOGGER.error("Error! Unable to tear down connection!", ioe);
+					LOGGER.error("Error! Unable to tear down connection for client: " + this.clientId, ioe);
 				}
 			}
 		}
@@ -72,9 +75,10 @@ public class ClientConnection implements Runnable {
 
 	private void processMessage(Message msg) {
 			if(msg == null) {
-				LOGGER.info("message received is null");
+				LOGGER.error("Message received is null");
 				return;
 			}
+
 			Message return_msg = null;
 			if (msg.getStatus() == KVMessage.StatusType.PUT) {
 				return_msg = handlePut(msg);
@@ -84,17 +88,14 @@ public class ClientConnection implements Runnable {
 
 			boolean success = transmission.sendMessage(toByteArray(gson.toJson(return_msg)), clientSocket);
 			if (!success) {
-				LOGGER.error("Send message failed");
+				LOGGER.error("Send message failed to client " + this.clientId);
 			}
 	}
 
 	private boolean checkValidValue(Message msg) {
 		String value = msg.getValue();
 
-		if (value != null && !(value.isEmpty()) && (value.equals("null") == false) && (value.equals("NULL") == false)){
-			/*
-			 * @Aaron, if I do 'put a ' will the client send this as value = null?
-			 */
+		if (value != null && !(value.isEmpty()) && (!value.toLowerCase().equals("null"))){
             LOGGER.info("checkValidValue(): value = "+value);
 			return true;
 		}
@@ -105,8 +106,6 @@ public class ClientConnection implements Runnable {
 		Message return_msg = null;
 		if (CacheManager.doesKeyExist(msg.getKey())) {
 			if (checkValidValue(msg)) {
-				System.out.println("msg value = "+msg.getValue());
-
 				if (CacheManager.putKV(msg.getKey(), msg.getValue())) {
 					LOGGER.info("PUT_UPDATE: <" + msg.getKey() + "," + msg.getValue() + ">");
 					return_msg = new Message(StatusType.PUT_UPDATE, msg.getClientID(), msg.getSeq(), msg.getKey(), msg.getValue());
@@ -147,9 +146,10 @@ public class ClientConnection implements Runnable {
 			LOGGER.info("GET_SUCCESS: <" + msg.getKey() + "," + value + ">");
 			return_msg = new Message(StatusType.GET_SUCCESS, msg.getClientID(), msg.getSeq(), msg.getKey(), value);
 		} else {
-			LOGGER.info("GET_ERROR: <" + msg.getKey() + ",null>");
+			LOGGER.info(msg.getStatus() + ": <" + msg.getKey() + ",null>");
 			return_msg = new Message(StatusType.GET_ERROR, msg.getClientID(), msg.getSeq(), msg.getKey(), null);
 		}
+
 		return return_msg;
 	}
 

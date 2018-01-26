@@ -5,6 +5,7 @@ import java.net.Socket;
 import java.io.IOException;
 
 import common.cache.CacheManager;
+import common.cache.CacheStructure;
 import logger.LogSetup;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -44,7 +45,7 @@ public class KVServer implements IKVServer {
 
 	static {
 		try {
-			new LogSetup("logs/server.log", Level.INFO);
+			new LogSetup("logs/server.log", Level.DEBUG);
 		} catch (IOException e) {
 			System.out.println("Error! Unable to initialize logger!");
 			e.printStackTrace();
@@ -67,14 +68,16 @@ public class KVServer implements IKVServer {
     }
 
 	private CacheStrategy string_to_enum_cache_strategy(String str) {
-		if(str.equals("LRU"))
-			return CacheStrategy.LRU;
-		else if(str.equals("LFU"))
-			return CacheStrategy.LFU;
-		else if(str.equals("FIFO"))
-			return CacheStrategy.FIFO;
-		else
-			return CacheStrategy.None;
+		switch (str.toLowerCase()){
+			case "LRU":
+				return CacheStrategy.LRU;
+			case "LFU":
+				return CacheStrategy.LFU;
+			case "FIFO":
+				return CacheStrategy.FIFO;
+			default:
+				return CacheStrategy.None;
+		}
 	}
 
 	@Override

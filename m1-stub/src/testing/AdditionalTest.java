@@ -145,5 +145,4 @@ public class AdditionalTest extends TestCase {
 		assertFalse(a3.exists());
 	}
 
-
 }

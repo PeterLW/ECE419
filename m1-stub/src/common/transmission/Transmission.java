@@ -23,13 +23,6 @@ public class Transmission {
     OutputStream output;
     InputStream input;
 
-//    static {
-//        try {
-//            new logger.LogSetup("logs/application.log", Level.INFO);
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//    }
 
     public Transmission() {
         this.gson = new Gson();
@@ -41,23 +34,21 @@ public class Transmission {
             output = socket.getOutputStream();
             output.write(msgBytes, 0, msgBytes.length);
             output.flush();
-
         } catch (IOException e) {
             e.printStackTrace();
             return false;
         }
-        LOGGER.debug("Send message:\t '" + new String(msg) + "'");
+        LOGGER.debug("Send message:\t '" + new String(msg) + "' ");
         return true;
     }
 
-//    public void sendMessage(Message msg) throws IOException {
-//        byte[] msgBytes = msg.getMsgBytes();
-//        output.write(msgBytes, 0, msgBytes.length);
-//        output.flush();
-//        LOGGER.debug("Send message:\t '" + new String(msg) + "'");
-//    }
-
     public Message receiveMessage(Socket socket) throws IOException {
+        String recieved_msg = receiveMessageString(socket);
+        Message recv_msg = gson.fromJson(recieved_msg, Message.class);
+        return recv_msg;
+    }
+
+    public String receiveMessageString(Socket socket) throws IOException {
         int index = 0;
         byte[] msgBytes = null, tmp = null;
         byte[] bufferBytes = new byte[BUFFER_SIZE];
@@ -110,8 +101,10 @@ public class Transmission {
 
         msgBytes = tmp;
         String msg_in_str = new String(msgBytes);
-        Message recv_msg = gson.fromJson(msg_in_str, Message.class);
-        return recv_msg;
+
+        return msg_in_str;
     }
+
+
 }
 
