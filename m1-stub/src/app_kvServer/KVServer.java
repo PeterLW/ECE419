@@ -83,7 +83,7 @@ public class KVServer implements IKVServer {
 	@Override
 	public int getPort(){
 		// TODO Auto-generated method stub
-		LOGGER.info("Server port: " + port);
+		LOGGER.info(">Server port: " + this.port);
 		return port;
 	}
 
@@ -177,11 +177,12 @@ public class KVServer implements IKVServer {
 	}
 
 	private boolean initializeServer() {
-		LOGGER.info("Initialize server ...");
+		LOGGER.info(">Initialize server ...");
 		try {
 			this.serverSocket = new ServerSocket(this.port);
-            this.hostname = serverSocket.getInetAddress().getHostName();
-			LOGGER.info("Server listening on port: " + this.serverSocket.getLocalPort());
+            		this.hostname = serverSocket.getInetAddress().getHostName();
+			this.port = this.serverSocket.getLocalPort();
+			LOGGER.info(">Server listening on port: " + this.serverSocket.getLocalPort());
 			return true;
 		} catch (IOException e) {
 			LOGGER.error("Error! Cannot open server socket:");

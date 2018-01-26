@@ -34,6 +34,7 @@ public class KVClient implements IKVClient {
     public void newConnection(String hostname, int port) {
         // TODO Auto-generated method stub
         try {
+	    LOGGER.error(">port = "+port);
             kvStore = new KVStore(hostname, port); // API we have to implement
             kvStore.connect();
         } catch (Exception ioe) {

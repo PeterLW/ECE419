@@ -49,11 +49,11 @@ public class KVStore implements KVCommInterface {
 	@Override
 	public void connect() throws Exception{
 		// TODO Auto-generated method stub
-        clientSocket = new Socket(address, port);
+        	clientSocket = new Socket(address, port);
 		clientSocket.setSoTimeout(TIMEOUT);
 		this.output = clientSocket.getOutputStream();
 		this.input = clientSocket.getInputStream();
-        setRunning(true);
+        	setRunning(true);
 
         String initialMessage = this.transmit.receiveMessageString(clientSocket); // should be clientId
 		this.clientId = Integer.parseInt(initialMessage);

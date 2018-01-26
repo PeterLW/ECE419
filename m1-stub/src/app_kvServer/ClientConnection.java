@@ -21,7 +21,7 @@ import common.transmission.Transmission;
  */
 public class ClientConnection implements Runnable {
 
-	private static Logger LOGGER;
+	private static Logger LOGGER = Logger.getLogger(ClientConnection.class);
 	private boolean isOpen;
 	private Gson gson = null;
 	private CacheManager CacheManager;
@@ -54,7 +54,9 @@ public class ClientConnection implements Runnable {
 	public void run() {
 		while (isOpen) {
 			try {
+				LOGGER.error("the client connection is running");
 				Message latestMsg = transmission.receiveMessage(clientSocket);
+				LOGGER.error("the client connection is running 2");
 				processMessage(latestMsg);
 				/* connection either terminated by the client or lost due to
 				 * network problems*/
