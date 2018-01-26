@@ -1,8 +1,6 @@
 package common.cache;
 import java.io.IOException;
 
-import logger.LogSetup;
-import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import common.disk.DBManager;
 
@@ -19,14 +17,17 @@ public class CacheManager {
         strategy = cache_strategy;
         this.dbManager = db_manager;
 
-        if(cache_strategy.toUpperCase().equals("FIFO"))
+        if(cache_strategy.toUpperCase().equals("FIFO")) {
             cacheStructure = new FIFO(size, dbManager);
-        else if(cache_strategy.toUpperCase().equals("LFU"))
+        }
+        else if(cache_strategy.toUpperCase().equals("LFU")) {
             cacheStructure = new LFU(size, dbManager);
-        else if(cache_strategy.toUpperCase().equals("LRU"))
+        }
+        else if(cache_strategy.toUpperCase().equals("LRU")) {
             cacheStructure = new LRU(size, dbManager);
-        else
+        } else {
             logger.error("Error: Invalid cache strategy !");
+        }
     }
 
     public boolean putKV(String key, String value){
@@ -46,7 +47,8 @@ public class CacheManager {
     }
 
     public boolean doesKeyExist(String key) {
-        if(key.isEmpty() || key == null || key.equals("null") || key.equals("NULL")){
+
+        if(key.isEmpty() || key == null){
             return false;
         }
         if (inCache(key) || dbManager.isExists(key)){

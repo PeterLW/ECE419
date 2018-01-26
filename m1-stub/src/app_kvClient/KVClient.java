@@ -3,7 +3,6 @@ package app_kvClient;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-
 import common.messages.Message;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -48,6 +47,16 @@ public class KVClient implements IKVClient {
         return kvStore;
     }
 
+    public boolean checkValidKeyValue(String key, String value){
+
+        if(key == null || key.isEmpty() || key.length() > 20){
+            return false;
+        }
+        if(value.length() > 120* 1024){
+            return false;
+        }
+        return true;
+    }
 
     public void quit(){
         kvStore.disconnect();
@@ -111,6 +120,7 @@ public class KVClient implements IKVClient {
         System.out.println(PROMPT + "ALL | DEBUG | INFO | WARN | ERROR | FATAL | OFF");
     }
 
+    private static final char RETURN = 0x0D;
     private void handleCommand(String cmdLine) { // CLI Class probably should just be modifying this is enough .__.
         String[] tokens = cmdLine.split("\\s+");
 
@@ -138,9 +148,15 @@ public class KVClient implements IKVClient {
                         }
                     }
                     try {
-                        Message msg = kvStore.put(tokens[1], value.toString()); // blocking call
-                        if(msg == null){
-                            printError("Communication for PUT failed");
+                        if(checkValidKeyValue(tokens[1],value.toString())) {
+                            Message msg = kvStore.put(tokens[1], value.toString()); // blocking call
+                            if (msg == null) {
+                                printError("Communication for PUT failed");
+                            }
+                        }
+                        else{
+                            printError("Invalid inputs!");
+                            LOGGER.error("Invalid inputs!");
                         }
                     }catch(Exception e){
                         printError("Put fail!");
@@ -157,9 +173,16 @@ public class KVClient implements IKVClient {
             if(tokens.length == 2) {
                 if(kvStore != null && kvStore.isRunning()){
                     try {
-                        Message msg = kvStore.get(tokens[1]); // blocking call
-                        if(msg == null){
-                            printError("Communication for GET failed");
+
+                        if(checkValidKeyValue(tokens[1],"dump")) {
+                            Message msg = kvStore.get(tokens[1]); // blocking call
+                            if (msg == null) {
+                                printError("Communication for GET failed");
+                            }
+                        }
+                        else{
+                            printError("Invalid inputs!");
+                            LOGGER.error("Invalid inputs!");
                         }
                     }catch(Exception e){
                         printError("Get fail!");
@@ -184,7 +207,11 @@ public class KVClient implements IKVClient {
         } else if(tokens[0].equals("help")) {
             help();
         }
+        else if(tokens[0].length() == 0){
+            //do nothing
+        }
         else{
+            System.out.println("enter key = "+tokens[0]);
             printError("Unknown command");
             help();
         }

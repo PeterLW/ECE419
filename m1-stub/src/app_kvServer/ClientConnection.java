@@ -106,6 +106,7 @@ public class ClientConnection implements Runnable {
 		Message return_msg = null;
 		if (CacheManager.doesKeyExist(msg.getKey())) {
 			if (checkValidValue(msg)) {
+
 				if (CacheManager.putKV(msg.getKey(), msg.getValue())) {
 					LOGGER.info("PUT_UPDATE: <" + msg.getKey() + "," + msg.getValue() + ">");
 					return_msg = new Message(StatusType.PUT_UPDATE, msg.getClientID(), msg.getSeq(), msg.getKey(), msg.getValue());
@@ -123,7 +124,7 @@ public class ClientConnection implements Runnable {
 				}
 			}
 		} else {
-			if (checkValidValue(msg)) {
+            if (checkValidValue(msg)) {
 				if (CacheManager.putKV(msg.getKey(), msg.getValue())) {
 					LOGGER.info("PUT_SUCCESS: <" + msg.getKey() + "," + msg.getValue() + ">");
 					return_msg = new Message(StatusType.PUT_SUCCESS, msg.getClientID(), msg.getSeq(), msg.getKey(), msg.getValue());
@@ -167,5 +168,7 @@ public class ClientConnection implements Runnable {
 
 		return tmp;
 	}
+
+
 
 }
