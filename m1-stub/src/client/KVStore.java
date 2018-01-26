@@ -110,7 +110,7 @@ public class KVStore implements KVCommInterface {
 			}
 
 			if (!isTimeOut && received_stat != null) {
-				LOGGER.info(gson.toJson(message));
+				LOGGER.info("Response from server: " + gson.toJson(received_stat));
 				return received_stat;
 			} else{
 				LOGGER.error("Timeout: PUT message failed");

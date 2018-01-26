@@ -24,7 +24,7 @@ import common.transmission.Transmission;
 public class ClientConnection implements Runnable {
 
 	private static final Logger LOGGER = Logger.getLogger(ClientConnection.class);
-    private final int TIMEOUT = 10000; // idk set this later - nanoseconds
+    private final int TIMEOUT = 1000000; // milliseconds
 	private boolean isOpen;
 	private Gson gson = null;
 	private CacheManager CacheManager;
@@ -45,6 +45,11 @@ public class ClientConnection implements Runnable {
 		this.gson = new Gson();
 		this.CacheManager = caching;
 
+		try {
+			clientSocket.setSoTimeout(TIMEOUT);
+		}catch (SocketException e) {
+			e.printStackTrace();
+		}
 		String clientIdString = Integer.toString(clientId);
 		transmission.sendMessage(toByteArray(clientIdString),clientSocket);
 	}
@@ -57,12 +62,6 @@ public class ClientConnection implements Runnable {
 	public void run() {
         Message latestMsg = new Message();
 		while (isOpen) {
-
-		    try {
-                clientSocket.setSoTimeout(TIMEOUT); // doubles the timeout time
-            }catch (SocketException e) {
-                e.printStackTrace();
-            }
             try {
 				 latestMsg = transmission.receiveMessage(clientSocket);
 

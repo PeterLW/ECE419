@@ -38,7 +38,7 @@ public class Transmission {
             e.printStackTrace();
             return false;
         }
-        LOGGER.debug("Send message:\t '" + new String(msg) + "' ");
+        LOGGER.info("Send message:\t '" + new String(msg) + "' ");
         return true;
     }
 

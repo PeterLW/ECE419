@@ -18,7 +18,7 @@ public class KVClient implements IKVClient {
     private static final String PROMPT = "KVCLIENT> ";
     private BufferedReader stdin;
 
-    private KVStore kvStore;
+    private KVStore kvStore = null;
     private boolean stop = false;
 
     static {
@@ -30,14 +30,18 @@ public class KVClient implements IKVClient {
             System.exit(1);
         }
     }
-
+  
     @Override
     public void newConnection(String hostname, int port) {
         // TODO Auto-generated method stub
         try {
-	    LOGGER.error(">port = "+port);
-            kvStore = new KVStore(hostname, port); // API we have to implement
-            kvStore.connect();
+	        LOGGER.error(">port = "+port);
+	        if (kvStore == null) {
+                kvStore = new KVStore(hostname, port); // API we have to implement
+                kvStore.connect();
+            } else {
+	            LOGGER.error("Connection with server already established");
+            }
         } catch (Exception ioe) {
             LOGGER.error("Unable to connect!");
         }
@@ -122,7 +126,7 @@ public class KVClient implements IKVClient {
         System.out.println(PROMPT + "ALL | DEBUG | INFO | WARN | ERROR | FATAL | OFF");
     }
 
-    private void handleCommand(String cmdLine) { // CLI Class probably should just be modifying this is enough .__.
+    private void handleCommand(String cmdLine) {
         String[] tokens = cmdLine.split("\\s+");
 
         if(tokens[0].equals("quit")) {
