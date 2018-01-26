@@ -89,6 +89,7 @@ public class KVStore implements KVCommInterface {
 			transmit.sendMessage(toByteArray(gson.toJson(message)), clientSocket);
 
 			seqNum++;
+            clientSocket.setSoTimeout(TIMEOUT); // doubles the timeout time
 			try {
 				received_stat = transmit.receiveMessage(clientSocket); // receive reply, note receiveMessage( ) is a blocking function
 			} catch (java.net.SocketTimeoutException e) {// read timed out - you may throw an exception of your choice

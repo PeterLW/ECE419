@@ -13,7 +13,8 @@ import client.KVStore;
 
 public class KVClient implements IKVClient {
 
-    private static Logger LOGGER = Logger.getLogger(KVClient.class);
+
+    private static final Logger LOGGER = Logger.getLogger(KVClient.class);
     private static final String PROMPT = "KVCLIENT> ";
     private BufferedReader stdin;
 
@@ -121,7 +122,6 @@ public class KVClient implements IKVClient {
         System.out.println(PROMPT + "ALL | DEBUG | INFO | WARN | ERROR | FATAL | OFF");
     }
 
-    private static final char RETURN = 0x0D;
     private void handleCommand(String cmdLine) { // CLI Class probably should just be modifying this is enough .__.
         String[] tokens = cmdLine.split("\\s+");
 
@@ -160,8 +160,7 @@ public class KVClient implements IKVClient {
                             LOGGER.error("Invalid inputs!");
                         }
                     }catch(Exception e){
-                        printError("Put fail!");
-                        LOGGER.warn("Put fail!", e);
+                        LOGGER.error("Put fail!", e);
                     }
                 } else {
                     printError("Not connected!");

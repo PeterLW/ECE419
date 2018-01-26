@@ -2,6 +2,8 @@ package app_kvServer;
 
 import java.io.IOException;
 import java.net.Socket;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
 
 import com.google.gson.Gson;
 import common.cache.CacheManager;
@@ -21,7 +23,8 @@ import common.transmission.Transmission;
  */
 public class ClientConnection implements Runnable {
 
-	private static Logger LOGGER = Logger.getLogger(ClientConnection.class);
+	private static final Logger LOGGER = Logger.getLogger(ClientConnection.class);
+    private final int TIMEOUT = 10000; // idk set this later - nanoseconds
 	private boolean isOpen;
 	private Gson gson = null;
 	private CacheManager CacheManager;
@@ -52,12 +55,17 @@ public class ClientConnection implements Runnable {
 	 * Loops until the connection is closed or aborted by the client.
 	 */
 	public void run() {
+        Message latestMsg = new Message();
 		while (isOpen) {
-			try {
-				LOGGER.error("the client connection is running");
-				Message latestMsg = transmission.receiveMessage(clientSocket);
-				LOGGER.error("the client connection is running 2");
-				processMessage(latestMsg);
+
+		    try {
+                clientSocket.setSoTimeout(TIMEOUT); // doubles the timeout time
+            }catch (SocketException e) {
+                e.printStackTrace();
+            }
+            try {
+				 latestMsg = transmission.receiveMessage(clientSocket);
+
 				/* connection either terminated by the client or lost due to
 				 * network problems*/
 			} catch (IOException ioe) {
@@ -72,6 +80,7 @@ public class ClientConnection implements Runnable {
 					LOGGER.error("Error! Unable to tear down connection for client: " + this.clientId, ioe);
 				}
 			}
+            processMessage(latestMsg);
 		}
 	}
 

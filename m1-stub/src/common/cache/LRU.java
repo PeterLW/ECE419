@@ -40,10 +40,10 @@ public class LRU implements CacheStructure{
             return n.value;
         }
         else{
-            logger.info("key-value pair of "+key+" does not exist in cache");
+            logger.info("key-value pair for key "+key+" does not exist in cache");
             String value = database_mgr.getKV(key);
             if(value == null){
-                logger.error("key-value pair of "+key+" does not exist in disk");
+                logger.error("key-value pair for key "+key+" does not exist in disk");
                 return null;
             }
             else{
