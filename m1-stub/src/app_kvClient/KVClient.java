@@ -3,6 +3,7 @@ package app_kvClient;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.SocketException;
 import common.messages.Message;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -18,7 +19,7 @@ public class KVClient implements IKVClient {
     private static final String PROMPT = "KVCLIENT> ";
     private BufferedReader stdin;
 
-    private KVStore kvStore = null;
+    private KVStore kvStore;
     private boolean stop = false;
 
     static {
@@ -30,18 +31,14 @@ public class KVClient implements IKVClient {
             System.exit(1);
         }
     }
-  
+
     @Override
     public void newConnection(String hostname, int port) {
         // TODO Auto-generated method stub
         try {
-	        LOGGER.error(">port = "+port);
-	        if (kvStore == null) {
-                kvStore = new KVStore(hostname, port); // API we have to implement
-                kvStore.connect();
-            } else {
-	            LOGGER.error("Connection with server already established");
-            }
+	    LOGGER.error(">port = "+port);
+            kvStore = new KVStore(hostname, port); // API we have to implement
+            kvStore.connect();
         } catch (Exception ioe) {
             LOGGER.error("Unable to connect!");
         }
@@ -65,6 +62,7 @@ public class KVClient implements IKVClient {
     }
 
     public void quit(){
+    	LOGGER.error("calling quit");
         kvStore.disconnect();
         stop = true;
         return;
@@ -126,7 +124,7 @@ public class KVClient implements IKVClient {
         System.out.println(PROMPT + "ALL | DEBUG | INFO | WARN | ERROR | FATAL | OFF");
     }
 
-    private void handleCommand(String cmdLine) {
+    private void handleCommand(String cmdLine) { // CLI Class probably should just be modifying this is enough .__.
         String[] tokens = cmdLine.split("\\s+");
 
         if(tokens[0].equals("quit")) {

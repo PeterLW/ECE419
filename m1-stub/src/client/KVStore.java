@@ -54,7 +54,7 @@ public class KVStore implements KVCommInterface {
 		clientSocket.setSoTimeout(TIMEOUT);
 		this.output = clientSocket.getOutputStream();
 		this.input = clientSocket.getInputStream();
-        	setRunning(true);
+        setRunning(true);
 
         String initialMessage = this.transmit.receiveMessageString(clientSocket); // should be clientId
 		this.clientId = Integer.parseInt(initialMessage);
@@ -68,9 +68,12 @@ public class KVStore implements KVCommInterface {
 		try{
 			setRunning(false);
 			LOGGER.info("tearing down the connection ...");
+			
+			message = new Message(StatusType.CLOSE_REQ, clientId, seqNum, "");
+			transmit.sendMessage(toByteArray(gson.toJson(message)), clientSocket);
+			
 			if (clientSocket != null){
 				clientSocket.close();
-				clientSocket = null;
 				LOGGER.info("connection closed!");
 			}
 		} catch (IOException ioe) {
@@ -98,7 +101,11 @@ public class KVStore implements KVCommInterface {
 					isTimeOut = true;
 				}
 
-				if (isTimeOut) { // try again once
+				if (isTimeOut) {
+				    /* try again once
+				     * @Aaron @Peter
+				     * why did you remove the try again in the merge o.o?
+				     */
 					clientSocket.setSoTimeout(TIMEOUT + 10000); // doubles the timeout time
 					try {
 						received_stat = transmit.receiveMessage(clientSocket); // receive reply, note receiveMessage( ) is a blocking function

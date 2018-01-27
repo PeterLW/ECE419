@@ -15,8 +15,8 @@ public class LRU implements CacheStructure{
     private Node end=null;
 
     public LRU(int capacity, DBManager database_mgr) {
-        this.capacity = capacity;
         this.database_mgr = database_mgr;
+        this.capacity = capacity;
     }
 
     @Override
@@ -36,27 +36,8 @@ public class LRU implements CacheStructure{
             remove(n);
             setHead(n);
             return n.value;
-        }
-        else{
-            logger.info("key-value pair for key "+key+" does not exist in cache");
-            String value = database_mgr.getKV(key);
-            if(value == null){
-                logger.error("key-value pair for key "+key+" does not exist in disk");
-                return null;
-            }
-            else{
-                //put the <key,pair> to cache now to avoid accessing disk again
-                Node created = new Node(key, value);
-                if(map.size()>=capacity){
-                    map.remove(end.key);
-                    remove(end);
-                    setHead(created);
-                }else{
-                    setHead(created);
-                }
-                map.put(key, created);
-                return value;
-            }
+        }else{
+        	return null;
         }
     }
 
@@ -93,7 +74,6 @@ public class LRU implements CacheStructure{
             map.remove(key);
             return database_mgr.deleteKV(key);
         }
-
         return database_mgr.deleteKV(key);
     }
 
@@ -115,13 +95,6 @@ public class LRU implements CacheStructure{
             }
 
             map.put(key, created);
-        }
-        //here we update the disk to synchronize with the cache. In this way, we no longer need to save the data to be evitcted.
-        if(database_mgr.storeKV(key,value) == false){
-            logger.error("Error: failed to update <"+key+","+value+"> to disk");
-        }
-        else {
-            logger.info("<" + key + "," + value + "> has been updated to disk");
         }
         return true;
     }

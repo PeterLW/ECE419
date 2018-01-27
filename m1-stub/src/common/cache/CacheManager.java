@@ -31,11 +31,28 @@ public class CacheManager {
     }
 
     public boolean putKV(String key, String value){
-       return cacheStructure.putKV(key,value);
+    	
+       return cacheStructure.putKV(key,value) && dbManager.storeKV(key, value);
     }
 
     public String getKV(String key){
-        return cacheStructure.getKV(key);
+    	
+    	String val = "";
+    	
+    	if(cacheStructure.inCacheStructure(key)){
+    		val = cacheStructure.getKV(key);
+        }
+    	else{
+    		if(dbManager.isExists(key)){
+    			val = dbManager.getKV(key);
+    			cacheStructure.putKV(key, val);
+    		}
+    		else{
+    			return null;
+    		}
+    	}
+    		
+        return val;
     }
 
     public void clear(){
@@ -58,7 +75,14 @@ public class CacheManager {
     }
 
     public boolean deleteRV(String key){
-       return cacheStructure.deleteKV(key);
+    	
+    	return cacheStructure.deleteKV(key);
+    	/* @Aaron @Peter
+    	 * When would you only want to call deleteRV but only delete from cache not db o.o?
+    	 * because the cache has a separate function to remove only from cache only
+    	 * & deleteRV does successfully delete from database (check it now)
+    	 */
+
     }
 
     public int get_cache_size(){

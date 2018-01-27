@@ -13,8 +13,8 @@ public class FIFO implements CacheStructure{
 
     public FIFO(int size, DBManager database_mgr) {
         this.size = size;
-        this.database_mgr = database_mgr;
         this.fifo = new LinkedHashMap<String,String>();
+        this.database_mgr = database_mgr;
     }
 
     @Override
@@ -23,13 +23,6 @@ public class FIFO implements CacheStructure{
             fifo.remove(fifo.entrySet().iterator().next().getKey());
         }
         fifo.put(key,value);
-
-        //update the disk
-        if(!database_mgr.storeKV(key,value)){
-            logger.error("Error: failed to update <"+key+","+value+"> to database");
-        } else {
-            logger.info("<" + key + "," + value + "> has been updated to database");
-        }
         return true;
     }
 
@@ -38,18 +31,8 @@ public class FIFO implements CacheStructure{
         if (fifo.containsKey(key)){
             return fifo.get(key);
         }
-
-        String value = database_mgr.getKV(key);
-        if(value == null){
-            logger.error("key-value pair of "+key+" does not exist in database");
-            return null;
-        } else {
-            //put the <key,pair> to cache now to avoid accessing disk again
-            if (fifo.size() >= size) {
-                fifo.remove(fifo.entrySet().iterator().next().getKey());
-            }
-            fifo.put(key, value);
-            return value;
+        else{
+        	return null;
         }
     }
 

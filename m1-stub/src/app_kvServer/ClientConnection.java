@@ -42,11 +42,6 @@ public class ClientConnection implements Runnable {
 		this.transmission = new Transmission();
 		this.CacheManager = caching;
 
-		try {
-			clientSocket.setSoTimeout(TIMEOUT);
-		}catch (SocketException e) {
-			e.printStackTrace();
-		}
 		String clientIdString = Integer.toString(clientId);
 		transmission.sendMessage(toByteArray(clientIdString),clientSocket);
 	}
@@ -66,11 +61,11 @@ public class ClientConnection implements Runnable {
 				 * network problems*/
 			} catch (IOException ioe) {
 				LOGGER.error("Error! Connection lost with client " + this.clientId);
-				isOpen = false;
 				ioe.printStackTrace();
 				try {
 					if (clientSocket != null) {
 						clientSocket.close();
+						isOpen = false;
 					}
 				} catch (IOException ie) {
 					LOGGER.error("Error! Unable to tear down connection for client: " + this.clientId, ioe);
@@ -87,7 +82,17 @@ public class ClientConnection implements Runnable {
 			}
 
 			Message return_msg;
-			if (msg.getStatus() == KVMessage.StatusType.PUT) {
+			if(msg.getStatus() == KVMessage.StatusType.CLOSE_REQ){
+				LOGGER.error("Client is closed, server will be closed!");
+				try{
+					clientSocket.close();
+					isOpen = false;
+				}catch(IOException ie){
+					LOGGER.error("Failed to close server socket!!");
+				}
+				return;
+			}
+			else if (msg.getStatus() == KVMessage.StatusType.PUT) {
 				return_msg = handlePut(msg);
 			} else {
 				return_msg = handleGet(msg);
@@ -106,58 +111,68 @@ public class ClientConnection implements Runnable {
 		}
 		return false;
 	}
+    private boolean checkValidkey(String key) {
+        if (key != null && !(key.isEmpty()) && !(key.equals("")) && !(key.contains(" ")) && !(key.length() > 20)) {
+            LOGGER.info("get checkValidValue(): key = " + key);
+            return true;
+        }
+        return false;
+    }
 
 	private Message handlePut (Message msg) {
-		Message return_msg;
-		if (CacheManager.doesKeyExist(msg.getKey())) {
-
-			if (isDelete(msg.getValue())) {
-				if (CacheManager.deleteRV(msg.getKey())) {
-					LOGGER.info("DELETE_SUCCESS: <" + msg.getKey() + "," + CacheManager.getKV(msg.getKey()) + ">");
-					return_msg = new Message(StatusType.DELETE_SUCCESS, msg.getClientID(), msg.getSeq(), msg.getKey(), CacheManager.getKV(msg.getKey()));
-				} else {
-					LOGGER.info("DELETE_ERROR: <" + msg.getKey() + "," + CacheManager.getKV(msg.getKey()) + ">");
-					return_msg = new Message(StatusType.DELETE_ERROR, msg.getClientID(), msg.getSeq(), msg.getKey(), CacheManager.getKV(msg.getKey()));
+		Message return_msg = null;
+		String key = msg.getKey();
+		String value = msg.getValue();
+		
+		if(checkValidkey(key) && (value.length() < 120)){
+			if(isDelete(value)){
+				boolean success = CacheManager.deleteRV(key);
+				LOGGER.info("DELETE_SUCCESS: <" + msg.getKey() + "," + CacheManager.getKV(msg.getKey()) + ">");
+				return_msg = new Message(StatusType.DELETE_SUCCESS, msg.getClientID(), msg.getSeq(), msg.getKey(), value);
+				if(!success){
+					LOGGER.info("DELETE_ERROR: <" + key+ "," + CacheManager.getKV(key) + ">");
+					return_msg = new Message(StatusType.DELETE_ERROR, msg.getClientID(), msg.getSeq(), key, value);
 				}
-			} else {
-				if (CacheManager.putKV(msg.getKey(), msg.getValue())) {
+			}
+			else{
+				if(CacheManager.doesKeyExist(key)){
+					CacheManager.putKV(key, value);
 					LOGGER.info("PUT_UPDATE: <" + msg.getKey() + "," + msg.getValue() + ">");
 					return_msg = new Message(StatusType.PUT_UPDATE, msg.getClientID(), msg.getSeq(), msg.getKey(), msg.getValue());
-				} else {
-					LOGGER.info("PUT_ERROR: <" + msg.getKey() + "," + msg.getValue() + ">");
-					return_msg = new Message(StatusType.PUT_ERROR, msg.getClientID(), msg.getSeq(), msg.getKey(), msg.getValue());
 				}
-			}
-
-		} else {
-
-            if (isDelete(msg.getValue())) {
-				LOGGER.info("DELETE_ERROR: <" + msg.getKey() + ", null >");
-				return_msg = new Message(StatusType.DELETE_ERROR, msg.getClientID(), msg.getSeq(), msg.getKey(), null);
-			} else{
-				if (CacheManager.putKV(msg.getKey(), msg.getValue())) {
+				else{
+					CacheManager.putKV(key, value);
 					LOGGER.info("PUT_SUCCESS: <" + msg.getKey() + "," + msg.getValue() + ">");
 					return_msg = new Message(StatusType.PUT_SUCCESS, msg.getClientID(), msg.getSeq(), msg.getKey(), msg.getValue());
-				} else {
-					LOGGER.info("PUT_ERROR: <" + msg.getKey() + "," + msg.getValue() + ">");
-					return_msg = new Message(StatusType.PUT_ERROR, msg.getClientID(), msg.getSeq(), msg.getKey(), msg.getValue());
 				}
 			}
+		}
+		else{
+			LOGGER.info("PUT_ERROR: <" + msg.getKey() + "," + msg.getValue() + ">");
+			return_msg = new Message(StatusType.PUT_ERROR, msg.getClientID(), msg.getSeq(), msg.getKey(), msg.getValue());
 		}
 		return return_msg;
 	}
 
 	private Message handleGet(Message msg){
 		Message return_msg;
-		String value = CacheManager.getKV(msg.getKey());
-		if (value != null) {
-			LOGGER.info("GET_SUCCESS: <" + msg.getKey() + "," + value + ">");
-			return_msg = new Message(StatusType.GET_SUCCESS, msg.getClientID(), msg.getSeq(), msg.getKey(), value);
+		
+		String key = msg.getKey();
+		String value = CacheManager.getKV(key);
+		
+		if (checkValidkey(key)) {
+			if(isDelete(value)){
+				LOGGER.info("GET_SUCCESS: <" + msg.getKey() + "," + value + ">");
+				return_msg = new Message(StatusType.GET_SUCCESS, msg.getClientID(), msg.getSeq(), msg.getKey(), value);
+			}
+			else{
+				LOGGER.info(msg.getStatus() + ": <" + msg.getKey() + ",null>");
+				return_msg = new Message(StatusType.GET_ERROR, msg.getClientID(), msg.getSeq(), msg.getKey(), null);
+			}
 		} else {
 			LOGGER.info(msg.getStatus() + ": <" + msg.getKey() + ",null>");
 			return_msg = new Message(StatusType.GET_ERROR, msg.getClientID(), msg.getSeq(), msg.getKey(), null);
 		}
-
 		return return_msg;
 	}
 
