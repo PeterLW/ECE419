@@ -92,9 +92,8 @@ public class KVStore implements KVCommInterface {
 			if (isRunning()) {
 				message = new Message(StatusType.PUT, clientId, seqNum, key, value);
 				transmit.sendMessage(toByteArray(gson.toJson(message)), clientSocket);
-
 				seqNum++;
-				clientSocket.setSoTimeout(TIMEOUT); // doubles the timeout time
+
 				try {
 					received_stat = transmit.receiveMessage(clientSocket); // receive reply, note receiveMessage( ) is a blocking function
 				} catch (java.net.SocketTimeoutException e) {// read timed out - you may throw an exception of your choice
@@ -103,13 +102,11 @@ public class KVStore implements KVCommInterface {
 
 				if (isTimeOut) {
 				    /* try again once
-				     * @Aaron @Peter
-				     * why did you remove the try again in the merge o.o?
 				     */
+					LOGGER.debug("Timeout: PUT message failed - Trying again");
 					clientSocket.setSoTimeout(TIMEOUT + 10000); // doubles the timeout time
 					try {
 						received_stat = transmit.receiveMessage(clientSocket); // receive reply, note receiveMessage( ) is a blocking function
-						LOGGER.debug("Timeout: PUT message failed - Trying again");
 						isTimeOut = false;
 					} catch (java.net.SocketTimeoutException e) {
 						// read timed out - you may throw an exception of your choice
@@ -158,11 +155,12 @@ public class KVStore implements KVCommInterface {
 				isTimeOut = true;
 
 			}
+
 			if (isTimeOut) { // try again once
+				LOGGER.debug("Timeout: GET message failed - Trying again");
 				clientSocket.setSoTimeout(TIMEOUT + 10000); // doubles the timeout time
 				try {
 					received_stat = transmit.receiveMessage(clientSocket); // receive reply, note receiveMessage( ) is a blocking function
-					LOGGER.debug("Timeout: GET message failed - Trying again");
 					isTimeOut = false;
 				} catch (java.net.SocketTimeoutException e) {
 					// read timed out - you may throw an exception of your choice

@@ -1,7 +1,5 @@
 package testing;
 
-import app_kvClient.KVClient;
-import client.KVStore;
 import com.google.gson.Gson;
 import common.cache.CacheManager;
 import common.disk.DBManager;
@@ -16,11 +14,6 @@ import java.io.File;
 import java.nio.file.Paths;
 
 public class AdditionalTest extends TestCase {
-
-    @Test
-    public void testKVStore() {
-
-    }
 
 	@Test
 	public void testMessage(){
@@ -153,7 +146,7 @@ public class AdditionalTest extends TestCase {
 
         final File rootDB = new File("DBRoot");
         final File a2 = new File(String.valueOf(Paths.get("DBRoot","a2")));
-        final File a3 = new File(String.valueOf(Paths.get("DBRoot","a2")));
+        final File a3 = new File(String.valueOf(Paths.get("DBRoot","a3")));
 		assertTrue(rootDB.exists());
 		assertTrue(a2.exists());
 		assertTrue(a3.exists());
@@ -164,6 +157,46 @@ public class AdditionalTest extends TestCase {
 		db.clearStorage();
 		assertTrue(rootDB.exists());
 		assertFalse(a2.exists());
+	}
+
+	@Test
+	public void testInsertionPolicy(){
+		/*
+		 *
+		 */
+		final DBManager db = new DBManager();
+		final CacheManager cm = new CacheManager(5,"LRU",db);
+
+		for (int i = 0; i < 8; i ++) {
+			cm.putKV(Integer.toString(i), "b");
+		}// 3 4 5 6 7
+
+		for (int i = 5; i > 0; i --) {
+			cm.putKV(Integer.toString(i), "b");
+		} // 3 4 5 2 1
+		cm.printCacheKeys();
+
+		assertTrue(cm.inCache("3"));
+		assertTrue(cm.inCache("4"));
+		assertTrue(cm.inCache("5"));
+		assertTrue(cm.inCache("2"));
+		assertTrue(cm.inCache("1"));
+
+		cm.deleteRV("3");
+		cm.deleteRV("1");
+
+		assertFalse(cm.inCache("3"));
+		assertFalse(cm.inCache("1"));
+
+		cm.putKV("10", "a");
+		cm.putKV("11", "a");
+		cm.putKV("12", "a");
+
+		assertTrue(cm.inCache("11"));
+		assertTrue(cm.inCache("12"));
+		assertTrue(cm.inCache("10"));
+		assertTrue(cm.inCache("2"));
+		assertTrue(cm.inCache("4"));
 	}
 
 	@Test
