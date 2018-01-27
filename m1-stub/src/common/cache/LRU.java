@@ -1,20 +1,18 @@
 package common.cache;
+
 import common.cache.Node;
 import common.disk.DBManager;
 
-import java.io.IOException;
 import java.util.*;
-import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import logger.LogSetup;
 
 public class LRU implements CacheStructure{
     private static Logger logger = Logger.getLogger(LRU.class);
-    int capacity;
-    private DBManager database_mgr = null;
-    static HashMap<String, Node> map = new HashMap<String, Node>();
-    Node head=null;
-    Node end=null;
+    private int capacity;
+    private static DBManager database_mgr = null;
+    private static HashMap<String, Node> map = new HashMap<String, Node>();
+    private Node head=null;
+    private Node end=null;
 
     public LRU(int capacity, DBManager database_mgr) {
         this.capacity = capacity;
@@ -95,9 +93,8 @@ public class LRU implements CacheStructure{
             map.remove(key);
             return database_mgr.deleteKV(key);
         }
-        else{
-            return false;
-        }
+
+        return database_mgr.deleteKV(key);
     }
 
     @Override

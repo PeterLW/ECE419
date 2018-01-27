@@ -1,16 +1,15 @@
 package common.cache;
-import java.io.IOException;
+
 import java.util.*;
 import common.disk.DBManager;
-import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import logger.LogSetup;
+
 
 public class FIFO implements CacheStructure{
-    int size;
+    private int size;
     private static LinkedHashMap<String,String> fifo;
-    private static Logger logger = Logger.getLogger(FIFO.class);
-    private DBManager database_mgr=null;
+    private final static Logger logger = Logger.getLogger(FIFO.class);
+    private static DBManager database_mgr;
 
     public FIFO(int size, DBManager database_mgr) {
         this.size = size;
@@ -61,9 +60,9 @@ public class FIFO implements CacheStructure{
             fifo.remove(key);
             return database_mgr.deleteKV(key);
         }
-        else{
-            return false;
-        }
+
+        return database_mgr.deleteKV(key);
+
     }
 
     @Override

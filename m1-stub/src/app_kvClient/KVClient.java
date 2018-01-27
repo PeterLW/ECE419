@@ -153,7 +153,7 @@ public class KVClient implements IKVClient {
                         }
                     }
                     try {
-                        if(checkValidKeyValue(tokens[1],value.toString())) {
+                        if(checkValidKeyValue(tokens[1], value.toString())) {
                             Message msg = kvStore.put(tokens[1], value.toString()); // blocking call
                             if (msg == null) {
                                 printError("Communication for PUT failed");

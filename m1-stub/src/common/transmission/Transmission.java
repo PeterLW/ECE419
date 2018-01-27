@@ -1,15 +1,12 @@
 package common.transmission;
 import com.google.gson.Gson;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import common.messages.Message;
-import common.messages.KVMessage.StatusType;
-import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 public class Transmission {
@@ -19,14 +16,12 @@ public class Transmission {
     private static final Logger LOGGER = Logger.getLogger(Transmission.class);
     private static final int BUFFER_SIZE = 1024;
     private static final int DROP_SIZE = 1024 * BUFFER_SIZE;
-    private static Gson gson = null;
-    OutputStream output;
-    InputStream input;
+    private static final Gson gson = new Gson();
+    private OutputStream output;
+    private InputStream input;
 
 
-    public Transmission() {
-        this.gson = new Gson();
-    }
+    public Transmission() {}
 
     public boolean sendMessage(byte[] msg, Socket socket) {
         byte[] msgBytes = msg;
@@ -100,9 +95,7 @@ public class Transmission {
         }
 
         msgBytes = tmp;
-        String msg_in_str = new String(msgBytes);
-
-        return msg_in_str;
+        return new String(msgBytes);
     }
 
 
