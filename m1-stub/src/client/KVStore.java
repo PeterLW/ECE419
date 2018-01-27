@@ -3,6 +3,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.net.SocketException;
 
 import com.google.gson.Gson;
 import common.messages.Message;
@@ -49,11 +50,11 @@ public class KVStore implements KVCommInterface {
 	@Override
 	public void connect() throws Exception{
 		// TODO Auto-generated method stub
-        	clientSocket = new Socket(address, port);
+        clientSocket = new Socket(address, port);
 		clientSocket.setSoTimeout(TIMEOUT);
 		this.output = clientSocket.getOutputStream();
 		this.input = clientSocket.getInputStream();
-        	setRunning(true);
+        setRunning(true);
 
         String initialMessage = this.transmit.receiveMessageString(clientSocket); // should be clientId
 		this.clientId = Integer.parseInt(initialMessage);
@@ -67,9 +68,12 @@ public class KVStore implements KVCommInterface {
 		try{
 			setRunning(false);
 			LOGGER.info("tearing down the connection ...");
+			
+			message = new Message(StatusType.CLOSE_REQ, clientId, seqNum, "");
+			transmit.sendMessage(toByteArray(gson.toJson(message)), clientSocket);
+			
 			if (clientSocket != null){
 				clientSocket.close();
-				clientSocket = null;
 				LOGGER.info("connection closed!");
 			}
 		} catch (IOException ioe) {
@@ -110,7 +114,7 @@ public class KVStore implements KVCommInterface {
 			}
 
 			if (!isTimeOut && received_stat != null) {
-				LOGGER.info("Response from server: " + gson.toJson(received_stat));
+				LOGGER.info(gson.toJson(message));
 				return received_stat;
 			} else{
 				LOGGER.error("Timeout: PUT message failed");

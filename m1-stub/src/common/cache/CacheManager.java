@@ -31,11 +31,28 @@ public class CacheManager {
     }
 
     public boolean putKV(String key, String value){
-       return cacheStructure.putKV(key,value);
+    	
+       return cacheStructure.putKV(key,value) && dbManager.storeKV(key, value);
     }
 
     public String getKV(String key){
-        return cacheStructure.getKV(key);
+    	
+    	String val = "";
+    	
+    	if(cacheStructure.inCacheStructure(key)){
+    		val = cacheStructure.getKV(key);
+        }
+    	else{
+    		if(dbManager.isExists(key)){
+    			val = dbManager.getKV(key);
+    			cacheStructure.putKV(key, val);
+    		}
+    		else{
+    			return null;
+    		}
+    	}
+    		
+        return val;
     }
 
     public void clear(){
@@ -58,7 +75,16 @@ public class CacheManager {
     }
 
     public boolean deleteRV(String key){
-       return cacheStructure.deleteKV(key);
+    	
+    	boolean success_delete_db = false;
+    	if(cacheStructure.inCacheStructure(key)){
+    		 cacheStructure.deleteKV(key);
+    	}
+    	if(dbManager.isExists(key)){
+    		success_delete_db = dbManager.deleteKV(key);
+    	}
+    	return success_delete_db;
+        
     }
 
     public int get_cache_size(){

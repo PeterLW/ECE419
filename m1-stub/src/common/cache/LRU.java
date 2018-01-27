@@ -11,14 +11,12 @@ import logger.LogSetup;
 public class LRU implements CacheStructure{
     private static Logger logger = Logger.getLogger(LRU.class);
     int capacity;
-    private DBManager database_mgr = null;
     static HashMap<String, Node> map = new HashMap<String, Node>();
     Node head=null;
     Node end=null;
 
     public LRU(int capacity, DBManager database_mgr) {
         this.capacity = capacity;
-        this.database_mgr = database_mgr;
     }
 
     @Override
@@ -38,27 +36,8 @@ public class LRU implements CacheStructure{
             remove(n);
             setHead(n);
             return n.value;
-        }
-        else{
-            logger.info("key-value pair for key "+key+" does not exist in cache");
-            String value = database_mgr.getKV(key);
-            if(value == null){
-                logger.error("key-value pair for key "+key+" does not exist in disk");
-                return null;
-            }
-            else{
-                //put the <key,pair> to cache now to avoid accessing disk again
-                Node created = new Node(key, value);
-                if(map.size()>=capacity){
-                    map.remove(end.key);
-                    remove(end);
-                    setHead(created);
-                }else{
-                    setHead(created);
-                }
-                map.put(key, created);
-                return value;
-            }
+        }else{
+        	return null;
         }
     }
 
@@ -93,11 +72,8 @@ public class LRU implements CacheStructure{
             Node n = map.get(key);
             remove(n);
             map.remove(key);
-            return database_mgr.deleteKV(key);
         }
-        else{
-            return false;
-        }
+        return true;
     }
 
     @Override
@@ -118,13 +94,6 @@ public class LRU implements CacheStructure{
             }
 
             map.put(key, created);
-        }
-        //here we update the disk to synchronize with the cache. In this way, we no longer need to save the data to be evitcted.
-        if(database_mgr.storeKV(key,value) == false){
-            logger.error("Error: failed to update <"+key+","+value+"> to disk");
-        }
-        else {
-            logger.info("<" + key + "," + value + "> has been updated to disk");
         }
         return true;
     }
