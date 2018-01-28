@@ -1,6 +1,8 @@
 package common.cache;
+import java.io.IOException;
 import java.util.*;
 import common.disk.DBManager;
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 public class LFU implements CacheStructure{
@@ -10,7 +12,6 @@ public class LFU implements CacheStructure{
     private static HashMap<Integer, LinkedHashSet<String>> lists;
     private int capacity;
     private int min = -1;
-    private static DBManager database_mgr;
 
     public LFU(int capacity, DBManager database_mgr) {
         this.capacity = capacity;
@@ -18,7 +19,6 @@ public class LFU implements CacheStructure{
         this.counts = new HashMap<>();
         this.lists = new HashMap<>();
         this.lists.put(1, new LinkedHashSet<String>());
-        this.database_mgr = database_mgr;
     }
 
 
@@ -51,7 +51,8 @@ public class LFU implements CacheStructure{
         }
     }
 
-    private synchronized void deleteFromCache(String key){
+    public synchronized void keyDelete(String key){
+
         vals.remove(key);
         int count = counts.get(key);
         lists.get(count).remove(key);
@@ -61,12 +62,11 @@ public class LFU implements CacheStructure{
 
     @Override
     public synchronized boolean deleteKV(String key){
-        if(vals.containsKey(key)) {
-            deleteFromCache(key);
-            return database_mgr.deleteKV(key);
-        }
 
-        return database_mgr.deleteKV(key);
+        if(vals.containsKey(key)) {
+            keyDelete(key);
+        }
+        return true;
     }
 
     @Override

@@ -76,13 +76,15 @@ public class CacheManager {
 
     public boolean deleteRV(String key){
     	
-    	return cacheStructure.deleteKV(key);
-    	/* @Aaron @Peter
-    	 * When would you only want to call deleteRV but only delete from cache not db o.o?
-    	 * because the cache has a separate function to remove only from cache only
-    	 * & deleteRV does successfully delete from database (check it now)
-    	 */
-
+    	boolean success_delete_db = false;
+    	if(cacheStructure.inCacheStructure(key)){
+    		 cacheStructure.deleteKV(key);
+    	}
+    	if(dbManager.isExists(key)){
+    		success_delete_db = dbManager.deleteKV(key);
+    	}
+    	return success_delete_db;
+        
     }
 
     public int get_cache_size(){
