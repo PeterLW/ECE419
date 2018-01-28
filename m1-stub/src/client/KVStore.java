@@ -152,22 +152,23 @@ public class KVStore implements KVCommInterface {
 				received_stat = transmit.receiveMessage(clientSocket); // receive reply, note receiveMessage( ) is a blocking function
 			} catch (java.net.SocketTimeoutException e) {
 				// read timed out - you may throw an exception of your choice
+				LOGGER.debug("timeout");
 				isTimeOut = true;
 
 			}
 
-			if (isTimeOut) { // try again once
-				LOGGER.debug("Timeout: GET message failed - Trying again");
-				clientSocket.setSoTimeout(TIMEOUT + 10000); // doubles the timeout time
-				try {
-					received_stat = transmit.receiveMessage(clientSocket); // receive reply, note receiveMessage( ) is a blocking function
-					isTimeOut = false;
-				} catch (java.net.SocketTimeoutException e) {
-					// read timed out - you may throw an exception of your choice
-					isTimeOut = true;
-				}
-				clientSocket.setSoTimeout(TIMEOUT); // resets to original
-			}
+//			if (isTimeOut) { // try again once
+//				LOGGER.debug("Timeout: GET message failed - Trying again");
+//				clientSocket.setSoTimeout(TIMEOUT + 10000); // doubles the timeout time
+//				try {
+//					received_stat = transmit.receiveMessage(clientSocket); // receive reply, note receiveMessage( ) is a blocking function
+//					isTimeOut = false;
+//				} catch (java.net.SocketTimeoutException e) {
+//					// read timed out - you may throw an exception of your choice
+//					isTimeOut = true;
+//				}
+//				clientSocket.setSoTimeout(TIMEOUT); // resets to original
+//			}
 
 			if (!isTimeOut && received_stat != null) {
 				LOGGER.info("Response from server: " + gson.toJson(received_stat));

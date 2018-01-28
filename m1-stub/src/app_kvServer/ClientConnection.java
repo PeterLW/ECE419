@@ -89,13 +89,13 @@ public class ClientConnection implements Runnable {
 				return;
 			}
 
-			if (seqIdValues.contains(msg.getSeq())) {
-				// already seen this message
-				LOGGER.debug("Duplicate message with seq " + msg.getSeq() + " from client " + this.clientId);
-				LOGGER.debug(gson.toJson(msg));
-				return;
-			}
-			seqIdValues.add(msg.getSeq());
+//			if (seqIdValues.contains(msg.getSeq())) {
+//				// already seen this message
+//				LOGGER.debug("Duplicate message with seq " + msg.getSeq() + " from client " + this.clientId);
+//				LOGGER.debug(gson.toJson(msg));
+//				return;
+//			}
+//			seqIdValues.add(msg.getSeq());
 
 			Message return_msg;
 			if(msg.getStatus() == KVMessage.StatusType.CLOSE_REQ){

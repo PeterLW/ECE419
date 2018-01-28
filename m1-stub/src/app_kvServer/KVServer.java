@@ -166,9 +166,8 @@ public class KVServer implements IKVServer {
 					try {
 						client = serverSocket.accept(); // blocking call
 						numConnectedClients++;
-					
-					ClientConnection connection = new ClientConnection(client, caching, numConnectedClients);
-					LOGGER.info("Connected to " + client.getInetAddress().getHostName() + " on port " + client.getPort());
+						ClientConnection connection = new ClientConnection(client, caching, numConnectedClients);
+						LOGGER.info("Connected to " + client.getInetAddress().getHostName() + " on port " + client.getPort());
 					new Thread(connection).start();
 					} catch (IOException e) {
 						LOGGER.error("Error! " +  "Unable to establish connection. \n", e);
@@ -200,7 +199,6 @@ public class KVServer implements IKVServer {
 		// TODO Auto-generated method stub
         try {
             serverSocket.close();
-
         } catch (IOException e) {
             LOGGER.error("Error! " + "Unable to close socket on port: " + port, e);
         }
