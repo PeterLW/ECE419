@@ -36,7 +36,7 @@ public class KVClient implements IKVClient {
     public void newConnection(String hostname, int port) {
         // TODO Auto-generated method stub
         try {
-	        LOGGER.debug(">Attempting to establish connection on port: "+port);
+	    LOGGER.error(">port = "+port);
             kvStore = new KVStore(hostname, port); // API we have to implement
             kvStore.connect();
         } catch (Exception ioe) {
@@ -151,7 +151,7 @@ public class KVClient implements IKVClient {
                         }
                     }
                     try {
-                        if(checkValidKeyValue(tokens[1], value.toString())) {
+                        if(checkValidKeyValue(tokens[1],value.toString())) {
                             Message msg = kvStore.put(tokens[1], value.toString()); // blocking call
                             if (msg == null) {
                                 printError("Communication for PUT failed");

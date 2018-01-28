@@ -6,7 +6,6 @@ import common.disk.DBManager;
 import junit.framework.TestCase;
 
 public class CacheTest extends TestCase{
-    /* basic unit tests for cache*/
 
     public void testInsert(){
        DBManager db = new DBManager();
