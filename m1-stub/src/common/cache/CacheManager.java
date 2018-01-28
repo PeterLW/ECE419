@@ -74,16 +74,14 @@ public class CacheManager {
     }
 
     public boolean deleteRV(String key){
-    	
-    	boolean success_delete_db = false;
     	if(cacheStructure.inCacheStructure(key)){
     		 cacheStructure.deleteKV(key);
     	}
-    	if(dbManager.isExists(key)){
-    		success_delete_db = dbManager.deleteKV(key);
-    	}
-    	return success_delete_db;
-        
+    	return dbManager.deleteKV(key);
+        /*
+         * I took out dbManager.exists() because deleteRV checks to see if it exists
+         * Also .exists() may be another file io .__.
+         */
     }
 
     public int get_cache_size(){

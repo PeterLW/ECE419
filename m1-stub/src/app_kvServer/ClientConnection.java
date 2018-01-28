@@ -11,6 +11,7 @@ import common.messages.Message;
 import org.apache.log4j.*;
 import common.transmission.Transmission;
 import java.lang.String;
+import java.util.HashSet;
 
 /**
  * Represents a connection end point for a particular client that is 
@@ -28,6 +29,7 @@ public class ClientConnection implements Runnable {
 	private Socket clientSocket;
 	private Transmission transmission;
 	private int clientId;
+	private HashSet<Integer> seqIdValues = new HashSet<Integer>();
 
 	/**
 	 * Constructs a new CientConnection object for a given TCP socket.
@@ -80,6 +82,19 @@ public class ClientConnection implements Runnable {
 				LOGGER.error("Message received is null");
 				return;
 			}
+
+			/*
+			 * we never did seq numbers, but we talked about it in the report so...
+			 * 'error handling stuff'
+			 */
+			if (seqIdValues.contains(msg.getSeq())) {
+					// already seen this message
+					LOGGER.debug("Duplicate message with seq " + msg.getSeq() + " from client " + this.clientId);
+					LOGGER.debug(gson.toJson(msg));
+					return;
+				}
+			seqIdValues.add(msg.getSeq());
+
 			Message return_msg = null;
 			if(msg.getStatus() == KVMessage.StatusType.CLOSE_REQ){
 				LOGGER.info("Client is closed, server will be closed!");

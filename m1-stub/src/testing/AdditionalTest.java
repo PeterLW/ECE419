@@ -21,7 +21,7 @@ public class AdditionalTest extends TestCase {
 		/*
 		 * ensures Message is serialized properly
 		 */
-		Message m = new Message(KVMessage.StatusType.GET, 1, 2, "11", "vaaaa");
+		Message m = new Message(KVMessage.StatusType.GET, 1, 2, "11", "vaa");
 		Gson gson = new Gson();
 		String json = gson.toJson(m);
 
