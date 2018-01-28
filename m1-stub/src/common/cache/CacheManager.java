@@ -37,20 +37,19 @@ public class CacheManager {
 
     public String getKV(String key){
     	
-    	String val = "";
-    	
+    	String val;
+
     	if(cacheStructure.inCacheStructure(key)){
-    		val = cacheStructure.getKV(key);
+            val = cacheStructure.getKV(key);
+            logger.debug("Getting value from cache <" + key + ", " + val + "> ");
         }
     	else{
-    		if(dbManager.isExists(key)){
-    			val = dbManager.getKV(key);
-    			cacheStructure.putKV(key, val);
-    		}
-    		else{
-    			return null;
-    		}
-    	}
+            val = dbManager.getKV(key);
+            if (val != null) {
+                cacheStructure.putKV(key, val);
+            }
+            logger.debug("Getting value from database <" + key + ", " + val + "> ");
+        }
     		
         return val;
     }
