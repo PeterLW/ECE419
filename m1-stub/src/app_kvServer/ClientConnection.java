@@ -168,14 +168,13 @@ public class ClientConnection implements Runnable {
 		Message return_msg;
 		
 		String key = msg.getKey();
-		String value = cacheManager.getKV(key);
+		String newValue = cacheManager.getKV(key);
 		
 		if (checkValidkey(key)) {
-			if(isDelete(value)){
-				LOGGER.info("GET_SUCCESS: <" + msg.getKey() + "," + value + ">");
-				return_msg = new Message(StatusType.GET_SUCCESS, msg.getClientID(), msg.getSeq(), msg.getKey(), value);
-			}
-			else{
+			if(newValue != null && !(newValue.isEmpty())){
+				LOGGER.info("GET_SUCCESS: <" + msg.getKey() + "," + newValue + ">");
+				return_msg = new Message(StatusType.GET_SUCCESS, msg.getClientID(), msg.getSeq(), msg.getKey(), newValue);
+			} else{
 				LOGGER.info(msg.getStatus() + ": <" + msg.getKey() + ",null>");
 				return_msg = new Message(StatusType.GET_ERROR, msg.getClientID(), msg.getSeq(), msg.getKey(), null);
 			}
