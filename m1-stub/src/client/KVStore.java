@@ -146,6 +146,7 @@ public class KVStore implements KVCommInterface {
 				isTimeOut = true;
 
 			}
+
 			if (isTimeOut) { // try again once
 				clientSocket.setSoTimeout(TIMEOUT + 10000); // doubles the timeout time
 				try {
