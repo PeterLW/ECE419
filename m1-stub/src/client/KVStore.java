@@ -102,7 +102,7 @@ public class KVStore implements KVCommInterface {
 
 			if (isTimeOut) { // try again once
 				LOGGER.debug("Timeout: PUT message failed - Trying again");
-				message = new Message(StatusType.PUT, clientId, seqNum, key, value);
+				// you don't have to make a new message, the message object from above is still in scope.
 				transmit.sendMessage(toByteArray(gson.toJson(message)), clientSocket);
 				clientSocket.setSoTimeout(TIMEOUT + 10000); // doubles the timeout time
 				try {
@@ -150,6 +150,7 @@ public class KVStore implements KVCommInterface {
 			}
 
 			if (isTimeOut) { // try again once
+				transmit.sendMessage(toByteArray(gson.toJson(message)), clientSocket);
 				clientSocket.setSoTimeout(TIMEOUT + 10000); // doubles the timeout time
 				try {
 					received_stat = transmit.receiveMessage(clientSocket); // receive reply, note receiveMessage( ) is a blocking function
