@@ -18,7 +18,7 @@ import common.messages.KVMessage.StatusType;
 public class KVStore implements KVCommInterface {
 
 	private final static Logger LOGGER = Logger.getLogger(KVStore.class);
-	private final int TIMEOUT = 10000; // milliseconds
+	private final int TIMEOUT = 10000; // idk set this later - nanoseconds
 
 	private Socket clientSocket;
 	private OutputStream output;
@@ -50,7 +50,7 @@ public class KVStore implements KVCommInterface {
 	@Override
 	public void connect() throws Exception{
 		// TODO Auto-generated method stub
-		clientSocket = new Socket(address, port);
+        clientSocket = new Socket(address, port);
 		clientSocket.setSoTimeout(TIMEOUT);
 		this.output = clientSocket.getOutputStream();
 		this.input = clientSocket.getInputStream();
@@ -83,56 +83,46 @@ public class KVStore implements KVCommInterface {
 
 
 	@Override
-	public Message put(String key, String value){
+	public Message put(String key, String value) throws Exception {
 		// TODO Auto-generated method stub
 		Message received_stat = null;
 		boolean isTimeOut = false;
 
-		try {
-			if (isRunning()) {
-				message = new Message(StatusType.PUT, clientId, seqNum, key, value);
-				transmit.sendMessage(toByteArray(gson.toJson(message)), clientSocket);
-				seqNum++;
+		if (isRunning()) {
+			message = new Message(StatusType.PUT, clientId, seqNum, key, value);
+			transmit.sendMessage(toByteArray(gson.toJson(message)), clientSocket);
 
+			seqNum++;
+            clientSocket.setSoTimeout(TIMEOUT); // doubles the timeout time
+			try {
+				received_stat = transmit.receiveMessage(clientSocket); // receive reply, note receiveMessage( ) is a blocking function
+			} catch (java.net.SocketTimeoutException e) {// read timed out - you may throw an exception of your choice
+				isTimeOut = true;
+			}
+
+			if (isTimeOut) { // try again once
+				clientSocket.setSoTimeout(TIMEOUT + 10000); // doubles the timeout time
 				try {
 					received_stat = transmit.receiveMessage(clientSocket); // receive reply, note receiveMessage( ) is a blocking function
-				} catch (java.net.SocketTimeoutException e) {// read timed out - you may throw an exception of your choice
+					LOGGER.debug("Timeout: PUT message failed - Trying again");
+					isTimeOut = false;
+				} catch (java.net.SocketTimeoutException e) {
+					// read timed out - you may throw an exception of your choice
 					isTimeOut = true;
 				}
-
-				if (isTimeOut) {
-				    /* try again once
-				     */
-					LOGGER.debug("Timeout: PUT message failed - Trying again");
-					clientSocket.setSoTimeout(TIMEOUT + 10000); // doubles the timeout time
-					try {
-						received_stat = transmit.receiveMessage(clientSocket); // receive reply, note receiveMessage( ) is a blocking function
-						isTimeOut = false;
-					} catch (java.net.SocketTimeoutException e) {
-						// read timed out - you may throw an exception of your choice
-						isTimeOut = true;
-					}
-					clientSocket.setSoTimeout(TIMEOUT); // resets to original
-				}
-
-				if (!isTimeOut && received_stat != null) {
-					LOGGER.info("Response from server: " + gson.toJson(received_stat));
-					return received_stat;
-				} else {
-					LOGGER.error("Timeout: PUT message failed");
-					return null;
-				}
-
-			} else {
-				LOGGER.error("Connection lost: PUT message failed");
+				clientSocket.setSoTimeout(TIMEOUT); // resets to original
 			}
-		} catch(IOException se){
-			se.printStackTrace();
-			if (se.getClass() == SocketException.class) {
-				LOGGER.error("Timeout not set ");
-			} else {
-				LOGGER.error("IOException");
+
+			if (!isTimeOut && received_stat != null) {
+				LOGGER.info(gson.toJson(message));
+				return received_stat;
+			} else{
+				LOGGER.error("Timeout: PUT message failed");
+				return null;
 			}
+
+		} else {
+			LOGGER.error("Connection lost: PUT message failed");
 		}
 		return null;
 	}
@@ -155,12 +145,11 @@ public class KVStore implements KVCommInterface {
 				isTimeOut = true;
 
 			}
-
 			if (isTimeOut) { // try again once
-				LOGGER.debug("Timeout: GET message failed - Trying again");
 				clientSocket.setSoTimeout(TIMEOUT + 10000); // doubles the timeout time
 				try {
 					received_stat = transmit.receiveMessage(clientSocket); // receive reply, note receiveMessage( ) is a blocking function
+					LOGGER.debug("Timeout: GET message failed - Trying again");
 					isTimeOut = false;
 				} catch (java.net.SocketTimeoutException e) {
 					// read timed out - you may throw an exception of your choice

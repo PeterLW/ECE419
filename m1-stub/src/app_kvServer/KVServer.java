@@ -5,6 +5,7 @@ import java.net.Socket;
 import java.io.IOException;
 
 import common.cache.CacheManager;
+import common.cache.CacheStructure;
 import logger.LogSetup;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;

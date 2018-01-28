@@ -24,10 +24,10 @@ public class AllTests {
 	
 	public static Test suite() {
 		TestSuite clientSuite = new TestSuite("Basic Storage ServerTest-Suite");
-		clientSuite.addTestSuite(testing.CacheTest.class);
-		clientSuite.addTestSuite(testing.ConnectionTest.class);
-		clientSuite.addTestSuite(testing.InteractionTest.class);
-		clientSuite.addTestSuite(testing.AdditionalTest.class);
+		clientSuite.addTestSuite(CacheTest.class);
+		clientSuite.addTestSuite(ConnectionTest.class);
+		clientSuite.addTestSuite(InteractionTest.class);
+		clientSuite.addTestSuite(AdditionalTest.class);
 		return clientSuite;
 	}
 	

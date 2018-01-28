@@ -9,6 +9,7 @@ import junit.framework.TestCase;
 
 public class ConnectionTest extends TestCase {
 
+	
 	public void testConnectionSuccess() {
 		
 		Exception ex = null;
