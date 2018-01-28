@@ -36,7 +36,7 @@ public class KVClient implements IKVClient {
     public void newConnection(String hostname, int port) {
         // TODO Auto-generated method stub
         try {
-	    LOGGER.error(">port = "+port);
+	   
             kvStore = new KVStore(hostname, port); // API we have to implement
             kvStore.connect();
         } catch (Exception ioe) {
@@ -62,7 +62,7 @@ public class KVClient implements IKVClient {
     }
 
     public void quit(){
-    	LOGGER.error("calling quit");
+    	LOGGER.info("calling quit");
         kvStore.disconnect();
         stop = true;
         return;
@@ -183,12 +183,10 @@ public class KVClient implements IKVClient {
                             }
                         }
                         else{
-                            printError("Invalid inputs!");
                             LOGGER.error("Invalid inputs!");
                         }
                     }catch(Exception e){
-                        printError("Get fail!");
-                        LOGGER.warn("Get fail!", e);
+                        LOGGER.error("Get fail!", e);
                     }
                 } else {
                     printError("Not connected!");

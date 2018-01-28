@@ -59,7 +59,7 @@ public class KVStore implements KVCommInterface {
         String initialMessage = this.transmit.receiveMessageString(clientSocket); // should be clientId
 		this.clientId = Integer.parseInt(initialMessage);
 
-        LOGGER.debug("Connection established, client_id: " + this.clientId);
+        LOGGER.info("Connection established, client_id: " + this.clientId);
 	}
 
 	@Override

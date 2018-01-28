@@ -97,7 +97,7 @@ public class KVServer implements IKVServer {
 	@Override
     public CacheStrategy getCacheStrategy(){
 		// TODO Auto-generated method stub
-        LOGGER.info("Server ("+hostname+","+port+") : CacheManager Strategy is "+ cacheStrategy);
+        //LOGGER.info("Server ("+hostname+","+port+") : CacheManager Strategy is "+ cacheStrategy);
 		return string_to_enum_cache_strategy(cacheStrategy);
 	}
 
@@ -171,7 +171,8 @@ public class KVServer implements IKVServer {
 						LOGGER.info("Connected to " + client.getInetAddress().getHostName() + " on port " + client.getPort());
 					new Thread(connection).start();
 					} catch (IOException e) {
-						LOGGER.error("Error! " +  "Unable to establish connection. \n", e);
+
+						LOGGER.error("Error! " +  "Unable to establish connection. \n");
 					}
 				}
 			}

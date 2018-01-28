@@ -80,11 +80,9 @@ public class ClientConnection implements Runnable {
 				LOGGER.error("Message received is null");
 				return;
 			}
-
 			Message return_msg = null;
-			
 			if(msg.getStatus() == KVMessage.StatusType.CLOSE_REQ){
-				LOGGER.error("Client is closed, server will be closed!");
+				LOGGER.info("Client is closed, server will be closed!");
 				try{
 					clientSocket.close();
 					isOpen = false;
@@ -107,7 +105,7 @@ public class ClientConnection implements Runnable {
 
 	private boolean checkValidkey(String key) {
 		if (key != null && !(key.isEmpty()) && !(key.equals("")) && !(key.contains(" ")) && !(key.length() > 20)){
-            LOGGER.info("get checkValidValue(): key = "+ key);
+           
 			return true;
 		}
 
@@ -161,11 +159,11 @@ public class ClientConnection implements Runnable {
 				LOGGER.info("GET_SUCCESS: <" + msg.getKey() + "," + newValue + ">");
 				return_msg = new Message(StatusType.GET_SUCCESS, msg.getClientID(), msg.getSeq(), msg.getKey(), newValue);
 			} else{
-				LOGGER.info(msg.getStatus() + ": <" + msg.getKey() + ",null>");
+				LOGGER.info("GET_ERROR" + ": <" + msg.getKey() + ",null>");
 				return_msg = new Message(StatusType.GET_ERROR, msg.getClientID(), msg.getSeq(), msg.getKey(), null);
 			}
 		} else {
-			LOGGER.info(msg.getStatus() + ": <" + msg.getKey() + ",null>");
+			LOGGER.info("GET_ERROR" + ": <" + msg.getKey() + ",null>");
 			return_msg = new Message(StatusType.GET_ERROR, msg.getClientID(), msg.getSeq(), msg.getKey(), null);
 		}
 
