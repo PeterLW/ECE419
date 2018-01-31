@@ -4,19 +4,16 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.io.IOException;
 
-import common.cache.CacheManager;
-import common.cache.CacheStructure;
+import common.cache.StorageManager;
 import logger.LogSetup;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import common.disk.DBManager;
 
 public class KVServer implements IKVServer {
 
     //log info
     private static final String PROMPT = "KVSERVER>";
     private static final Logger LOGGER = Logger.getLogger(KVServer.class);
-    private static DBManager dbManager;
 
     //connection info
     private int port;
@@ -30,7 +27,7 @@ public class KVServer implements IKVServer {
     //cache info
 	private int cacheSize;
 	private String cacheStrategy;
-	private static CacheManager caching;
+	private static StorageManager storage;
 
 	/**
 	 * Start KV Server at given port
@@ -58,8 +55,7 @@ public class KVServer implements IKVServer {
 		this.port = port;
 		this.cacheSize = cacheSize;
 		this.cacheStrategy = strategy;
-        dbManager = new DBManager();
-		caching = new CacheManager(cacheSize, strategy,dbManager);
+		storage = new StorageManager(cacheSize, strategy);
 
 	}
 
@@ -111,7 +107,7 @@ public class KVServer implements IKVServer {
     public boolean inStorage(String key){
 		// TODO Auto-generated method stub
         if(key != null && !(key.isEmpty()) && !(key.equals("")) && !(key.contains(" ")) && !(key.length() > 20)) {
-            return dbManager.isExists(key);
+            return storage.inDatabase(key);
         }
         else{
             return false;
@@ -121,19 +117,19 @@ public class KVServer implements IKVServer {
 	@Override
     public boolean inCache(String key){
 		// TODO Auto-generated method stub
-		return caching.inCache(key);
+		return storage.inCache(key);
 	}
 
 	@Override
     public String getKV(String key) throws Exception{
 		// TODO Auto-generated method stub
-        return caching.getKV(key);
+        return storage.getKV(key);
 	}
 
 	@Override
     public void putKV(String key, String value) throws Exception{
 		// TODO Auto-generated method stub
-        if(caching.putKV(key, value) == true){
+        if(storage.putKV(key, value) == true){
             LOGGER.info("Server ("+hostname+","+port+") : Success in putKV");
         }
         else{
@@ -144,15 +140,14 @@ public class KVServer implements IKVServer {
 	@Override
     public void clearCache(){
 		// TODO Auto-generated method stub
-		caching.clear();
+		storage.clearCache();
 		return;
 	}
 
 	@Override
     public void clearStorage(){
 		// TODO Auto-generated method stub
-		caching.clear();
-        dbManager.clearStorage();
+		storage.clearAll();
 	}
 
 	public void run(){
@@ -167,7 +162,7 @@ public class KVServer implements IKVServer {
 					try {
 						client = serverSocket.accept(); // blocking call
 						numConnectedClients++;
-						ClientConnection connection = new ClientConnection(client, caching, numConnectedClients);
+						ClientConnection connection = new ClientConnection(client, storage, numConnectedClients);
 						LOGGER.info("Connected to " + client.getInetAddress().getHostName() + " on port " + client.getPort());
 					new Thread(connection).start();
 					} catch (IOException e) {

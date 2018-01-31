@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.net.Socket;
 
 import com.google.gson.Gson;
-import common.cache.CacheManager;
+import common.cache.StorageManager;
 import common.messages.KVMessage;
 import common.messages.KVMessage.StatusType;
 import common.messages.Message;
@@ -23,9 +23,9 @@ import java.util.HashSet;
 public class ClientConnection implements Runnable {
 
 	private static final Logger LOGGER = Logger.getLogger(ClientConnection.class);
+	private final Gson gson = new Gson();
 	private boolean isOpen;
-	private Gson gson = null;
-	private CacheManager cacheManager;
+	private StorageManager storageManager;
 	private Socket clientSocket;
 	private Transmission transmission;
 	private int clientId;
@@ -36,13 +36,12 @@ public class ClientConnection implements Runnable {
 	 *
 	 * @param clientSocket the Socket object for the client connection.
 	 */
-	public ClientConnection(Socket clientSocket, CacheManager caching, int clientId) {
+	public ClientConnection(Socket clientSocket, StorageManager caching, int clientId) {
 		this.clientSocket = clientSocket;
 		this.clientId = clientId;
 		this.isOpen = true;
 		this.transmission = new Transmission();
-		this.gson = new Gson();
-		this.cacheManager = caching;
+		this.storageManager = caching;
 
 		String clientIdString = Integer.toString(clientId);
 		transmission.sendMessage(toByteArray(clientIdString),clientSocket);
@@ -133,23 +132,25 @@ public class ClientConnection implements Runnable {
 		String value = msg.getValue();
 		
 		if(checkValidkey(key) && (value.length() < 120)){
+			LOGGER.info("valid key " + key);
 			if(value == null || value.isEmpty()){
-				boolean success = cacheManager.deleteRV(key);
-				LOGGER.info("DELETE_SUCCESS: <" + msg.getKey() + "," + cacheManager.getKV(msg.getKey()) + ">");
+				LOGGER.info("Interpreted as a delete for key: " + key);
+				boolean success = storageManager.deleteRV(key);
+				LOGGER.info("DELETE_SUCCESS: <" + msg.getKey() + "," + storageManager.getKV(msg.getKey()) + ">");
 				return_msg = new Message(StatusType.DELETE_SUCCESS, msg.getClientID(), msg.getSeq(), msg.getKey(), value);
 				if(!success){
-					LOGGER.info("DELETE_ERROR: <" + key+ "," + cacheManager.getKV(key) + ">");
+					LOGGER.info("DELETE_ERROR: <" + key+ "," + storageManager.getKV(key) + ">");
 					return_msg = new Message(StatusType.DELETE_ERROR, msg.getClientID(), msg.getSeq(), key, value);
 				}
-			}
-			else{
-				if(cacheManager.doesKeyExist(key)){
-					cacheManager.putKV(key, value);
+			} else{
+				LOGGER.info("Interpreted as a put for key: " + key);
+				if(storageManager.doesKeyExist(key)){
+					storageManager.putKV(key, value);
 					LOGGER.info("PUT_UPDATE: <" + msg.getKey() + "," + msg.getValue() + ">");
 					return_msg = new Message(StatusType.PUT_UPDATE, msg.getClientID(), msg.getSeq(), msg.getKey(), msg.getValue());
 				}
 				else{
-					cacheManager.putKV(key, value);
+					storageManager.putKV(key, value);
 					LOGGER.info("PUT_SUCCESS: <" + msg.getKey() + "," + msg.getValue() + ">");
 					return_msg = new Message(StatusType.PUT_SUCCESS, msg.getClientID(), msg.getSeq(), msg.getKey(), msg.getValue());
 				}
@@ -167,7 +168,7 @@ public class ClientConnection implements Runnable {
 		Message return_msg = null;
 		
 		String key = msg.getKey();
-		String newValue = cacheManager.getKV(key);
+		String newValue = storageManager.getKV(key);
 		
 		if (checkValidkey(key)) {
 			if(newValue != null && !(newValue.isEmpty())){

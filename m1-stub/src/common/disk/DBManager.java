@@ -1,6 +1,5 @@
 package common.disk;
 
-import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -22,15 +21,19 @@ public class DBManager {
     private static Logger LOGGER = Logger.getLogger(DBManager.class);
 
     public DBManager(){
-        if (!initializeDB()){
-            // throw error
-        }
+        initializeDB();
     }
 
-    public boolean clearStorage() {
+    public synchronized boolean clearStorage() {
         File[] allFiles = new File(ROOT_PATH).listFiles();
+
+        if (allFiles.length == 0)// no files in Database
+            return true;
+
         for (File f: allFiles){
-            f.delete();
+            if (!f.delete()){
+                return false;
+            }
         }
         return true;
     }
@@ -43,7 +46,7 @@ public class DBManager {
         return false;
     }
 
-    private boolean initializeDB(){
+    private synchronized boolean initializeDB(){
         File rootDirectory = new File(ROOT_PATH);
         if (rootDirectory.exists()) {
             return true;
@@ -53,7 +56,7 @@ public class DBManager {
         }
     }
 
-    public boolean storeKV(String key, String value) {
+    public synchronized boolean storeKV(String key, String value) {
         File keyFile = new File(String.valueOf(Paths.get(ROOT_PATH,key)));
         LOGGER.info("Attempting to store key (" + key + ") in file: " + keyFile.getAbsolutePath());
 
@@ -69,7 +72,7 @@ public class DBManager {
         return true;
     }
 
-    public boolean deleteKV(String key){
+    public synchronized boolean deleteKV(String key){
         File keyFile = new File(String.valueOf(Paths.get(ROOT_PATH,key)));
         LOGGER.info("Attempting to delete key: " + key);
 
@@ -82,7 +85,7 @@ public class DBManager {
         return true;
     }
 
-    public String getKV(String key){
+    public synchronized String getKV(String key){
         File keyFile = new File(String.valueOf(Paths.get(ROOT_PATH,key)));
             LOGGER.info("Attempting to access key (" + key + ") in file: " + keyFile.getAbsolutePath());
 

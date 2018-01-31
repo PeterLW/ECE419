@@ -1,7 +1,7 @@
 package testing;
 
 import com.google.gson.Gson;
-import common.cache.CacheManager;
+import common.cache.StorageManager;
 import common.disk.DBManager;
 import common.messages.KVMessage;
 import common.messages.Message;
@@ -21,7 +21,7 @@ public class AdditionalTest extends TestCase {
 		/*
 		 * ensures Message is serialized properly
 		 */
-		Message m = new Message(KVMessage.StatusType.GET, 1, 2, "11", "vaa");
+		Message m = new Message(KVMessage.StatusType.GET, 1, 2, "11", "vaaaa");
 		Gson gson = new Gson();
 		String json = gson.toJson(m);
 
@@ -35,18 +35,18 @@ public class AdditionalTest extends TestCase {
 		/* FIFO implementation
 		 * ensures correct keys are in cache
 		 */
-		DBManager db = new DBManager();
-		CacheManager cm = new CacheManager(5,"FIFO",db);
+		StorageManager sm = new StorageManager(5,"FIFO");
+		sm.clearAll();
 
 		for (int i = 0; i < 10; i ++) {
-			cm.putKV(Integer.toString(i), "b");
+			sm.putKV(Integer.toString(i), "b");
 		}
 
-		assertTrue(cm.inCache("7"));
-		assertTrue(cm.inCache("8"));
-		assertTrue(cm.inCache("9"));
-		assertTrue(cm.inCache("6"));
-		assertTrue(cm.inCache("5"));
+		assertTrue(sm.inCache("7"));
+		assertTrue(sm.inCache("8"));
+		assertTrue(sm.inCache("9"));
+		assertTrue(sm.inCache("6"));
+		assertTrue(sm.inCache("5"));
 	}
 
 	@Test
@@ -54,23 +54,23 @@ public class AdditionalTest extends TestCase {
 		/* LRU implementation
 		 * ensures correct keys are in cache
 		 */
-		DBManager db = new DBManager();
-		CacheManager cm = new CacheManager(5,"LRU",db);
+		StorageManager sm = new StorageManager(5,"LRU");
+		sm.clearAll();
 
 		for (int i = 0; i < 10; i ++) {
-			cm.putKV(Integer.toString(i), "b");
+			sm.putKV(Integer.toString(i), "b");
 		}// 5 6 7 8 9
 
 		for (int i = 7; i > 2; i --) {
-			cm.printCacheKeys();
-			cm.putKV(Integer.toString(i), "b");
+			sm.printCacheKeys();
+			sm.putKV(Integer.toString(i), "b");
 		} // 5 6 7 4 3
 
-		assertTrue(cm.inCache("7"));
-		assertTrue(cm.inCache("5"));
-		assertTrue(cm.inCache("6"));
-		assertTrue(cm.inCache("4"));
-		assertTrue(cm.inCache("3"));
+		assertTrue(sm.inCache("7"));
+		assertTrue(sm.inCache("5"));
+		assertTrue(sm.inCache("6"));
+		assertTrue(sm.inCache("4"));
+		assertTrue(sm.inCache("3"));
 	}
 
 	@Test
@@ -78,41 +78,41 @@ public class AdditionalTest extends TestCase {
 		/* LFU implementation
 		 * ensures correct keys are in cache
 		 */
-		DBManager db = new DBManager();
-		CacheManager cm = new CacheManager(5,"LFU",db);
+		StorageManager sm = new StorageManager(5,"LFU");
+		sm.clearAll();
 
 		for (int i = 0; i < 10; i ++) {
-			cm.putKV(Integer.toString(i), "b");
+			sm.putKV(Integer.toString(i), "b");
 		}// 5 6 7 8 9
-		cm.putKV("9", "b");
-		cm.putKV("9", "c");
-		cm.putKV("5", "d");
-		cm.getKV("6");
+		sm.putKV("9", "b");
+		sm.putKV("9", "c");
+		sm.putKV("5", "d");
+		sm.getKV("6");
 
-		cm.getKV("1");
-		cm.getKV("2");
+		sm.getKV("1");
+		sm.getKV("2");
 
-		assertTrue(cm.inCache("9"));
-		assertTrue(cm.inCache("5"));
-		assertTrue(cm.inCache("6"));
-		assertTrue(cm.inCache("1"));
-		assertTrue(cm.inCache("2"));
+		assertTrue(sm.inCache("9"));
+		assertTrue(sm.inCache("5"));
+		assertTrue(sm.inCache("6"));
+		assertTrue(sm.inCache("1"));
+		assertTrue(sm.inCache("2"));
 
-		cm.getKV("2");
-		cm.getKV("2");
+		sm.getKV("2");
+		sm.getKV("2");
 		// 9 6 5 1 2
 		// 3 2 2 1 3
 
-		cm.getKV("4");
-		cm.getKV("4");
-		cm.getKV("8");
+		sm.getKV("4");
+		sm.getKV("4");
+		sm.getKV("8");
 		// for ties should use FIFO
 
-		assertTrue(cm.inCache("4"));
-		assertTrue(cm.inCache("9"));
-		assertTrue(cm.inCache("8"));
-		assertTrue(cm.inCache("6"));
-		assertTrue(cm.inCache("2"));
+		assertTrue(sm.inCache("4"));
+		assertTrue(sm.inCache("9"));
+		assertTrue(sm.inCache("8"));
+		assertTrue(sm.inCache("6"));
+		assertTrue(sm.inCache("2"));
 	}
 	
 	@Test
@@ -120,16 +120,16 @@ public class AdditionalTest extends TestCase {
 		/*
 		 * ensures KVs are properly written to database through cache structure
 		 */
-		DBManager db = new DBManager();
-		CacheManager cm = new CacheManager(5,"LFU",db);
+		StorageManager sm = new StorageManager(5,"LFU");
+		sm.clearAll();
 
-		cm.putKV("a2","b");
-		cm.putKV("a1","b");
-		cm.putKV("a3","b");
+		sm.putKV("a2","b");
+		sm.putKV("a1","b");
+		sm.putKV("a3","b");
 
-		assertTrue(db.isExists("a2"));
-		assertTrue(db.isExists("a1"));
-		assertTrue(db.isExists("a3"));
+		assertTrue(sm.inDatabase("a2"));
+		assertTrue(sm.inDatabase("a1"));
+		assertTrue(sm.inDatabase("a3"));
 
 	}
 
@@ -138,39 +138,39 @@ public class AdditionalTest extends TestCase {
 		/*
 		 * Ensures that cache inserts into free slots after free slots created after deleteKV
 		 */
-		final DBManager db = new DBManager();
-		final CacheManager cm = new CacheManager(5,"LRU",db);
+		final StorageManager sm = new StorageManager(5,"LRU");
+		sm.clearAll();
 
 		for (int i = 0; i < 8; i ++) {
-			cm.putKV(Integer.toString(i), "b");
+			sm.putKV(Integer.toString(i), "b");
 		}// 3 4 5 6 7
 
 		for (int i = 5; i > 0; i --) {
-			cm.putKV(Integer.toString(i), "b");
+			sm.putKV(Integer.toString(i), "b");
 		} // 3 4 5 2 1
-		cm.printCacheKeys();
+		sm.printCacheKeys();
 
-		assertTrue(cm.inCache("3"));
-		assertTrue(cm.inCache("4"));
-		assertTrue(cm.inCache("5"));
-		assertTrue(cm.inCache("2"));
-		assertTrue(cm.inCache("1"));
+		assertTrue(sm.inCache("3"));
+		assertTrue(sm.inCache("4"));
+		assertTrue(sm.inCache("5"));
+		assertTrue(sm.inCache("2"));
+		assertTrue(sm.inCache("1"));
 
-		cm.deleteRV("3");
-		cm.deleteRV("1");
+		sm.deleteRV("3");
+		sm.deleteRV("1");
 
-		assertFalse(cm.inCache("3"));
-		assertFalse(cm.inCache("1"));
+		assertFalse(sm.inCache("3"));
+		assertFalse(sm.inCache("1"));
 
-		cm.putKV("10", "a");
-		cm.putKV("11", "a");
-		cm.putKV("12", "a");
+		sm.putKV("10", "a");
+		sm.putKV("11", "a");
+		sm.putKV("12", "a");
 
-		assertTrue(cm.inCache("11"));
-		assertTrue(cm.inCache("12"));
-		assertTrue(cm.inCache("10"));
-		assertTrue(cm.inCache("2"));
-		assertTrue(cm.inCache("4"));
+		assertTrue(sm.inCache("11"));
+		assertTrue(sm.inCache("12"));
+		assertTrue(sm.inCache("10"));
+		assertTrue(sm.inCache("2"));
+		assertTrue(sm.inCache("4"));
 	}
 
 	@Test
@@ -178,30 +178,30 @@ public class AdditionalTest extends TestCase {
 		/* tests to ensure that KV are deleted
 		 * from database and cache
 		 */
-		DBManager db = new DBManager();
-		CacheManager cm = new CacheManager(5,"LRU",db);
+		StorageManager sm = new StorageManager(5,"LRU");
+		sm.clearAll();
 
-		cm.putKV("a1","b");
-		cm.putKV("a2","b");
-		cm.putKV("a3","b");
-		cm.putKV("a4","b");
-		cm.putKV("a5","b");
-		cm.putKV("a6","b");
-		cm.putKV("a7","b");
+		sm.putKV("a1","b");
+		sm.putKV("a2","b");
+		sm.putKV("a3","b");
+		sm.putKV("a4","b");
+		sm.putKV("a5","b");
+		sm.putKV("a6","b");
+		sm.putKV("a7","b");
 		// 3 4 5 6 7
 
-		cm.deleteRV("a6");
-		cm.deleteRV("a7");
-		cm.deleteRV("a1");
+		sm.deleteRV("a6");
+		sm.deleteRV("a7");
+		sm.deleteRV("a1");
 
-		assertTrue(cm.inCache("a5"));
-		assertTrue(cm.inCache("a4"));
-		assertTrue(cm.inCache("a3"));
+		assertTrue(sm.inCache("a5"));
+		assertTrue(sm.inCache("a4"));
+		assertTrue(sm.inCache("a3"));
 
-		assertFalse(cm.inCache("a1"));
-		assertFalse(db.isExists("a7"));
-		assertFalse(db.isExists("a6"));
-		assertFalse(db.isExists("a1"));
+		assertFalse(sm.inCache("a1"));
+		assertFalse(sm.inDatabase("a7"));
+		assertFalse(sm.inDatabase("a6"));
+		assertFalse(sm.inDatabase("a1"));
 
 	}
 

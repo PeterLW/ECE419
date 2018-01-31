@@ -12,7 +12,7 @@ import common.messages.Message;
 public class InteractionTest extends TestCase {
 
 	private KVStore kvClient;
-	
+
 	public void setUp() {
 		kvClient = new KVStore("localhost", 50000);
 		try {
@@ -95,7 +95,7 @@ public class InteractionTest extends TestCase {
 		try {
 			setUp();
 			kvClient.put(key, value);
-			response = kvClient.put(key, "null");
+			response = kvClient.put(key, "");
 			
 		} catch (Exception e) {
 			ex = e;

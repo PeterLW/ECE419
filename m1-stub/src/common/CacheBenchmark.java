@@ -1,6 +1,6 @@
 package common;
 
-import common.cache.CacheManager;
+import common.cache.StorageManager;
 import common.disk.DBManager;
 
 import java.lang.*;
@@ -18,10 +18,9 @@ import java.lang.*;
 
 public class CacheBenchmark {
 
-    private DBManager db = new DBManager();
-    private CacheManager fifo;
-    private CacheManager lru;
-    private CacheManager lfu;
+    private StorageManager fifo;
+    private StorageManager lru;
+    private StorageManager lfu;
     private double put_ratio = 0;
     private long times = 0;
     private int cache_size;
@@ -34,9 +33,9 @@ public class CacheBenchmark {
         else
             System.out.println("CacheBenchmark: Invalid ratio");
         this.cache_size = size;
-        fifo = new CacheManager(cache_size, "FIFO",db);
-        lru = new CacheManager(cache_size, "LRU",db);
-        lfu = new CacheManager(cache_size, "LFU",db);
+        fifo = new StorageManager(cache_size, "FIFO");
+        lru = new StorageManager(cache_size, "LRU");
+        lfu = new StorageManager(cache_size, "LFU");
     }
 
 
@@ -58,8 +57,7 @@ public class CacheBenchmark {
             long end = System.currentTimeMillis();
 
             result[0] = end - start;
-            fifo.clear();
-            db.clearStorage();
+            fifo.clearAll();
 
             //LRU Test*********************************************
             start = System.currentTimeMillis();
@@ -72,8 +70,7 @@ public class CacheBenchmark {
             end = System.currentTimeMillis();
 
             result[1] = end - start;
-            lru.clear();
-            db.clearStorage();
+            lru.clearAll();
 
             //LFU Test*************************************************
             start = System.currentTimeMillis();
@@ -86,8 +83,7 @@ public class CacheBenchmark {
             end = System.currentTimeMillis();
 
             result[2] = end - start;
-            lfu.clear();
-            db.clearStorage();
+            lfu.clearAll();
 
         }catch(Exception e){
             System.out.println("CacheBenchmark: PUT/GET exception!");

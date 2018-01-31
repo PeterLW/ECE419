@@ -19,6 +19,7 @@ public class KVStore implements KVCommInterface {
 
 	private final static Logger LOGGER = Logger.getLogger(KVStore.class);
 	private final int TIMEOUT = 10000; // idk set this later - nanoseconds
+	private final Gson gson = new Gson();
 
 	private Socket clientSocket;
 	private OutputStream output;
@@ -27,12 +28,11 @@ public class KVStore implements KVCommInterface {
 	private int clientId = 0;
 	private int seqNum = 0;
 
-	String address;
-	int port;
+	private String address;
+	private int port;
 
 	private Message message = null;
 	private Transmission transmit;
-	private final Gson gson = new Gson();
 
 	/**
 	 * Initialize KVStore with address and port of KVServer
@@ -84,6 +84,8 @@ public class KVStore implements KVCommInterface {
 
 	@Override
 	public Message put(String key, String value) throws Exception {
+		// when the value == null somewhere down the line gets a NullPointerException .__.
+		// should we just set value to empty string here?
 		// TODO Auto-generated method stub
 		Message received_stat = null;
 		boolean isTimeOut = false;
@@ -93,7 +95,7 @@ public class KVStore implements KVCommInterface {
 			transmit.sendMessage(toByteArray(gson.toJson(message)), clientSocket);
 
 			seqNum++;
-            clientSocket.setSoTimeout(TIMEOUT); // doubles the timeout time
+			// the SoTTimeout is already set in constructor
 			try {
 				received_stat = transmit.receiveMessage(clientSocket); // receive reply, note receiveMessage( ) is a blocking function
 			} catch (java.net.SocketTimeoutException e) {// read timed out - you may throw an exception of your choice

@@ -1,21 +1,20 @@
 package common.cache;
-import java.io.IOException;
 
 import org.apache.log4j.Logger;
 import common.disk.DBManager;
 
-public class CacheManager {
+public class StorageManager {
 
-    private static Logger logger = Logger.getLogger(CacheManager.class);
+    private static Logger logger = Logger.getLogger(StorageManager.class);
     private static int cache_size;
     private static String strategy;
     private static CacheStructure cacheStructure = null;
     private static DBManager dbManager = null;
 
-    public CacheManager(int size, String cache_strategy, DBManager db_manager) {
+    public StorageManager(int size, String cache_strategy) {
         cache_size = size;
         strategy = cache_strategy;
-        this.dbManager = db_manager;
+        dbManager = new DBManager();
 
         if(cache_strategy.toUpperCase().equals("FIFO")) {
             cacheStructure = new FIFO(size, dbManager);
@@ -31,14 +30,11 @@ public class CacheManager {
     }
 
     public boolean putKV(String key, String value){
-    	
-       return cacheStructure.putKV(key,value) && dbManager.storeKV(key, value);
+       return (cacheStructure.putKV(key,value) && dbManager.storeKV(key,value));
     }
 
     public String getKV(String key){
-    	
     	String val;
-
     	if(cacheStructure.inCacheStructure(key)){
             val = cacheStructure.getKV(key);
             logger.debug("Getting value from cache <" + key + ", " + val + "> ");
@@ -54,16 +50,22 @@ public class CacheManager {
         return val;
     }
 
-    public void clear(){
+    public void clearCache(){
         cacheStructure.clear();
+    }
+
+    public void clearAll(){
+        this.clearCache();
+        dbManager.clearStorage();
     }
 
     public boolean inCache(String key){
         return cacheStructure.inCacheStructure(key);
     }
 
-    public boolean doesKeyExist(String key) {
+    public boolean inDatabase(String key){ return dbManager.isExists(key); }
 
+    public boolean doesKeyExist(String key) {
         if(key.isEmpty() || key == null){
             return false;
         }
@@ -78,10 +80,6 @@ public class CacheManager {
     		 cacheStructure.deleteKV(key);
     	}
     	return dbManager.deleteKV(key);
-        /*
-         * I took out dbManager.exists() because deleteRV checks to see if it exists
-         * Also .exists() may be another file io .__.
-         */
     }
 
     public int get_cache_size(){
@@ -91,6 +89,7 @@ public class CacheManager {
     public String getReplacementPolicy() {
         return strategy;
     }
+
     public void printCacheKeys() {
         cacheStructure.printCacheKeys();
     }

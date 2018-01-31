@@ -1,11 +1,10 @@
 package testing;
 
-import common.cache.CacheManager;
+import common.cache.StorageManager;
 import common.disk.DBManager;
 
 import junit.framework.TestCase;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -19,17 +18,10 @@ public class CacheTest extends TestCase{
         add("LFU");
     }};
 
-    DBManager db = new DBManager();
-
-    @Before
-    public void setUp() {
-        db.clearStorage();
-    }
-
     @Test
     public void testInsert(){
         for (String strategy: cacheStrategy) {
-           CacheManager cm = new CacheManager(10, strategy, db);
+           StorageManager cm = new StorageManager(10, strategy);
 
            for (int i = 0; i < 10; i++) {
                cm.putKV(Integer.toString(i), "b");
@@ -48,7 +40,7 @@ public class CacheTest extends TestCase{
     @Test
     public void testUpdate(){
         for (String strategy: cacheStrategy) {
-            CacheManager cm = new CacheManager(10, strategy, db);
+            StorageManager cm = new StorageManager(10, strategy);
 
             for (int i = 0; i < 10; i++) {
                 assertTrue(cm.putKV(Integer.toString(i), "b"));
@@ -74,7 +66,7 @@ public class CacheTest extends TestCase{
     @Test
     public void testDelete(){
         for (String strategy: cacheStrategy) {
-            CacheManager cm = new CacheManager(10, strategy, db);
+            StorageManager cm = new StorageManager(10, strategy);
 
             for (int i = 0; i < 10; i++) {
                 assertTrue(cm.putKV(Integer.toString(i), "b"));
@@ -105,7 +97,7 @@ public class CacheTest extends TestCase{
     @Test
     public void testGet(){
         for (String strategy: cacheStrategy) {
-            CacheManager cm = new CacheManager(10, strategy, db);
+            StorageManager cm = new StorageManager(10, strategy);
 
             for (int i = 0; i < 10; i++) {
                 assertTrue(cm.putKV(Integer.toString(i), "b"));

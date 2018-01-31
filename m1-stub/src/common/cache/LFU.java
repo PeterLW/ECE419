@@ -1,12 +1,10 @@
 package common.cache;
-import java.io.IOException;
 import java.util.*;
 import common.disk.DBManager;
-import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 public class LFU implements CacheStructure{
-    private final static Logger logger = Logger.getLogger(LFU.class);
+    private final static Logger LOGGER = Logger.getLogger(LFU.class);
     private static HashMap<String, String> vals;
     private static HashMap<String, Integer> counts;
     private static HashMap<Integer, LinkedHashSet<String>> lists;
@@ -15,10 +13,10 @@ public class LFU implements CacheStructure{
 
     public LFU(int capacity, DBManager database_mgr) {
         this.capacity = capacity;
-        this.vals = new HashMap<>();
-        this.counts = new HashMap<>();
-        this.lists = new HashMap<>();
-        this.lists.put(1, new LinkedHashSet<String>());
+        vals = new HashMap<>();
+        counts = new HashMap<>();
+        lists = new HashMap<>();
+        lists.put(1, new LinkedHashSet<String>());
     }
 
 
