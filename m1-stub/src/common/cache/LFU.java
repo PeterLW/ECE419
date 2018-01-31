@@ -5,17 +5,17 @@ import org.apache.log4j.Logger;
 
 public class LFU implements CacheStructure{
     private final static Logger LOGGER = Logger.getLogger(LFU.class);
-    private static HashMap<String, String> vals;
-    private static HashMap<String, Integer> counts;
-    private static HashMap<Integer, LinkedHashSet<String>> lists;
+    private static HashMap<String, String> vals = new HashMap<String, String>();
+    private static HashMap<String, Integer> counts = new HashMap<String, Integer>();
+    private static HashMap<Integer, LinkedHashSet<String>> lists = new HashMap<Integer, LinkedHashSet<String>>();
     private int capacity;
     private int min = -1;
 
     public LFU(int capacity, DBManager database_mgr) {
         this.capacity = capacity;
-        vals = new HashMap<>();
-        counts = new HashMap<>();
-        lists = new HashMap<>();
+    }
+
+    private void initialize(){
         lists.put(1, new LinkedHashSet<String>());
     }
 
@@ -81,7 +81,6 @@ public class LFU implements CacheStructure{
             lists.get(min).remove(evit);
             vals.remove(evit);
         }
-        
         vals.put(key, value);
         counts.put(key, 1);
         min = 1;
@@ -95,6 +94,7 @@ public class LFU implements CacheStructure{
         vals.clear();
         counts.clear();
         lists.clear();
+        initialize();
     }
 
     @Override

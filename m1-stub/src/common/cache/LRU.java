@@ -1,19 +1,16 @@
 package common.cache;
-import common.cache.Node;
 import common.disk.DBManager;
 
-import java.io.IOException;
 import java.util.*;
-import org.apache.log4j.Level;
+
 import org.apache.log4j.Logger;
-import logger.LogSetup;
 
 public class LRU implements CacheStructure{
-    private static Logger logger = Logger.getLogger(LRU.class);
-    int capacity;
-    static HashMap<String, Node> map = new HashMap<String, Node>();
-    Node head=null;
-    Node end=null;
+    private static Logger LOGGER = Logger.getLogger(LRU.class);
+    private int capacity;
+    private static HashMap<String, LRUNode> map = new HashMap<String, LRUNode>();
+    private static LRUNode head=null;
+    private static LRUNode end=null;
 
     public LRU(int capacity, DBManager database_mgr) {
         this.capacity = capacity;
@@ -32,7 +29,7 @@ public class LRU implements CacheStructure{
     @Override
     public synchronized String getKV(String key) {
         if(map.containsKey(key)){
-            Node n = map.get(key);
+            LRUNode n = map.get(key);
             remove(n);
             setHead(n);
             return n.value;
@@ -41,7 +38,7 @@ public class LRU implements CacheStructure{
         }
     }
 
-    private void remove(Node n){
+    private void remove(LRUNode n){
         if(n.pre!=null){
             n.pre.next = n.next;
         }else{
@@ -54,7 +51,7 @@ public class LRU implements CacheStructure{
         }
     }
 
-    private void setHead(Node n){
+    private void setHead(LRUNode n){
         n.next = head;
         n.pre = null;
 
@@ -69,7 +66,7 @@ public class LRU implements CacheStructure{
     public synchronized boolean deleteKV(String key){
 
         if(map.containsKey(key)) {
-            Node n = map.get(key);
+            LRUNode n = map.get(key);
             remove(n);
             map.remove(key);
         }
@@ -79,12 +76,12 @@ public class LRU implements CacheStructure{
     @Override
     public synchronized boolean putKV(String key, String value) {
         if(map.containsKey(key)){
-            Node old = map.get(key);
+            LRUNode old = map.get(key);
             old.value = value;
             remove(old);
             setHead(old);
         }else{
-            Node created = new Node(key, value);
+            LRUNode created = new LRUNode(key, value);
             if(map.size()>=capacity){
                     map.remove(end.key);
                     remove(end);

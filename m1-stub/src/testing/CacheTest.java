@@ -21,18 +21,19 @@ public class CacheTest extends TestCase{
     @Test
     public void testInsert(){
         for (String strategy: cacheStrategy) {
-           StorageManager cm = new StorageManager(10, strategy);
+           StorageManager sm = new StorageManager(10, strategy);
+           sm.clearAll();
 
            for (int i = 0; i < 10; i++) {
-               cm.putKV(Integer.toString(i), "b");
+               sm.putKV(Integer.toString(i), "b");
            }
            for (int i = 0; i < 10; i++) {
-               assertTrue(cm.inCache(Integer.toString(i)));
+               assertTrue(sm.inCache(Integer.toString(i)));
            }
 
            String vals[] = new String[10];
            for (int i = 0; i < 10; i++) {
-               vals[i] = cm.getKV(Integer.toString(i));
+               vals[i] = sm.getKV(Integer.toString(i));
                assertEquals("b", vals[i]);
            }
        }
@@ -40,24 +41,25 @@ public class CacheTest extends TestCase{
     @Test
     public void testUpdate(){
         for (String strategy: cacheStrategy) {
-            StorageManager cm = new StorageManager(10, strategy);
+            StorageManager rm = new StorageManager(10, strategy);
+            rm.clearAll();
 
             for (int i = 0; i < 10; i++) {
-                assertTrue(cm.putKV(Integer.toString(i), "b"));
+                assertTrue(rm.putKV(Integer.toString(i), "b"));
             }
             String vals[] = new String[10];
             for (int i = 0; i < 10; i++) {
-                vals[i] = cm.getKV(Integer.toString(i));
+                vals[i] = rm.getKV(Integer.toString(i));
                 assertEquals("b", vals[i]);
             }
 
             for (int i = 0; i < 10; i++) {
-                assertTrue(cm.putKV(Integer.toString(i), "c"));
+                assertTrue(rm.putKV(Integer.toString(i), "c"));
             }
 
             String getvals[] = new String[10];
             for (int i = 0; i < 10; i++) {
-                getvals[i] = cm.getKV(Integer.toString(i));
+                getvals[i] = rm.getKV(Integer.toString(i));
                 assertEquals("c", getvals[i]);
             }
         }
@@ -66,30 +68,31 @@ public class CacheTest extends TestCase{
     @Test
     public void testDelete(){
         for (String strategy: cacheStrategy) {
-            StorageManager cm = new StorageManager(10, strategy);
+            StorageManager sm = new StorageManager(10, strategy);
+            sm.clearAll();
 
             for (int i = 0; i < 10; i++) {
-                assertTrue(cm.putKV(Integer.toString(i), "b"));
+                assertTrue(sm.putKV(Integer.toString(i), "b"));
             }
 
             for (int i = 0; i < 10; i++) {
-                assertTrue(cm.inCache(Integer.toString(i)));
+                assertTrue(sm.inCache(Integer.toString(i)));
             }
 
             for (int i = 0; i < 10; i++) {
-                assertTrue(cm.deleteRV(Integer.toString(i)));
+                assertTrue(sm.deleteRV(Integer.toString(i)));
             }
 
             for (int i = 0; i < 10; i++) {
-                assertFalse(cm.inCache(Integer.toString(i)));
+                assertFalse(sm.inCache(Integer.toString(i)));
             }
 
             for (int i = 0; i < 20; i++) {
-                assertFalse(cm.deleteRV(Integer.toString(i)));
+                assertFalse(sm.deleteRV(Integer.toString(i)));
             }
 
             for (int i = 0; i < 10; i++) {
-                assertFalse(cm.inCache(null));
+                assertFalse(sm.inCache(null));
             }
         }
     }
@@ -97,28 +100,29 @@ public class CacheTest extends TestCase{
     @Test
     public void testGet(){
         for (String strategy: cacheStrategy) {
-            StorageManager cm = new StorageManager(10, strategy);
+            StorageManager sm = new StorageManager(10, strategy);
+            sm.clearAll();
 
             for (int i = 0; i < 10; i++) {
-                assertTrue(cm.putKV(Integer.toString(i), "b"));
+                assertTrue(sm.putKV(Integer.toString(i), "b"));
             }
 
             for (int i = 0; i < 10; i++) {
-                assertTrue(cm.inCache(Integer.toString(i)));
+                assertTrue(sm.inCache(Integer.toString(i)));
             }
 
             String vals[] = new String[10];
             for (int i = 0; i < 10; i++) {
-                vals[i] = cm.getKV(Integer.toString(i));
+                vals[i] = sm.getKV(Integer.toString(i));
                 assertEquals("b", vals[i]);
             }
 
             for (int i = 0; i < 10; i++) {
-                assertTrue(cm.deleteRV(Integer.toString(i)));
+                assertTrue(sm.deleteRV(Integer.toString(i)));
             }
 
             for (int i = 0; i < 10; i++) {
-                assertEquals(null, cm.getKV(Integer.toString(i)));
+                assertEquals(null, sm.getKV(Integer.toString(i)));
             }
         }
     }
