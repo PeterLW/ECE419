@@ -84,15 +84,16 @@ public class AdditionalTest extends TestCase {
 		for (int i = 0; i < 10; i ++) {
 			sm.putKV(Integer.toString(i), "b");
 		}// 5 6 7 8 9
-		sm.putKV("9", "b");
+
+        sm.putKV("9", "b");
 		sm.putKV("9", "c");
 		sm.putKV("5", "d");
-		sm.getKV("6");
+        sm.getKV("6");
 
-		sm.getKV("1");
+        sm.getKV("1");
 		sm.getKV("2");
 
-		assertTrue(sm.inCache("9"));
+        assertTrue(sm.inCache("9"));
 		assertTrue(sm.inCache("5"));
 		assertTrue(sm.inCache("6"));
 		assertTrue(sm.inCache("1"));
@@ -100,15 +101,15 @@ public class AdditionalTest extends TestCase {
 
 		sm.getKV("2");
 		sm.getKV("2");
-		// 9 6 5 1 2
-		// 3 2 2 1 3
+		// keys: 9 6 5 1 2
+		// freq: 3 2 2 1 3
 
-		sm.getKV("4");
+        sm.getKV("4");
 		sm.getKV("4");
 		sm.getKV("8");
 		// for ties should use FIFO
 
-		assertTrue(sm.inCache("4"));
+        assertTrue(sm.inCache("4"));
 		assertTrue(sm.inCache("9"));
 		assertTrue(sm.inCache("8"));
 		assertTrue(sm.inCache("6"));
@@ -130,7 +131,6 @@ public class AdditionalTest extends TestCase {
 		assertTrue(sm.inDatabase("a2"));
 		assertTrue(sm.inDatabase("a1"));
 		assertTrue(sm.inDatabase("a3"));
-
 	}
 
 	@Test
