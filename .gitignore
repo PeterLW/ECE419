@@ -1,9 +1,11 @@
 *.idea*
 *.iml
-out/*
-bin/*
+./out/*
+./bin/*
 *.class
-*/logs/*
+logs/*
 *.DS_Store*
 *m1-server.jar
 *m1-client.jar
+DBRoot/*
+
