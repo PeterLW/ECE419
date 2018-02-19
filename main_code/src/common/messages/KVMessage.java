@@ -41,7 +41,7 @@ public interface KVMessage {
 	/**
 	 * @return  the responsible server node
 	 */
-	public IECSNode getResponsibleServer();
+	public ecs.IECSNode getResponsibleServer();
 
 }
 

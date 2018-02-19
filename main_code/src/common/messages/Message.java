@@ -61,4 +61,9 @@ public class Message implements KVMessage {
 
     @Override
     public StatusType getStatus(){return this.status;}
+
+    @Override
+    public ecs.IECSNode getResponsibleServer() {
+        return null;
+    }
 }
