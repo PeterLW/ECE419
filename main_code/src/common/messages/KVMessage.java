@@ -12,7 +12,11 @@ public interface KVMessage {
 		PUT_ERROR,       /* Put - request not successful */
 		DELETE_SUCCESS,  /* Delete - request successful */
 		DELETE_ERROR,     /* Delete - request successful */
-		CLOSE_REQ
+		CLOSE_REQ,
+
+		SERVER_STOPPED,         /* Server is stopped, no requests are processed */
+		SERVER_WRITE_LOCK,      /* Server locked for out, only get possible */
+		SERVER_NOT_RESPONSIBLE  /* Request not successful, server not responsible for key */
 	}
 
 	/**
@@ -32,7 +36,13 @@ public interface KVMessage {
 	 * response types and error types associated to the message.
 	 */
 	public StatusType getStatus();
-	
+
+
+	/**
+	 * @return  the responsible server node
+	 */
+	public IECSNode getResponsibleServer();
+
 }
 
 

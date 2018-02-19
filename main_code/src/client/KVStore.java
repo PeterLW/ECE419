@@ -81,6 +81,11 @@ public class KVStore implements KVCommInterface {
 		}
 	}
 
+	@Override
+	public boolean isConnected() {
+		// TODO Auto-generated method stub
+		return false;
+	}
 
 	@Override
 	public Message put(String key, String value) throws Exception {

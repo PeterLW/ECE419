@@ -215,6 +215,31 @@ public class KVServer implements IKVServer {
 		stop = true;
 	}
 
+	@Override
+	public void start() {
+
+	}
+
+	@Override
+	public void stop() {
+
+	}
+
+	@Override
+	public void lockWrite() {
+
+	}
+
+	@Override
+	public void unlockWrite() {
+
+	}
+
+	@Override
+	public boolean moveData(String[] hashRange, String targetName) throws Exception {
+		return false;
+	}
+
 	public static void main(String[] args){
 			KVServer server = new KVServer(50000,10,"LRU"); // these should be from cmdline
 			server.run();
