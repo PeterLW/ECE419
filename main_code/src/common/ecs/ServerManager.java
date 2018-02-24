@@ -1,20 +1,20 @@
 package common.ecs;
 
 
+import com.sun.security.ntlm.Server;
+
 import java.util.Comparator;
-import java.util.TreeSet;
+import java.util.HashMap;
+import java.util.TreeMap;
 
 public class ServerManager {
-    private TreeSet<ServerNode> tree = new TreeSet<ServerNode>(new Comparator<ServerNode>() {
-
-        @Override
-        public int compare(ServerNode o1, ServerNode o2) {
-            if ()
-        }
-
-    });
+    // hash values -> serverNode
+    private TreeMap<String,ServerNode> tree = new TreeMap<String,ServerNode>();
+    // ip:port -> serverNode
+    private HashMap<String,ServerNode> hash = new HashMap<String,ServerNode>();
 
     public ServerManager(){
-
+        
     }
+
 }

@@ -3,7 +3,7 @@ package app_kvECS;
 import java.util.Map;
 import java.util.Collection;
 
-import ecs.IECSNode;
+import common.ecs.IECSNode;
 
 public class ECSClient implements IECSClient {
 
