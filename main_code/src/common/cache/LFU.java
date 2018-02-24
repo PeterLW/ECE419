@@ -87,7 +87,7 @@ public class LFU implements CacheStructure{
     }
 
     @Override
-    public void clear(){
+    public synchronized void clear(){
         vals.clear();
         counts.clear();
         lists.clear();

@@ -45,7 +45,7 @@ public class FIFO implements CacheStructure{
     }
 
     @Override
-    public void clear(){
+    public synchronized void clear(){
         fifo.clear();
     }
 

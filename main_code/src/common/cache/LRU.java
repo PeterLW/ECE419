@@ -96,7 +96,7 @@ public class LRU implements CacheStructure{
     }
 
     @Override
-    public void clear(){
+    public synchronized void clear(){
         map.clear();
     }
 
