@@ -3,9 +3,11 @@ package app_kvECS;
 import java.util.Map;
 import java.util.Collection;
 
-import common.ecs.IECSNode;
+import ecs.IECSNode;
+import ecs.ServerManager;
 
 public class ECSClient implements IECSClient {
+    private ServerManager serverManager;
 
     @Override
     public boolean start() {

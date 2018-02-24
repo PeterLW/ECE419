@@ -1,4 +1,4 @@
-package common.ecs;
+package ecs;
 
 public class ServerNode implements IECSNode {
     private String name;

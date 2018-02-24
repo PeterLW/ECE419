@@ -1,4 +1,4 @@
-package common.ecs;
+package ecs;
 
 import java.util.HashMap;
 import java.util.List;

@@ -1,4 +1,4 @@
-package common.ecs;
+package ecs;
 
 public interface IECSNode {
 
