@@ -7,6 +7,7 @@ import ecs.IECSNode;
 import ecs.ServerManager;
 import ecs.ConfigEntity;
 import java.util.*;
+import java.io.*;
 
 public class ECSClient implements IECSClient {
     private ServerManager serverManager;
@@ -75,15 +76,16 @@ public class ECSClient implements IECSClient {
      * parse the ecs.config file to get a list of IPs
      * @return a string array containing info regarding one machine
      */
-    private ConfigEntity[]parseConfigFile(){
+    private ArrayList<ConfigEntity>  parseConfigFile(){
 
         try {
             File file = new File("ecs.config");
             FileReader fileReader = new FileReader(file);
             BufferedReader bufferedReader = new BufferedReader(fileReader);
             StringBuffer stringBuffer = new StringBuffer();
-            ArrayList<ConfigEntity> entityList=new ArrayList<String>();//Creating arraylist
+            ArrayList<ConfigEntity> entityList=new ArrayList<ConfigEntity>();//Creating arraylist
 
+            String line = null;
             while ((line = bufferedReader.readLine()) != null) {
                 stringBuffer.append(line);
                 stringBuffer.append(",");
@@ -103,6 +105,7 @@ public class ECSClient implements IECSClient {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        return null;
     }
 
     public static void main(String[] args) {
