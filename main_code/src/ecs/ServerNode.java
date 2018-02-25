@@ -3,7 +3,7 @@ package ecs;
 public class ServerNode implements IECSNode {
     private String name;
     private String host;
-    private String id;
+    private String id; // "ipaddress:port"
     private int port;
     private String[] range;
     // socket?
