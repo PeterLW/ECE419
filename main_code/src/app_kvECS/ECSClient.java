@@ -11,10 +11,15 @@ import java.io.*;
 
 public class ECSClient implements IECSClient {
     private ServerManager serverManager;
+    ArrayList<ConfigEntity> entityList= new ArrayList<ConfigEntity>();
 
     @Override
     public boolean start() {
         // TODO
+
+        // get command line argument
+        // start parseConfigFile with path to file
+        parseConfigFile("ecs.config");
         return false;
     }
 
@@ -76,14 +81,12 @@ public class ECSClient implements IECSClient {
      * parse the ecs.config file to get a list of IPs
      * @return a string array containing info regarding one machine
      */
-    private ArrayList<ConfigEntity>  parseConfigFile(){
-
+    private void parseConfigFile(String filePath){
         try {
-            File file = new File("ecs.config");
+            File file = new File(filePath);
             FileReader fileReader = new FileReader(file);
             BufferedReader bufferedReader = new BufferedReader(fileReader);
             StringBuffer stringBuffer = new StringBuffer();
-            ArrayList<ConfigEntity> entityList=new ArrayList<ConfigEntity>();//Creating arraylist
 
             String line = null;
             while ((line = bufferedReader.readLine()) != null) {
@@ -101,11 +104,9 @@ public class ECSClient implements IECSClient {
                 entityList.add(node);
             }
             bufferedReader.close();
-            return entityList;
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return null;
     }
 
     public static void main(String[] args) {

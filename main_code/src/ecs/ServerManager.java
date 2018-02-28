@@ -12,11 +12,6 @@ public class ServerManager {
 
     }
 
-
-
-
-
-
 //
 //    public boolean addNode(ServerNode n){
 //        String id = n.getNodeId(); // ip:port
