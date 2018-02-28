@@ -16,6 +16,12 @@ public class ServerNode implements IECSNode {
         range = new String[2];
     }
 
+    public ServerNode(ConfigEntity e){
+        this.name = e.getHostName();
+        this.host = e.getIpAddr();
+        this.port = e.getPortNum();
+    }
+
     public void setRange(String start, String end){
         if (start == null || end == null){
             throw new NullPointerException("start and end cannot be null");
@@ -23,6 +29,7 @@ public class ServerNode implements IECSNode {
         range[0] = start;
         range[1] = end;
     }
+
 
     @Override
     public String getNodeName() {

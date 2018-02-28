@@ -6,17 +6,18 @@ import java.util.Collection;
 import ecs.IECSNode;
 import ecs.ServerManager;
 import ecs.ConfigEntity;
+import ecs.ServerNode;
+
 import java.util.*;
 import java.io.*;
 
 public class ECSClient implements IECSClient {
-    private ServerManager serverManager;
-    ArrayList<ConfigEntity> entityList= new ArrayList<ConfigEntity>();
+    private ServerManager serverManager = new ServerManager();
+    LinkedList<ConfigEntity> entityList= new LinkedList<ConfigEntity>();
 
     @Override
     public boolean start() {
         // TODO
-
         // get command line argument
         // start parseConfigFile with path to file
         parseConfigFile("ecs.config");
@@ -43,7 +44,10 @@ public class ECSClient implements IECSClient {
 
     @Override
     public Collection<IECSNode> addNodes(int count, String cacheStrategy, int cacheSize) {
-        // TODO
+        for (int i =0; i<count; i++){
+            ServerNode n = new ServerNode(entityList.removeFirst());
+            serverManager.addNode(n);
+        }
         return null;
     }
 
@@ -100,7 +104,7 @@ public class ECSClient implements IECSClient {
             int length = splitArray.length;
             for(int i = 0; i < length; i++){
                 String[] entry = splitArray[i].split("\\s+");
-                ConfigEntity node = new ConfigEntity(entry[0],entry[1],entry[2]);
+                ConfigEntity node = new ConfigEntity(entry[0],entry[1],Integer.parseInt(entry[2]));
                 entityList.add(node);
             }
             bufferedReader.close();

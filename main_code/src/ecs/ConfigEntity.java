@@ -3,12 +3,10 @@ package ecs;
 public class ConfigEntity {
 
     private String hostName;
-    private String portNum;
     private String ipAddr;
+    private int portNum;
 
-
-   public ConfigEntity(String hostName, String ipAddr, String portNum){
-
+   public ConfigEntity(String hostName, String ipAddr, int portNum){
         this.hostName = hostName;
         this.ipAddr = ipAddr;
         this.portNum = portNum;
@@ -18,7 +16,7 @@ public class ConfigEntity {
         return this.hostName;
     }
 
-    public String getPortNum(){
+    public int getPortNum(){
         return this.portNum;
     }
 

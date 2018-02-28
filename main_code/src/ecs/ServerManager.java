@@ -1,27 +1,40 @@
 package ecs;
 
+import common.zookeeper.ZookeeperManager;
+import org.apache.log4j.Logger;
 
+import java.io.IOException;
+import java.util.HashMap;
 
 public class ServerManager {
 //    // hash values (start) -> serverNode
 //    private TreeMap<String,ServerNode> tree = new TreeMap<String,ServerNode>();
-//    // ip:port -> serverNode
-//    private HashMap<String,ServerNode> hashMap = new HashMap<String,ServerNode>();
+    // ip:port -> serverNode
+    private HashMap<String,ServerNode> hashMap = new HashMap<String,ServerNode>();
+
+    ZookeeperManager zookeeperManager;
+    private static Logger LOGGER = Logger.getLogger(ServerManager.class);
 
     public ServerManager(){
-
+        try {
+            zookeeperManager = new ZookeeperManager("localhost:2181",10000); // session timeout ms
+        } catch (Exception e) {
+            LOGGER.error("Failed to connect to zookeeper. Check that zookeeper server has started and is running on localhost:2181");
+            throw new RuntimeException("Failed to connect to zookeeper. Check that zookeeper server has started and is running on localhost:2181", e);
+        }
     }
 
-//
-//    public boolean addNode(ServerNode n){
-//        String id = n.getNodeId(); // ip:port
-//        if (hashMap.containsKey(id)) {
-//            return false;
-//        }
-//        hashMap.put(id,n);
-//
-//        return true;
-//    }
+    public boolean addNode(ServerNode n){
+        String id = n.getNodeId(); // ip:port
+        if (hashMap.containsKey(id)) {
+            return false;
+        }
+        hashMap.put(id,n);
+
+        return zookeeperManager.addKVServer(n);
+    }
+
+
 //
 //    /**
 //     * @return number of nodes successfully added
