@@ -1,11 +1,14 @@
 package ecs;
 
+import java.math.BigInteger;
+
 public class ServerNode implements IECSNode {
     private String name;
     private String host;
     private String id; // "ipaddress:port"
     private int port;
-    private String[] range;
+    private BigInteger[] range = new BigInteger[];
+    private transient String[] hexStringRange = new String[]; // do not serialize
     // socket?
 
     public ServerNode(String name, String host, int port){
@@ -13,7 +16,6 @@ public class ServerNode implements IECSNode {
         this.host = host;
         this.port = port;
         this.id = host + ":" + Integer.toString(port);
-        range = new String[2];
     }
 
     public ServerNode(ConfigEntity e){
@@ -22,7 +24,7 @@ public class ServerNode implements IECSNode {
         this.port = e.getPortNum();
     }
 
-    public void setRange(String start, String end){
+    public void setRange(BigInteger start, BigInteger end){
         if (start == null || end == null){
             throw new NullPointerException("start and end cannot be null");
         }
@@ -52,6 +54,6 @@ public class ServerNode implements IECSNode {
 
     @Override
     public String[] getNodeHashRange() {
-        return range;
+        return hexStringRange;
     }
 }

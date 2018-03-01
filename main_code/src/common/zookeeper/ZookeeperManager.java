@@ -57,9 +57,16 @@ public class ZookeeperManager {
         return false;
     }
 
-    public void addZNode(String path, String memberName, byte[] data) throws KeeperException, InterruptedException {
-        String full_path = path + "/" + memberName;
-        String createdPath = zooKeeper.create(full_path,data,ZooDefs.Ids.OPEN_ACL_UNSAFE,CreateMode.EPHEMERAL_SEQUENTIAL);
+    public boolean addKVServer(ServerNode n){
+
+
+        this.addZNode(ZNODE_HEAD,n.getNodeName(),);
+        return true;
+    }
+
+    private void addZNode(String path, String memberName, byte[] data) throws KeeperException, InterruptedException {
+        String fullPath = path + "/" + memberName;
+        String createdPath = zooKeeper.create(fullPath,data,ZooDefs.Ids.OPEN_ACL_UNSAFE,CreateMode.EPHEMERAL_SEQUENTIAL);
     }
 
     public void close(){
@@ -70,25 +77,21 @@ public class ZookeeperManager {
     private void test(){
     }
 
-    public boolean addKVServer(ServerNode n){
-
-        return true;
-    }
 
     private boolean deleteZNode(String path, String groupName){
-        String full_path = path + "/" + groupName;
+        String fullPath = path + "/" + groupName;
         try {
-            Stat stat = zooKeeper.exists(full_path, false);
+            Stat stat = zooKeeper.exists(fullPath, false);
             if (stat == null)
                 return true;
-            List<String> children = zooKeeper.getChildren(full_path, false);
+            List<String> children = zooKeeper.getChildren(fullPath, false);
             for (String child : children) {
-                zooKeeper.delete(full_path + "/" + child, -1);
+                zooKeeper.delete(fullPath + "/" + child, -1);
             }
-            zooKeeper.delete(full_path, -1);
+            zooKeeper.delete(fullPath, -1);
             return true;
         } catch (KeeperException.NoNodeException e) {
-            System.out.printf("Group %s does not exist\n", full_path);
+            System.out.printf("Group %s does not exist\n", fullPath);
             return false;
         } catch (InterruptedException | KeeperException e) {
             e.printStackTrace();

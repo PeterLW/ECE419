@@ -13,7 +13,6 @@ public class ECSNode implements IECSNode {
     private String highHashRange;
 
     ECSNode(String hostName, int portNum, String lowHashRange, String highHashRange){
-
         this.hostName = hostName;
         this.portNum = portNum;
         this.lowHashRange = lowHashRange;
