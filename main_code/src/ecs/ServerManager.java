@@ -2,6 +2,7 @@ package ecs;
 
 import common.zookeeper.ZookeeperManager;
 import org.apache.log4j.Logger;
+import org.apache.zookeeper.KeeperException;
 
 import java.util.HashMap;
 
@@ -23,14 +24,25 @@ public class ServerManager {
         }
     }
 
-    public boolean addNode(ServerNode n){
+    public boolean addNode(ServerNode n) throws KeeperException, InterruptedException { // change to throw?
         String id = n.getNodeId(); // ip:port
         if (hashMap.containsKey(id)) {
             return false;
         }
-        hashMap.put(id,n);
 
-        return zookeeperManager.addKVServer(n);
+        zookeeperManager.addKVServer(n);
+        hashMap.put(id,n);
+        return true;
+    }
+
+    public void removeNode(ServerNode n) {
+        String id = n.getNodeId();
+        zookeeperManager.removeKVServer(n);
+        if (hashMap.containsKey(id)){
+            hashMap.remove(id);
+        } else {
+            LOGGER.debug("Trying to remove server: " + n.getNodeName() + " id: " + n.getNodeId() + " but server not in hash map");
+        }
     }
 
     public void close(){

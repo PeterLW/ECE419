@@ -32,7 +32,6 @@ public class ServerNode implements IECSNode {
         range[1] = end;
     }
 
-
     @Override
     public String getNodeName() {
         return name;

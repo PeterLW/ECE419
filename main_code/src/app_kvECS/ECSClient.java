@@ -7,13 +7,19 @@ import ecs.IECSNode;
 import ecs.ServerManager;
 import ecs.ConfigEntity;
 import ecs.ServerNode;
+import org.apache.log4j.Logger;
+import org.apache.zookeeper.KeeperException;
 
 import java.util.*;
 import java.io.*;
 
 public class ECSClient implements IECSClient {
-    private ServerManager serverManager = new ServerManager();
-    LinkedList<ConfigEntity> entityList= new LinkedList<ConfigEntity>();
+    private static final Logger LOGGER = Logger.getLogger(ServerManager.class);
+    private final ServerManager serverManager = new ServerManager();
+
+    private LinkedList<ConfigEntity> entityList= new LinkedList<ConfigEntity>();
+
+
 
     @Override
     public boolean start() {
@@ -46,7 +52,11 @@ public class ECSClient implements IECSClient {
     public Collection<IECSNode> addNodes(int count, String cacheStrategy, int cacheSize) {
         for (int i =0; i<count; i++){
             ServerNode n = new ServerNode(entityList.removeFirst());
-            serverManager.addNode(n);
+            try {
+                serverManager.addNode(n);
+            } catch (KeeperException | InterruptedException e) {
+                LOGGER.error("Error attempting to add node #" + count + " in addNodes. Node name: " + n.getNodeName());
+            }
         }
         return null;
     }

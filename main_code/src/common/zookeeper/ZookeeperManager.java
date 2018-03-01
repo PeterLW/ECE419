@@ -110,8 +110,10 @@ public class ZookeeperManager {
         String fullPath = path + "/" + groupName;
         try {
             Stat stat = zooKeeper.exists(fullPath, false);
-            if (stat == null)
+            if (stat == null) {
+                LOGGER.debug("Attempting to delete znode: " + fullPath + " but znode does not exist");
                 return;
+            }
             List<String> children = zooKeeper.getChildren(fullPath, false);
             for (String child : children) {
                 zooKeeper.delete(fullPath + "/" + child, -1);
