@@ -1,5 +1,6 @@
 package common.zookeeper;
 
+import com.google.gson.Gson;
 import ecs.ServerNode;
 import org.apache.log4j.Logger;
 import org.apache.zookeeper.*;
@@ -16,6 +17,8 @@ public class ZookeeperManager {
     private static final String ZNODE_HEAD = "/"+HEAD_NAME;
     private static final String ZNODE_CONFIG_NODE = "CONFIG_DATA";
     private static final String ZNODE_SERVER_PREFIX = "KVSERVER_";
+    private static final Gson gson = new Gson();
+
 
     private ZooKeeper zooKeeper = null;
 
@@ -43,7 +46,6 @@ public class ZookeeperManager {
         clearZNodes(); // in case crashed before shutting down last time
         createHead();
         addZNode(ZNODE_HEAD, ZNODE_CONFIG_NODE,null);
-        test();
     }
 
     private void createHead() throws KeeperException, InterruptedException {
@@ -57,45 +59,69 @@ public class ZookeeperManager {
         return false;
     }
 
-    public boolean addKVServer(ServerNode n){
-
-
-        this.addZNode(ZNODE_HEAD,n.getNodeName(),);
-        return true;
+    public void addKVServer(ServerNode n) throws KeeperException, InterruptedException {
+        String jsonServerData = gson.toJson(n);
+        System.out.println(jsonServerData);
+        this.addZNode(ZNODE_HEAD,n.getNodeName(),toByteArray(jsonServerData));
     }
 
-    private void addZNode(String path, String memberName, byte[] data) throws KeeperException, InterruptedException {
+    public void removeKVServer(ServerNode n) {
+        this.deleteZNode(ZNODE_HEAD,n.getNodeName());
+    }
+
+    public void getServerDataAndAddWatch(String serverName) throws KeeperException, InterruptedException {
+        String fullPath = ZNODE_HEAD + "/" + serverName;
+        Stat stat = zooKeeper.exists(fullPath,false);
+        if (stat == null){
+            LOGGER.debug("Attempting to access data for server: " + serverName + " but no znode created of that name");
+            return;
+        }
+
+//        byte[] data = zooKeeper.getData(fullPath,
+//                new Watcher() {
+//            @Override
+//            public void process(WatchedEvent watchedEvent) {
+//                if (watchedEvent.getType() == Event.EventType.NodeDataChanged) {
+//                    System.out.println("temp");
+//
+//                    }
+//                }
+//            });
+    }
+
+
+    private void addZNode(String path, String memberName, byte[] data) throws KeeperException, InterruptedException { // KeeperException can be thrown if data to large
         String fullPath = path + "/" + memberName;
-        String createdPath = zooKeeper.create(fullPath,data,ZooDefs.Ids.OPEN_ACL_UNSAFE,CreateMode.EPHEMERAL_SEQUENTIAL);
+        if (zooKeeper.exists(fullPath,false) == null) {
+            zooKeeper.create(fullPath, data, ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.EPHEMERAL_SEQUENTIAL);
+            LOGGER.debug("Successfully created znode: " + fullPath);
+        } else {
+            LOGGER.debug("Trying to add znode: " + fullPath + " ,but already exists, updating data instead");
+            zooKeeper.setData(fullPath,data,-1);
+        }
     }
 
     public void close(){
         clearZNodes();
+        // how to close connection with zookeeper?
     }
 
-
-    private void test(){
-    }
-
-
-    private boolean deleteZNode(String path, String groupName){
+    private void deleteZNode(String path, String groupName){
         String fullPath = path + "/" + groupName;
         try {
             Stat stat = zooKeeper.exists(fullPath, false);
             if (stat == null)
-                return true;
+                return;
             List<String> children = zooKeeper.getChildren(fullPath, false);
             for (String child : children) {
                 zooKeeper.delete(fullPath + "/" + child, -1);
             }
             zooKeeper.delete(fullPath, -1);
-            return true;
         } catch (KeeperException.NoNodeException e) {
-            System.out.printf("Group %s does not exist\n", fullPath);
-            return false;
+            LOGGER.error("Trying to delete: " + fullPath + " but Znode does not exist\n", e);
         } catch (InterruptedException | KeeperException e) {
-            e.printStackTrace();
-            return false;
+            LOGGER.error(e);
+            throw new RuntimeException("Error trying to delete: " + fullPath + " ,",e);
         }
     }
 
@@ -113,6 +139,13 @@ public class ZookeeperManager {
             LOGGER.error("Error deleting all nodes from zookeeper");
             throw new RuntimeException("Error deleting all nodes from zookeeper",e);
         }
+    }
+
+    private byte[] toByteArray(String s) {
+        byte[] bytes = s.getBytes();
+        byte[] tmp = new byte[bytes.length];
+        System.arraycopy(bytes, 0, tmp, 0, bytes.length);
+        return tmp;
     }
 
     public static void main(String[] args) throws IOException, InterruptedException, KeeperException {

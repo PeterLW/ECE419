@@ -7,8 +7,8 @@ public class ServerNode implements IECSNode {
     private String host;
     private String id; // "ipaddress:port"
     private int port;
-    private BigInteger[] range = new BigInteger[];
-    private transient String[] hexStringRange = new String[]; // do not serialize
+    private BigInteger[] range = new BigInteger[2];
+    private transient String[] hexStringRange = new String[2]; // do not serialize
     // socket?
 
     public ServerNode(String name, String host, int port){
