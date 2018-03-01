@@ -3,7 +3,6 @@ package ecs;
 import common.zookeeper.ZookeeperManager;
 import org.apache.log4j.Logger;
 
-import java.io.IOException;
 import java.util.HashMap;
 
 public class ServerManager {
@@ -32,6 +31,10 @@ public class ServerManager {
         hashMap.put(id,n);
 
         return zookeeperManager.addKVServer(n);
+    }
+
+    public void close(){
+        zookeeperManager.close();
     }
 
 

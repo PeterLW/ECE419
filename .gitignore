@@ -8,6 +8,6 @@ logs/*
 *m1-server.jar
 *m1-client.jar
 DBRoot/*
-./zookeeper/*
-*zookeeper*
+*zookeeper*.jar
+
 
