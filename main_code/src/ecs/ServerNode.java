@@ -16,6 +16,7 @@ public class ServerNode implements IECSNode {
         this.name = e.getHostName();
         this.host = e.getIpAddr();
         this.port = e.getPortNum();
+        this.id = this.host + ":" +this.port;
         this.cacheSize = cacheSize;
         this.cacheStrategy = cacheStrategy;
     }
@@ -24,6 +25,7 @@ public class ServerNode implements IECSNode {
         this.name = name;
         this.host = ip;
         this.port = port;
+        this.id = this.host + ":" +this.port;
     }
 
     public void setRange(BigInteger start, BigInteger end){
@@ -36,9 +38,12 @@ public class ServerNode implements IECSNode {
         hexStringRange[1] = end.toString();
     }
 
+    public String getServerName(){
+        return this.name;
+    }
+
     @Override
     public String getNodeName() {
-
         StringBuilder nodeName = new StringBuilder();
         nodeName.append(name);
         nodeName.append(" ");
