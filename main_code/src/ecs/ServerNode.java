@@ -9,8 +9,8 @@ public class ServerNode implements IECSNode {
     private int port;
     private BigInteger[] range = new BigInteger[2];
     private transient String[] hexStringRange = new String[2]; // do not serialize
-    private int cacheSize;
-    private String cacheStrategy;
+    public int cacheSize;
+    public String cacheStrategy;
 
     public ServerNode(ConfigEntity e, int cacheSize, String cacheStrategy){
         this.name = e.getHostName();
@@ -57,10 +57,6 @@ public class ServerNode implements IECSNode {
         return host;
     }
 
-    public String getNodeId(){
-        return id;
-    }
-
     @Override
     public int getNodePort() {
         return port;
@@ -69,5 +65,9 @@ public class ServerNode implements IECSNode {
     @Override
     public String[] getNodeHashRange() {
         return hexStringRange;
+    }
+
+    public String getNodeId(){
+        return id;
     }
 }

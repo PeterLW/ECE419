@@ -56,7 +56,6 @@ public class KVServer implements IKVServer {
 		this.cacheSize = cacheSize;
 		this.cacheStrategy = strategy;
 		storage = new StorageManager(cacheSize, strategy);
-
 	}
 
     public boolean isRunning() {

@@ -23,7 +23,6 @@ public class ECSClient implements IECSClient {
     private final ServerManager serverManager = new ServerManager();
     private LinkedList<ConfigEntity> entityList = new LinkedList<ConfigEntity>();
 
-    private static final Map<String,IECSNode> map = new HashMap<String, IECSNode>();
     private static final String PROMPT = "ECSCLIENT> ";
     private static final String CONFIG_FILE_PATH = "ecs.config";
     private BufferedReader stdin;
@@ -45,19 +44,16 @@ public class ECSClient implements IECSClient {
 
     @Override
     public boolean start() {
-
         return serverManager.start();
     }
 
     @Override
     public boolean stop() {
-
         return serverManager.stop();
     }
 
     @Override
     public boolean shutdown() {
-
         return serverManager.shutdown();
     }
 
@@ -120,7 +116,6 @@ public class ECSClient implements IECSClient {
 
     @Override
     public boolean awaitNodes(int count, int timeout) throws Exception {
-
         return false;
     }
 
@@ -139,8 +134,17 @@ public class ECSClient implements IECSClient {
 
     @Override
     public Map<String, IECSNode> getNodes() {
-//        HashMap<String, ServerNode> s =  serverManager.getServerMap();
-        return null;
+        /* this function is only for their autotester, so I'm going to cast everything to
+            a HashMap<String,IECSNode>
+         */
+        HashMap<String,IECSNode> result = new HashMap<String,IECSNode>();
+        HashMap<String, ServerNode> s = serverManager.getServerMap();
+
+        Set<String> keys = s.keySet();
+        for (String key : keys){
+            result.put(key,s.get(key));
+        }
+        return result;
     }
 
     @Override

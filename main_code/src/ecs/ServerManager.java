@@ -54,11 +54,11 @@ public class ServerManager {
     }
 
     public boolean stop(){
+        close();
         return true;
     }
 
     public void removeKVServer(ServerNode n) throws KeeperException, InterruptedException {
-
         String id = n.getNodeId();
         zookeeperManager.removeKVServer(n);
         if (hashMap.containsKey(id)){
@@ -71,6 +71,7 @@ public class ServerManager {
     public void removeNode(String NodeName)throws KeeperException, InterruptedException{
 
     }
+
     public ServerNode getNodeByKey(String Key) {
         return null;
     }
@@ -78,7 +79,6 @@ public class ServerManager {
     public void close(){
         zookeeperManager.close();
     }
-
 
 //    public boolean removeNode(String id) {
 //        ServerNode n = hashMap.get(id);
@@ -105,14 +105,27 @@ public class ServerManager {
 //    }
 
     public static void main(String[] args) throws IOException, InterruptedException, KeeperException {
-        ServerManager serverManager = new ServerManager();
-        for (int i = 12; i<17; i++){
-            String name = "SERVER_" + Integer.toString(i);
-            int port = 1111+i;
-            ServerNode n = new ServerNode(name,"localhost",port);
-            boolean success = serverManager.addKVServer(n,"something", 100);
-            System.out.println(success);
-        }
-        System.in.read();
+        ServerNode n = new ServerNode("11111","localhost",1111);
+        n.cacheStrategy = "SSSS";
+        n.cacheSize = 111;
+        System.out.println(n.getNodeId());
+
+        IECSNode g = (IECSNode) n;
+        System.out.println(g.getNodePort());
+
+        ServerNode n2 = (ServerNode) g;
+        System.out.println(n2.getNodeId());
+        System.out.println(n2.cacheStrategy);
+        System.out.println(n2.cacheSize);
+
+// ServerManager serverManager = new ServerManager();
+//        for (int i = 12; i<17; i++){
+//            String name = "SERVER_" + Integer.toString(i);
+//            int port = 1111+i;
+//            ServerNode n = new ServerNode(name,"localhost",port);
+//            boolean success = serverManager.addKVServer(n,"something", 100);
+//            System.out.println(success);
+//        }
+//        System.in.read();
     }
 }
