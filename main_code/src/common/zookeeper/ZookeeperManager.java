@@ -97,8 +97,9 @@ public class ZookeeperManager {
         }
     }
 
-    public void close(){
+    public void close() throws InterruptedException {
         clearZNodes();
+        zooKeeper.close(); // close connection
         // how to close connection with zookeeper?
     }
 

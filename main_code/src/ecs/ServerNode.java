@@ -5,11 +5,16 @@ import java.math.BigInteger;
 public class ServerNode implements IECSNode {
     private String name;
     private String host;
-    private String id; // "ipaddress:port"
+//    private String id; // "ipaddress:port"
     private int port;
     private BigInteger[] range = new BigInteger[2];
-    public int cacheSize;
-    public String cacheStrategy;
+
+    private int cacheSize;
+    private String cacheStrategy;
+
+    // private ServerStatus statusChange; // for updates to znodes that are status changes: Ie. Start/Stop, otherwise this should be null.
+
+
 
     private transient String[] hexStringRange = new String[2]; // do not serialize
 
@@ -18,7 +23,7 @@ public class ServerNode implements IECSNode {
         this.name = e.getHostName();
         this.host = e.getIpAddr();
         this.port = e.getPortNum();
-        this.id = this.host + ":" +this.port;
+//        this.id = this.host + ":" +this.port;
         this.cacheSize = cacheSize;
         this.cacheStrategy = cacheStrategy;
     }
@@ -27,7 +32,7 @@ public class ServerNode implements IECSNode {
         this.name = name;
         this.host = ip;
         this.port = port;
-        this.id = this.host + ":" +this.port;
+//        this.id = this.host + ":" +this.port;
     }
 
     public void setRange(BigInteger start, BigInteger end){
@@ -69,7 +74,7 @@ public class ServerNode implements IECSNode {
         return hexStringRange;
     }
 
-    public String getNodeId(){
-        return id;
-    }
+//    public String getNodeId(){
+//        return id;
+//    }
 }
