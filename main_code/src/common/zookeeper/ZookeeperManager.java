@@ -19,7 +19,6 @@ public class ZookeeperManager {
     private static final String ZNODE_SERVER_PREFIX = "KVSERVER_";
     private static final Gson gson = new Gson();
 
-
     private ZooKeeper zooKeeper = null;
 
     /**
@@ -42,14 +41,24 @@ public class ZookeeperManager {
                     }
                 });
         connectedSignal.await();
-        System.out.println("connected");
-        clearZNodes(); // in case crashed before shutting down last time
+        zooKeeper.sync(ZNODE_HEAD,null,null);
+        System.out.println("Connected to Zookeeper client " + zookeeperHosts);
+        LOGGER.info("Connected to Zookeeper client " + zookeeperHosts);
+//        clearZNodes(); // in case crashed before shutting down last time
         createHead();
         addZNode(ZNODE_HEAD, ZNODE_CONFIG_NODE,null);
     }
 
     private void createHead() throws KeeperException, InterruptedException {
-        zooKeeper.create(ZNODE_HEAD,null, ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+        Stat stat = zooKeeper.exists(ZNODE_HEAD,false);
+        if (stat == null) {
+            zooKeeper.create(ZNODE_HEAD, null, ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+            LOGGER.debug("Successfully created Head node");
+            System.out.println("Successfully created Head node");
+        } else {
+            LOGGER.debug("Head already exists, not creating");
+            System.out.println("Head already exists, not creating");
+        }
     }
 
     public boolean isConnected(){
@@ -65,7 +74,7 @@ public class ZookeeperManager {
         this.addZNode(ZNODE_HEAD,n.getNodeName(),toByteArray(jsonServerData));
     }
 
-    public void removeKVServer(ServerNode n) {
+    public void removeKVServer(ServerNode n) throws KeeperException, InterruptedException {
         this.deleteZNode(ZNODE_HEAD,n.getNodeName());
     }
 
@@ -89,14 +98,17 @@ public class ZookeeperManager {
 //            });
     }
 
-
     private void addZNode(String path, String memberName, byte[] data) throws KeeperException, InterruptedException { // KeeperException can be thrown if data to large
         String fullPath = path + "/" + memberName;
-        if (zooKeeper.exists(fullPath,false) == null) {
-            zooKeeper.create(fullPath, data, ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.EPHEMERAL_SEQUENTIAL);
+        zooKeeper.sync(fullPath,null,null);
+        Stat stat =zooKeeper.exists(fullPath,false);
+        if (stat == null) {
+            zooKeeper.create(fullPath, data, ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
             LOGGER.debug("Successfully created znode: " + fullPath);
+            System.out.println("Successfully created znode: " + fullPath);
         } else {
             LOGGER.debug("Trying to add znode: " + fullPath + " ,but already exists, updating data instead");
+            System.out.println("Trying to add znode: " + fullPath + " ,but already exists, updating data instead");
             zooKeeper.setData(fullPath,data,-1);
         }
     }
@@ -106,7 +118,7 @@ public class ZookeeperManager {
         // how to close connection with zookeeper?
     }
 
-    private void deleteZNode(String path, String groupName){
+    private void deleteZNode(String path, String groupName) throws KeeperException, InterruptedException {
         String fullPath = path + "/" + groupName;
         try {
             Stat stat = zooKeeper.exists(fullPath, false);
@@ -121,9 +133,6 @@ public class ZookeeperManager {
             zooKeeper.delete(fullPath, -1);
         } catch (KeeperException.NoNodeException e) {
             LOGGER.error("Trying to delete: " + fullPath + " but Znode does not exist\n", e);
-        } catch (InterruptedException | KeeperException e) {
-            LOGGER.error(e);
-            throw new RuntimeException("Error trying to delete: " + fullPath + " ,",e);
         }
     }
 
@@ -153,8 +162,7 @@ public class ZookeeperManager {
     public static void main(String[] args) throws IOException, InterruptedException, KeeperException {
         ZookeeperManager zm = new ZookeeperManager("localhost:2181", 10000); // session timeout is in ms
         System.out.println(zm.isConnected());
-        zm.addZNode(ZNODE_HEAD,"wee",null);
-        new ListGroupForever(zm.zooKeeper).listForever(HEAD_NAME); // debugging class
+        new ListGroupForever(zm.zooKeeper).listForever(ZNODE_HEAD); // debugging class
     }
 
 }
