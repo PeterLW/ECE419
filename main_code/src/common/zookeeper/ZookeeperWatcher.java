@@ -22,6 +22,7 @@ public class ZookeeperWatcher extends ZookeeperManager implements Runnable {
     private static Logger LOGGER = Logger.getLogger(ZookeeperECSManager.class);
     private String fullPath = null;
     private Semaphore semaphore = new Semaphore(1);
+    private ServerNode serverNode; // not sure.. if need
 
     public ZookeeperWatcher(String zookeeperHost, int sessionTimeout, String name) throws IOException, InterruptedException {
         super(zookeeperHost,sessionTimeout);
@@ -33,10 +34,11 @@ public class ZookeeperWatcher extends ZookeeperManager implements Runnable {
      * It is not meant to set a watch
      * @return
      */
-    public ServerNode getDataFromZnode() throws KeeperException, InterruptedException {
+    public ServerNode getDataFromZnode(ServerNode n) throws KeeperException, InterruptedException {
         byte[] data = zooKeeper.getData(fullPath,false,null);
         String dataString = new String(data);
-        ServerNode n = gson.fromJson(dataString,ServerNode.class);
+        ServerNode newNode = gson.fromJson(dataString,ServerNode.class);
+        n.setRange();
         return n;
     }
 

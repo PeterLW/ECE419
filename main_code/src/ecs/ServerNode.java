@@ -32,14 +32,21 @@ public class ServerNode implements IECSNode {
 //        this.id = this.host + ":" +this.port;
     }
 
+    public BigInteger[] getRange(){
+        return range;
+    }
+
+    public void setRange(BigInteger[] range){
+        this.range[0] = range[0];
+        this.range[1] = range[1];
+    }
+
     public void setRange(BigInteger start, BigInteger end){
         if (start == null || end == null){
             throw new NullPointerException("start and end cannot be null");
         }
         range[0] = start;
         range[1] = end;
-        hexStringRange[0] = start.toString();
-        hexStringRange[1] = end.toString();
     }
 
     public String getServerName(){ // debug
@@ -68,10 +75,9 @@ public class ServerNode implements IECSNode {
 
     @Override
     public String[] getNodeHashRange() {
+        hexStringRange[0] = range[0].toString();
+        hexStringRange[1] = range[1].toString();
         return hexStringRange;
     }
 
-//    public String getNodeId(){
-//        return id;
-//    }
 }

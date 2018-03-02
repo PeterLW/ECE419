@@ -5,6 +5,9 @@ import java.net.Socket;
 import java.io.IOException;
 
 import common.cache.StorageManager;
+import common.zookeeper.ZookeeperManager;
+import common.zookeeper.ZookeeperWatcher;
+import ecs.ServerNode;
 import logger.LogSetup;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -28,7 +31,9 @@ public class KVServer implements IKVServer {
 	private String cacheStrategy;
 	private static StorageManager storage;
 
-	private static ServerStatus serverStatus = ServerStatus.STARTING; // when first booted up, it's in starting stage 
+	private static ServerStatus serverStatus = ServerStatus.STARTING; // when first booted up, it's in starting stage
+	/* This needs to be passed into ClientConnections & ZookeeperWatcher thread */
+	private static ServerNode serverNode;
 
 	/**
 	 * Start KV Server at given port
@@ -51,13 +56,27 @@ public class KVServer implements IKVServer {
 		}
 	}
 
-	public KVServer(int port, int cacheSize, String strategy) {
-		// TODO Auto-generated method stub
-		this.port = port;
-		this.cacheSize = cacheSize;
-		this.cacheStrategy = strategy;
-		storage = new StorageManager(cacheSize, strategy);
+	// in progress
+	public KVServer(String name, String zkHostname, int zkPort) { // m2 interface
+		ZookeeperWatcher zookeeperWatcher = null;
+		try {
+			zookeeperWatcher = new ZookeeperWatcher(zkHostname,100000,name);
+		} catch (IOException | InterruptedException e) {
+			LOGGER.error("Failed to connect to zookeeper server");
+			System.exit(-1);
+		}
+
+
+		//		storage = new StorageManager(cacheSize, strategy);
 	}
+
+//	public KVServer(int port, int cacheSize, String strategy) { // m1 interface
+//		// TODO Auto-generated method stub
+//		this.port = port;
+//		this.cacheSize = cacheSize;
+//		this.cacheStrategy = strategy;
+//		storage = new StorageManager(cacheSize, strategy);
+//	}
 
     public boolean isRunning() {
         return this.running;
@@ -129,7 +148,7 @@ public class KVServer implements IKVServer {
 	@Override
     public void putKV(String key, String value) throws Exception{
 		// TODO Auto-generated method stub
-        if(storage.putKV(key, value) == true){
+        if(storage.putKV(key, value)){
             LOGGER.info("Server ("+hostname+","+port+") : Success in putKV");
         }
         else{
@@ -241,7 +260,8 @@ public class KVServer implements IKVServer {
 	}
 
 	public static void main(String[] args){
-			KVServer server = new KVServer(50000,10,"LRU"); // these should be from cmdline
-			server.run();
+		//TODO read from cmdline the arguments needed to start KVServer
+//			KVServer server = new KVServer(50000,10,"LRU"); // these should be from cmdline
+//			server.run();
 	}
 }
