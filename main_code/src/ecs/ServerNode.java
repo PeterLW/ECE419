@@ -7,13 +7,10 @@ public class ServerNode implements IECSNode {
     private String host;
     private String id; // "ipaddress:port"
     private int port;
-
     private BigInteger[] range = new BigInteger[2];
     private transient String[] hexStringRange = new String[2]; // do not serialize
     private int cacheSize;
     private String cacheStrategy;
-
-
 
     public ServerNode(ConfigEntity e, int cacheSize, String cacheStrategy){
         this.name = e.getHostName();
@@ -21,6 +18,12 @@ public class ServerNode implements IECSNode {
         this.port = e.getPortNum();
         this.cacheSize = cacheSize;
         this.cacheStrategy = cacheStrategy;
+    }
+
+    public ServerNode(String name, String ip, int port){
+        this.name = name;
+        this.host = ip;
+        this.port = port;
     }
 
     public void setRange(BigInteger start, BigInteger end){
