@@ -1,12 +1,16 @@
 package common.zookeeper;
 
+import org.apache.log4j.Logger;
 import org.apache.zookeeper.ZooKeeper;
 
-public class ZookeeperWatcher implements Runnable {
+import java.io.IOException;
 
+public class ZookeeperWatcher extends ZookeeperManager implements Runnable {
+    private static Logger LOGGER = Logger.getLogger(ZookeeperECSManager.class);
 
-    public ZookeeperWatcher(ZooKeeper zooKeeper){
-
+    public ZookeeperWatcher(String zookeeperHost, int sessionTimeout) throws IOException, InterruptedException {
+        super(zookeeperHost,sessionTimeout);
+        
     }
 
     @Override

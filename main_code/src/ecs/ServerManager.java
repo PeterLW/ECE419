@@ -1,6 +1,6 @@
 package ecs;
 
-import common.zookeeper.ZookeeperManager;
+import common.zookeeper.ZookeeperECSManager;
 import org.apache.log4j.Logger;
 import org.apache.zookeeper.KeeperException;
 
@@ -13,12 +13,12 @@ public class ServerManager {
     // name: (serverName ip) -> serverNode
     private HashMap<String,ServerNode> hashMap = new HashMap<String,ServerNode>();
 
-    private ZookeeperManager zookeeperManager;
+    private ZookeeperECSManager zookeeperManager;
     private static Logger LOGGER = Logger.getLogger(ServerManager.class);
 
     public ServerManager(){
         try {
-            zookeeperManager = new ZookeeperManager("localhost:2181",10000); // session timeout ms
+            zookeeperManager = new ZookeeperECSManager("localhost:2181",10000); // session timeout ms
         } catch (Exception e) {
             LOGGER.error("Failed to connect to zookeeper. Check that zookeeper server has started and is running on localhost:2181");
             throw new RuntimeException("Failed to connect to zookeeper. Check that zookeeper server has started and is running on localhost:2181", e);
