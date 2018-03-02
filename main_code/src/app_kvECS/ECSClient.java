@@ -20,13 +20,14 @@ import java.io.*;
 
 public class ECSClient implements IECSClient {
     private static final Logger LOGGER = Logger.getLogger(ServerManager.class);
-    private final ServerManager serverManager = new ServerManager();
-    private LinkedList<ConfigEntity> entityList = new LinkedList<ConfigEntity>();
-
     private static final String PROMPT = "ECSCLIENT> ";
     private static final String CONFIG_FILE_PATH = "ecs.config";
-    private BufferedReader stdin;
-    private boolean stop;
+
+    private final ServerManager serverManager = new ServerManager();
+    private final LinkedList<ConfigEntity> entityList = new LinkedList<ConfigEntity>();
+    private final BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in)); //Buffered Reader pointed at STDIN
+
+    private boolean stop = false;
 
     static {
         try {
@@ -38,9 +39,7 @@ public class ECSClient implements IECSClient {
         }
     }
 
-    public ECSClient(){
-        this.stop = false;
-    }
+    public ECSClient(){}
 
     @Override
     public boolean start() {
@@ -106,8 +105,8 @@ public class ECSClient implements IECSClient {
             try {
                 serverManager.addKVServer(node, cacheStrategy,cacheSize);
             } catch (InterruptedException | KeeperException e) {
-                LOGGER.error("Trying to add KVServer " + node.getServerName() + " to Zookeeper, Failed due to exception ", e);
-                System.out.println("Trying to add KVServer " + node.getServerName() + " to Zookeeper, Failed due to exception ");
+                LOGGER.error("Trying to add KVServer " + node.getNodeName() + " to Zookeeper, Failed due to exception ", e);
+                System.out.println("Trying to add KVServer " + node.getNodeName() + " to Zookeeper, Failed due to exception ");
                 e.printStackTrace();
             }
         }
@@ -123,7 +122,7 @@ public class ECSClient implements IECSClient {
     public boolean removeNodes(Collection<String> nodeNames) {
         for (String name : nodeNames) {
             try {
-                serverManager.removeNode(name);
+                serverManager.removeKVServer(name);
             }catch (KeeperException | InterruptedException e){
                 e.printStackTrace();
                 return false;
@@ -148,9 +147,13 @@ public class ECSClient implements IECSClient {
     }
 
     @Override
-    public IECSNode getNodeByKey(String Key) {
-        ServerNode node = serverManager.getNodeByKey(Key);
-        return node;
+    public IECSNode getNodeByKey(String key) {
+        ServerNode n = serverManager.getServerForKey(key);
+        if (n == null){
+            LOGGER.error("Attempting to get Server responsible for key: " + key + ", returned null");
+            return null;
+        }
+        return n;
     }
 
     /**
@@ -281,12 +284,9 @@ public class ECSClient implements IECSClient {
 
 
     public void run(){
-
         // start parseConfigFile with path to file
        // parseConfigFile(CONFIG_FILE_PATH);
-
         while(!stop) {
-            stdin = new BufferedReader(new InputStreamReader(System.in)); //Buffered Reader pointed at STDIN
             System.out.print(PROMPT);
             try {
                 String cmdLine = stdin.readLine(); // reads input after prompt

@@ -10,7 +10,7 @@ import java.util.HashMap;
 public class ServerManager {
 //    // hash values (start) -> serverNode
 //    private TreeMap<String,ServerNode> tree = new TreeMap<String,ServerNode>();
-    // ip:port -> serverNode
+    // name: (serverName ip) -> serverNode
     private HashMap<String,ServerNode> hashMap = new HashMap<String,ServerNode>();
 
     private ZookeeperManager zookeeperManager;
@@ -35,7 +35,7 @@ public class ServerManager {
     }
 
     public boolean addKVServer(ServerNode n, String cacheStrategy, int cacheSize) throws KeeperException, InterruptedException { // change to throw?
-        String id = n.getNodeId(); // ip:port
+        String id = n.getNodeName(); // ip:port
         if (hashMap.containsKey(id)) {
             return false;
         }
@@ -58,22 +58,21 @@ public class ServerManager {
         return true;
     }
 
-    public void removeKVServer(ServerNode n) throws KeeperException, InterruptedException {
-        String id = n.getNodeId();
-        zookeeperManager.removeKVServer(n);
-        if (hashMap.containsKey(id)){
-            hashMap.remove(id);
+    public void removeKVServer(String name) throws KeeperException, InterruptedException {
+        zookeeperManager.removeKVServer(name);
+        if (hashMap.containsKey(name)){
+            hashMap.remove(name);
         } else {
-            LOGGER.debug("Trying to remove server: " + n.getServerName() + " id: " + n.getNodeId() + " but server not in hash map");
+            LOGGER.debug("Trying to remove server: " + name + " but server not in hash map");
         }
     }
 
-    public void removeNode(String NodeName)throws KeeperException, InterruptedException{
-
-    }
-
-    public ServerNode getNodeByKey(String Key) {
-        return null;
+    public ServerNode getServerForKey(String key) {
+        if (hashMap.containsKey(key)) {
+            return hashMap.get(key);
+        } else {
+            return null;
+        }
     }
 
     public void close(){

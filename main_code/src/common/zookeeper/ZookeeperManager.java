@@ -71,11 +71,15 @@ public class ZookeeperManager {
     public void addKVServer(ServerNode n) throws KeeperException, InterruptedException {
         String jsonServerData = gson.toJson(n);
         System.out.println(jsonServerData); // debug
-        this.addZNode(ZNODE_HEAD,n.getServerName(),toByteArray(jsonServerData));
+        this.addZNode(ZNODE_HEAD,n.getNodeName(),toByteArray(jsonServerData));
     }
 
     public void removeKVServer(ServerNode n) throws KeeperException, InterruptedException {
-        this.deleteZNode(ZNODE_HEAD,n.getServerName());
+        this.deleteZNode(ZNODE_HEAD,n.getNodeName());
+    }
+
+    public void removeKVServer(String name) throws KeeperException, InterruptedException {
+        this.deleteZNode(ZNODE_HEAD,name);
     }
 
     private void addZNode(String path, String memberName, byte[] data) throws KeeperException, InterruptedException { // KeeperException can be thrown if data to large
