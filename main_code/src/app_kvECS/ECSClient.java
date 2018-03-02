@@ -9,6 +9,8 @@ import ecs.IECSNode;
 import ecs.ServerManager;
 import ecs.ConfigEntity;
 import ecs.ServerNode;
+import logger.LogSetup;
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.zookeeper.KeeperException;
 
@@ -27,9 +29,17 @@ public class ECSClient implements IECSClient {
     private BufferedReader stdin;
     private boolean stop;
 
+    static {
+        try {
+            new LogSetup("logs/ecsclient.log", Level.DEBUG);
+        } catch (IOException e) {
+            System.out.println("Error! Unable to initialize logger!");
+            e.printStackTrace();
+            System.exit(1);
+        }
+    }
 
     public ECSClient(){
-
         this.stop = false;
     }
 
@@ -175,16 +185,16 @@ public class ECSClient implements IECSClient {
         System.out.println(PROMPT + "Error! " +  error);
     }
 
-    private void handleCommand(String cmdLine) { // CLI Class probably should just be modifying this is enough .__.
+    private void handleCommand(String cmdLine) {
         String[] tokens = cmdLine.split("\\s+");
 
         if(tokens[0].equals("shutdown")) {
             stop = true;
             System.out.println(PROMPT + "All servers are shutdown.");
         } else if (tokens[0].equals("start")){
-            start();
+            this.start();
         } else  if (tokens[0].equals("stop")) {
-            stop();
+            this.stop();
         } else if(tokens[0].equals("addNode")){
             if(tokens.length != 3) {
                 printError("Invalid number of arguments");
