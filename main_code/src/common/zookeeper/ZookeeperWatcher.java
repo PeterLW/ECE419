@@ -1,21 +1,27 @@
 package common.zookeeper;
 
+import common.metadata.Metadata;
 import ecs.ServerNode;
 import org.apache.log4j.Logger;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
-import org.apache.zookeeper.ZooKeeper;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.concurrent.Semaphore;
 
 public class ZookeeperWatcher extends ZookeeperManager implements Runnable {
+    /*
+        On each KVServer, this class is the zookeeper interface manager
+        Instance one: helps to:
+            get Data from Znode
+            runs as a separate thread which will respond whenever data is changed by ECS
+        Instance two (do not run this as another thread):
+            get MetaData data
+     */
     private static Logger LOGGER = Logger.getLogger(ZookeeperECSManager.class);
     private String fullPath = null;
     private Semaphore semaphore = new Semaphore(1);
-
 
     public ZookeeperWatcher(String zookeeperHost, int sessionTimeout, String name) throws IOException, InterruptedException {
         super(zookeeperHost,sessionTimeout);
@@ -34,6 +40,15 @@ public class ZookeeperWatcher extends ZookeeperManager implements Runnable {
         return n;
     }
 
+    public Metadata getMetadata() throws KeeperException, InterruptedException {
+        String metadataPath = ZNODE_HEAD + "/" + ZNODE_CONFIG_NODE;
+        zooKeeper.sync(metadataPath,null,null);
+        byte[] data = zooKeeper.getData(metadataPath,false,null);
+        String dataString = new String(data);
+        Metadata n = gson.fromJson(dataString,Metadata.class);
+        return n;
+    }
+
     public void setWatch() throws KeeperException, InterruptedException {
         semaphore.acquire();
         byte[] data = zooKeeper.getData(fullPath, new Watcher() {
@@ -46,12 +61,17 @@ public class ZookeeperWatcher extends ZookeeperManager implements Runnable {
         }, null);
     }
 
+    private void getNewData(){
+
+
+    }
+
     @Override
     public void run() {
         try {
             semaphore.acquire();
             while(true){
-                
+                getNewData();
                 semaphore.acquire();
             }
         } catch (InterruptedException e) {

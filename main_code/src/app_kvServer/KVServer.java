@@ -10,7 +10,6 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 public class KVServer implements IKVServer {
-
     //log info
     private static final String PROMPT = "KVSERVER>";
     private static final Logger LOGGER = Logger.getLogger(KVServer.class);
@@ -28,6 +27,8 @@ public class KVServer implements IKVServer {
 	private int cacheSize;
 	private String cacheStrategy;
 	private static StorageManager storage;
+
+	private static ServerStatus serverStatus = ServerStatus.STARTING; // when first booted up, it's in starting stage 
 
 	/**
 	 * Start KV Server at given port
