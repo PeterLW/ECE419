@@ -98,7 +98,7 @@ public class ECSClient implements IECSClient {
             ServerNode node = new ServerNode(entityList.removeFirst(), cacheSize, cacheStrategy);
             list.add(node);
             try {
-                serverManager.addKVServer(node);
+                serverManager.addKVServer(node, cacheStrategy,cacheSize);
             } catch (InterruptedException | KeeperException e) {
                 LOGGER.error("Trying to add KVServer " + node.getServerName() + " to Zookeeper, Failed due to exception ", e);
                 System.out.println("Trying to add KVServer " + node.getServerName() + " to Zookeeper, Failed due to exception ");
@@ -129,7 +129,8 @@ public class ECSClient implements IECSClient {
 
     @Override
     public Map<String, IECSNode> getNodes() {
-        return map;
+//        HashMap<String, ServerNode> s =  serverManager.getServerMap();
+        return null;
     }
 
     @Override
@@ -239,7 +240,7 @@ public class ECSClient implements IECSClient {
         }
     }
 
-    public void help() {
+    private void help() {
         StringBuilder sb = new StringBuilder();
         sb.append(PROMPT).append("ECSCLIENT HELP (Usage):\n");
         sb.append(PROMPT);
@@ -262,7 +263,6 @@ public class ECSClient implements IECSClient {
         sb.append("\t\t Add a new server to the storage service at an arbitrary position .\n");
         sb.append(PROMPT).append("removeNode <server_index> ");
         sb.append("\t\t Remove a server from the storage service at an arbitrary position. \n");
-
     }
 
 

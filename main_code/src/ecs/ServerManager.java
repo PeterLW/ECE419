@@ -25,7 +25,16 @@ public class ServerManager {
         }
     }
 
-    public boolean addKVServer(ServerNode n) throws KeeperException, InterruptedException { // change to throw?
+    public HashMap<String,ServerNode> getServerMap(){
+        return hashMap;
+    }
+
+    public boolean addKVServer(ServerNode n) throws KeeperException, InterruptedException {
+        // have a default cache strategy & cache Size
+        return addKVServer(n,"LRU",100);
+    }
+
+    public boolean addKVServer(ServerNode n, String cacheStrategy, int cacheSize) throws KeeperException, InterruptedException { // change to throw?
         String id = n.getNodeId(); // ip:port
         if (hashMap.containsKey(id)) {
             return false;
@@ -46,11 +55,6 @@ public class ServerManager {
 
     public boolean stop(){
         return true;
-    }
-
-    public void addNode(String cacheStrategy, int cacheSize) throws KeeperException, InterruptedException{
-        //TODO: Create a new KVServer with the specified cache size and replacement strategy
-        // and add it to the storage service at an arbitrary position.
     }
 
     public void removeKVServer(ServerNode n) throws KeeperException, InterruptedException {
@@ -106,7 +110,7 @@ public class ServerManager {
             String name = "SERVER_" + Integer.toString(i);
             int port = 1111+i;
             ServerNode n = new ServerNode(name,"localhost",port);
-            boolean success = serverManager.addKVServer(n);
+            boolean success = serverManager.addKVServer(n,"something", 100);
             System.out.println(success);
         }
         System.in.read();
