@@ -70,32 +70,12 @@ public class ZookeeperManager {
 
     public void addKVServer(ServerNode n) throws KeeperException, InterruptedException {
         String jsonServerData = gson.toJson(n);
-        System.out.println(jsonServerData);
-        this.addZNode(ZNODE_HEAD,n.getNodeName(),toByteArray(jsonServerData));
+        System.out.println(jsonServerData); // debug
+        this.addZNode(ZNODE_HEAD,n.getServerName(),toByteArray(jsonServerData));
     }
 
     public void removeKVServer(ServerNode n) throws KeeperException, InterruptedException {
-        this.deleteZNode(ZNODE_HEAD,n.getNodeName());
-    }
-
-    public void getServerDataAndAddWatch(String serverName) throws KeeperException, InterruptedException {
-        String fullPath = ZNODE_HEAD + "/" + serverName;
-        Stat stat = zooKeeper.exists(fullPath,false);
-        if (stat == null){
-            LOGGER.debug("Attempting to access data for server: " + serverName + " but no znode created of that name");
-            return;
-        }
-
-//        byte[] data = zooKeeper.getData(fullPath,
-//                new Watcher() {
-//            @Override
-//            public void process(WatchedEvent watchedEvent) {
-//                if (watchedEvent.getType() == Event.EventType.NodeDataChanged) {
-//                    System.out.println("temp");
-//
-//                    }
-//                }
-//            });
+        this.deleteZNode(ZNODE_HEAD,n.getServerName());
     }
 
     private void addZNode(String path, String memberName, byte[] data) throws KeeperException, InterruptedException { // KeeperException can be thrown if data to large
@@ -160,7 +140,7 @@ public class ZookeeperManager {
     }
 
     public static void main(String[] args) throws IOException, InterruptedException, KeeperException {
-        ZookeeperManager zm = new ZookeeperManager("localhost:2181", 10000); // session timeout is in ms
+        ZookeeperManager zm = new ZookeeperManager("localhost:2181", 100000000); // session timeout is in ms
         System.out.println(zm.isConnected());
         new ListGroupForever(zm.zooKeeper).listForever(ZNODE_HEAD); // debugging class
     }

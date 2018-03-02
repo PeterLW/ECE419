@@ -5,6 +5,7 @@ import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
 import org.apache.zookeeper.ZooKeeper;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Semaphore;
@@ -30,12 +31,19 @@ public class ListGroupForever {
 
     private void list(String groupName)
             throws KeeperException, InterruptedException {
-        String path = "/" + groupName;
+        String path = groupName;
         List<String> children = zooKeeper.getChildren(path, new Watcher() {
             @Override
             public void process(WatchedEvent event) {
                 if (event.getType() == Watcher.Event.EventType.NodeChildrenChanged) {
-                    semaphore.release();
+//                    semaphore.release();
+                    try {
+                        System.out.println(event.getPath());
+                        list(event.getPath());
+                    } catch(Exception e){
+
+                    }
+
                 }
             }
         });
@@ -47,5 +55,10 @@ public class ListGroupForever {
         Collections.sort(children);
         System.out.println(children);
         System.out.println("--------------------");
+        try {
+            System.in.read();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

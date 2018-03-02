@@ -57,7 +57,6 @@ public class ClientConnection implements Runnable {
 		while (isOpen) {
             try {
 				 latestMsg = transmission.receiveMessage(clientSocket);
-
 				/* connection either terminated by the client or lost due to
 				 * network problems*/
 			} catch (IOException ioe) {

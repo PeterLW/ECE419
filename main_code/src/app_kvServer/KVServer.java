@@ -164,7 +164,7 @@ public class KVServer implements IKVServer {
 						numConnectedClients++;
 						ClientConnection connection = new ClientConnection(client, storage, numConnectedClients);
 						LOGGER.info("Connected to " + client.getInetAddress().getHostName() + " on port " + client.getPort());
-					new Thread(connection).start();
+						new Thread(connection).start();
 					} catch (IOException e) {
 
 						LOGGER.error("Error! " +  "Unable to establish connection. \n");

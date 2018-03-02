@@ -17,12 +17,11 @@ import java.util.*;
 import java.io.*;
 
 public class ECSClient implements IECSClient {
-
     private static final Logger LOGGER = Logger.getLogger(ServerManager.class);
     private final ServerManager serverManager = new ServerManager();
     private LinkedList<ConfigEntity> entityList = new LinkedList<ConfigEntity>();
+
     private static final Map<String,IECSNode> map = new HashMap<String, IECSNode>();
-    private static final ArrayList<IECSNode> list = new ArrayList<IECSNode>();
     private static final String PROMPT = "ECSCLIENT> ";
     private static final String CONFIG_FILE_PATH = "ecs.config";
     private BufferedReader stdin;
@@ -52,48 +51,59 @@ public class ECSClient implements IECSClient {
         return serverManager.shutdown();
     }
 
+    /**
+     * Create a new KVServer with the specified cache size and replacement strategy and add it to the storage service at an arbitrary position.
+     * @return  name of new server
+     */
     @Override
     public IECSNode addNode(String cacheStrategy, int cacheSize) {
-
-        if(entityList.isEmpty()){
-            LOGGER.error("no more nodes are available");
-            return null;
-        }
-        else{
-            setupNodes(1, cacheStrategy, cacheSize);
-            try {
-                serverManager.addNode(cacheStrategy, cacheSize);
-            }catch(KeeperException | InterruptedException e){
-                LOGGER.error("Error attempting to add node");
-                return null;
-            }
-            return list.get(list.size() - 1);
-        }
+        LinkedList<IECSNode> list = (LinkedList<IECSNode>) setupNodes(1,cacheStrategy,cacheSize);
+        IECSNode n = list.removeFirst();
+        /* @Aaron: This is where the ssh script should go
+            https://piazza.com/class/jc6l5ut99r35yl?cid=179
+        */
+        return n;
     }
 
+    /**
+     * Randomly choose <numberOfNodes> servers from the available machines and start the KVServer by issuing an SSH call to the respective machine.
+     * This call launches the storage server with the specified cache size and replacement strategy. For simplicity, locate the KVServer.jar in the
+     * same directory as the ECS. All storage servers are initialized with the metadata and any persisted data, and remain in state stopped.
+     * NOTE: Must call setupNodes before the SSH calls to start the servers and must call awaitNodes before returning
+     * @return  set of strings containing the names of the nodes
+     */
     @Override
     public Collection<IECSNode> addNodes(int count, String cacheStrategy, int cacheSize) {
+        Collection<IECSNode> list = setupNodes(count,cacheStrategy,cacheSize);
+        for (IECSNode node : list){
+            /* @Aaron: This is where the ssh script should go
+            https://piazza.com/class/jc6l5ut99r35yl?cid=179
+            */
 
-        setupNodes(count, cacheStrategy, cacheSize);
-        for (int i =0; i<count; i++){
-            try {
-                serverManager.addNode(cacheStrategy, cacheSize);
-            } catch (KeeperException | InterruptedException e) {
-                LOGGER.error("Error attempting to add node #" + count);
-                return null;
-            }
+//                serverManager.addNode(cacheStrategy, cacheSize);
+            // I need the server name and port to add NOD I CAN'T just add a node with just this...
+            // omgosh.
         }
         return list;
     }
 
+    /**
+     * Sets up `count` servers with the ECS (in this case Zookeeper)
+     * @return  array of strings, containing unique names of servers
+     */
     @Override
-    public Collection<IECSNode> setupNodes(int count, String cacheStrategy, int cacheSize) {
-
+    public Collection<IECSNode> setupNodes(int count, String cacheStrategy, int cacheSize) { // this function is redundant.
+        LinkedList<IECSNode>list = new LinkedList<IECSNode>();
         for(int i = 0; i < count; ++i){
             ServerNode node = new ServerNode(entityList.removeFirst(), cacheSize, cacheStrategy);
             list.add(node);
-            map.put(node.getNodeName(),node);
-
+            try {
+                serverManager.addKVServer(node);
+            } catch (InterruptedException | KeeperException e) {
+                LOGGER.error("Trying to add KVServer " + node.getServerName() + " to Zookeeper, Failed due to exception ", e);
+                System.out.println("Trying to add KVServer " + node.getServerName() + " to Zookeeper, Failed due to exception ");
+                e.printStackTrace();
+            }
         }
         return list;
     }
@@ -106,10 +116,9 @@ public class ECSClient implements IECSClient {
 
     @Override
     public boolean removeNodes(Collection<String> nodeNames) {
-
-        for (Iterator<String> iterator = nodeNames.iterator(); iterator.hasNext();) {
+        for (String name : nodeNames) {
             try {
-                serverManager.removeNode(iterator.next());
+                serverManager.removeNode(name);
             }catch (KeeperException | InterruptedException e){
                 e.printStackTrace();
                 return false;
@@ -120,13 +129,12 @@ public class ECSClient implements IECSClient {
 
     @Override
     public Map<String, IECSNode> getNodes() {
-
         return map;
     }
 
     @Override
     public IECSNode getNodeByKey(String Key) {
-        IECSNode node = serverManager.getNodeByKey(Key);
+        ServerNode node = serverManager.getNodeByKey(Key);
         return node;
     }
 

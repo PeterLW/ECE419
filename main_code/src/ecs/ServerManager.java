@@ -4,6 +4,7 @@ import common.zookeeper.ZookeeperManager;
 import org.apache.log4j.Logger;
 import org.apache.zookeeper.KeeperException;
 
+import java.io.IOException;
 import java.util.HashMap;
 
 public class ServerManager {
@@ -12,7 +13,7 @@ public class ServerManager {
     // ip:port -> serverNode
     private HashMap<String,ServerNode> hashMap = new HashMap<String,ServerNode>();
 
-    ZookeeperManager zookeeperManager;
+    private ZookeeperManager zookeeperManager;
     private static Logger LOGGER = Logger.getLogger(ServerManager.class);
 
     public ServerManager(){
@@ -24,7 +25,7 @@ public class ServerManager {
         }
     }
 
-    public boolean addNode(ServerNode n) throws KeeperException, InterruptedException { // change to throw?
+    public boolean addKVServer(ServerNode n) throws KeeperException, InterruptedException { // change to throw?
         String id = n.getNodeId(); // ip:port
         if (hashMap.containsKey(id)) {
             return false;
@@ -48,19 +49,18 @@ public class ServerManager {
     }
 
     public void addNode(String cacheStrategy, int cacheSize) throws KeeperException, InterruptedException{
-
         //TODO: Create a new KVServer with the specified cache size and replacement strategy
         // and add it to the storage service at an arbitrary position.
-
     }
 
-    public void removeNode(ServerNode n) throws KeeperException, InterruptedException{
+    public void removeKVServer(ServerNode n) throws KeeperException, InterruptedException {
+
         String id = n.getNodeId();
         zookeeperManager.removeKVServer(n);
         if (hashMap.containsKey(id)){
             hashMap.remove(id);
         } else {
-            LOGGER.debug("Trying to remove server: " + n.getNodeName() + " id: " + n.getNodeId() + " but server not in hash map");
+            LOGGER.debug("Trying to remove server: " + n.getServerName() + " id: " + n.getNodeId() + " but server not in hash map");
         }
     }
 
@@ -76,14 +76,6 @@ public class ServerManager {
     }
 
 
-//
-//    /**
-//     * @return number of nodes successfully added
-//     */
-//    public int addNodes(List<ServerNode> nodes){
-//        return 0;
-//    }
-//
 //    public boolean removeNode(String id) {
 //        ServerNode n = hashMap.get(id);
 //        if (n == null){
@@ -108,4 +100,15 @@ public class ServerManager {
 //        return 0;
 //    }
 
+    public static void main(String[] args) throws IOException, InterruptedException, KeeperException {
+        ServerManager serverManager = new ServerManager();
+        for (int i = 12; i<17; i++){
+            String name = "SERVER_" + Integer.toString(i);
+            int port = 1111+i;
+            ServerNode n = new ServerNode(name,"localhost",port);
+            boolean success = serverManager.addKVServer(n);
+            System.out.println(success);
+        }
+        System.in.read();
+    }
 }
