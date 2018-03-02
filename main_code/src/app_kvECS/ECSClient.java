@@ -34,19 +34,19 @@ public class ECSClient implements IECSClient {
 
         // start parseConfigFile with path to file
         parseConfigFile(CONFIG_FILE_PATH);
-        return serverManager.start();
+        return false;
     }
 
     @Override
     public boolean stop() {
 
-        return serverManager.stop();
+        return false;
     }
 
     @Override
     public boolean shutdown() {
         // TODO
-        return serverManager.shutdown();
+        return false;
     }
 
     //@return  name of new server
@@ -59,21 +59,19 @@ public class ECSClient implements IECSClient {
         }
         else{
             ServerNode node = new ServerNode(entityList.removeFirst(),cacheSize,cacheStrategy);
-            if(serverManager.addNode(node) == false){
-                printError("Error: failed to error server node to server manager");
-            }
+//            serverManager.addKVServer(node);
             return node;
         }
     }
 
     //@return  set of strings containing the names of the nodes
     @Override
-    public Collection<ServerNode> addNodes(int count, String cacheStrategy, int cacheSize) {
+    public Collection<IECSNode> addNodes(int count, String cacheStrategy, int cacheSize) {
         for (int i =0; i<count; i++){
 
             ServerNode n = new ServerNode(entityList.removeFirst(), cacheSize, cacheStrategy);
             try {
-                serverManager.addNode(n);
+                serverManager.addKVServer(n);
             } catch (KeeperException | InterruptedException e) {
                 LOGGER.error("Error attempting to add node #" + count + " in addNodes. Node name: " + n.getNodeName());
             }
@@ -83,7 +81,7 @@ public class ECSClient implements IECSClient {
     }
 
     @Override
-    public Collection<ServerNode> setupNodes(int count, String cacheStrategy, int cacheSize) {
+    public Collection<IECSNode> setupNodes(int count, String cacheStrategy, int cacheSize) {
         // TODO
         return null;
     }
@@ -99,13 +97,13 @@ public class ECSClient implements IECSClient {
 
         for (Iterator<String> iterator = nodeNames.iterator(); iterator.hasNext();) {
 
-            serverManager.removeNode(iterator.next());
+//            serverManager.removeNode(iterator.next());
         }
-
+        return false;
     }
 
     @Override
-    public Map<String, ServerNode> getNodes() {
+    public Map<String, IECSNode> getNodes() {
         // TODO
         return null;
     }
@@ -169,9 +167,9 @@ public class ECSClient implements IECSClient {
 
                 int cacheSize = Integer.parseInt(tokens[1]);
                 String cacheStrategy = tokens[2];
-                if (addNode(cacheStrategy, cacheSize) == null) {
-                    printError("Error occurred in adding a server node");
-                }
+//                if (addNode(cacheStrategy, cacheSize) == null) {
+//                    printError("Error occurred in adding a server node");
+//                }
             }
         }else if(tokens[0].equals("addNodes")) {
             if(tokens.length != 4){
@@ -237,15 +235,15 @@ public class ECSClient implements IECSClient {
 
     public void run(){
         while(!stop) {
-            stdin = new BufferedReader(new InputStreamReader(System.in)); //Buffered Reader pointed at STDIN
-            System.out.print(PROMPT);
-            try {
-                String cmdLine = stdin.readLine(); // reads input after prompt
-                this.handleCommand(cmdLine);
-            } catch (IOException e) {
-                stop = true;
-                printError("CLI does not respond - Application terminated ");
-            }
+//            stdin = new BufferedReader(new InputStreamReader(System.in)); //Buffered Reader pointed at STDIN
+//            System.out.print(PROMPT);
+//            try {
+////                String cmdLine = stdin.readLine(); // reads input after prompt
+////                this.handleCommand(cmdLine);
+//            } catch (IOException e) {
+//                stop = true;
+//                printError("CLI does not respond - Application terminated ");
+//            }
         }
     }
 
