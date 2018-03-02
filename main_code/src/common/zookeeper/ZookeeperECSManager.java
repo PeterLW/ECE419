@@ -30,6 +30,7 @@ public class ZookeeperECSManager extends ZookeeperManager{
         LOGGER.info("Connected to Zookeeper client " + zookeeperHosts);
 //        clearZNodes(); // in case crashed before shutting down last time
         createHead();
+        // the config node should store the metadata class
         addZNode(ZNODE_HEAD, ZNODE_CONFIG_NODE,null);
     }
 

@@ -14,13 +14,13 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.zookeeper.KeeperException;
 
-
 import java.util.*;
 import java.io.*;
 
 public class ECSClient implements IECSClient {
     private static final Logger LOGGER = Logger.getLogger(ServerManager.class);
     private static final String PROMPT = "ECSCLIENT> ";
+    // Note: Hey, is this the name that they will use in autotester? If not we perhaps should change this to a runtime argument
     private static final String CONFIG_FILE_PATH = "ecs.config";
 
     private final ServerManager serverManager = new ServerManager();

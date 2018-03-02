@@ -10,8 +10,9 @@ import java.util.HashMap;
 public class ServerManager {
 //    // hash values (start) -> serverNode
 //    private TreeMap<String,ServerNode> tree = new TreeMap<String,ServerNode>();
+
     // name: (serverName ip) -> serverNode
-    private HashMap<String,ServerNode> hashMap = new HashMap<String,ServerNode>();
+    private HashMap<String,ServerNode> hashMap = new HashMap<String,ServerNode>(); // stores the active running nodes
 
     private ZookeeperECSManager zookeeperManager;
     private static Logger LOGGER = Logger.getLogger(ServerManager.class);
@@ -39,7 +40,6 @@ public class ServerManager {
         if (hashMap.containsKey(id)) {
             return false;
         }
-
         zookeeperManager.addKVServer(n);
         hashMap.put(id,n);
         return true;
@@ -51,7 +51,7 @@ public class ServerManager {
 
     public boolean stop(){ // look into
         return true;
-    }
+    } // do not delete nodes
 
     public boolean shutdown(){
         try {
@@ -62,7 +62,6 @@ public class ServerManager {
             return false;
         }
     } // delete nodes
-
 
     public void removeKVServer(String name) throws KeeperException, InterruptedException {
         zookeeperManager.removeKVServer(name);

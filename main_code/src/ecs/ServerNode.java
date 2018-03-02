@@ -11,10 +11,7 @@ public class ServerNode implements IECSNode {
 
     private int cacheSize;
     private String cacheStrategy;
-
     // private ServerStatus statusChange; // for updates to znodes that are status changes: Ie. Start/Stop, otherwise this should be null.
-
-
 
     private transient String[] hexStringRange = new String[2]; // do not serialize
 

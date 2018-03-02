@@ -11,7 +11,7 @@ import java.util.concurrent.CountDownLatch;
 public class ZookeeperManager {
     protected static final String HEAD_NAME = "ZNODES_HEAD";
     protected static final String ZNODE_HEAD = "/"+HEAD_NAME;
-    protected static final String ZNODE_CONFIG_NODE = "CONFIG_DATA";
+    protected static final String ZNODE_CONFIG_NODE = "METADATA";
     protected static final String ZNODE_SERVER_PREFIX = "KVSERVER_";
     protected static final Gson gson = new Gson();
 
