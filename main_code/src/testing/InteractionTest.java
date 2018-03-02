@@ -1,6 +1,6 @@
 package testing;
 
-import org.junit.Test;
+//import org.junit.Test;
 
 import client.KVStore;
 import junit.framework.TestCase;
@@ -26,7 +26,7 @@ public class InteractionTest extends TestCase {
 	}
 	
 	
-	@Test
+	//@Test
 	public void testPut() {
 		String key = "foo2";
 		String value = "bar2";
@@ -43,7 +43,7 @@ public class InteractionTest extends TestCase {
 		assertTrue(ex == null && response.getStatus() == StatusType.PUT_SUCCESS);
 	}
 	
-	@Test
+	//@Test
 	public void testPutDisconnected() {
 		setUp();
 		kvClient.disconnect();
@@ -62,7 +62,7 @@ public class InteractionTest extends TestCase {
         assertNull(ret);
 	}
 
-	@Test
+	//@Test
 	public void testUpdate() {
 		String key = "updateTestValue";
 		String initialValue = "initial";
@@ -84,7 +84,7 @@ public class InteractionTest extends TestCase {
 				&& response.getValue().equals(updatedValue));
 	}
 	
-	@Test
+	//@Test
 	public void testDelete() {
 		String key = "deleteTestValue";
 		String value = "toDelete";
@@ -105,7 +105,7 @@ public class InteractionTest extends TestCase {
         assertTrue( response.getStatus() == StatusType.DELETE_SUCCESS);
 	}
 	
-	@Test
+	//@Test
 	public void testGet() {
 		String key = "foo";
 		String value = "bar";
@@ -123,7 +123,7 @@ public class InteractionTest extends TestCase {
 		assertTrue(ex == null && response.getValue().equals("bar"));
 	}
 
-	@Test
+	//@Test
 	public void testGetUnsetValue() {
 		String key = "an unset value";
 		KVMessage response = null;

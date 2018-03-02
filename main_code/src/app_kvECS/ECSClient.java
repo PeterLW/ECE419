@@ -2,7 +2,9 @@ package app_kvECS;
 
 import java.util.Map;
 import java.util.Collection;
-
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import ecs.IECSNode;
 import ecs.ServerManager;
 import ecs.ConfigEntity;
@@ -18,9 +20,12 @@ public class ECSClient implements IECSClient {
 
     private static final Logger LOGGER = Logger.getLogger(ServerManager.class);
     private final ServerManager serverManager = new ServerManager();
-    private LinkedList<ConfigEntity> entityList= new LinkedList<ConfigEntity>();
+    private LinkedList<ConfigEntity> entityList = new LinkedList<ConfigEntity>();
+    private static final Map<String,IECSNode> map = new HashMap<String, IECSNode>();
+    private static final ArrayList<IECSNode> list = new ArrayList<IECSNode>();
     private static final String PROMPT = "ECSCLIENT> ";
     private static final String CONFIG_FILE_PATH = "ecs.config";
+    private BufferedReader stdin;
     private boolean stop;
 
 
@@ -32,63 +37,70 @@ public class ECSClient implements IECSClient {
     @Override
     public boolean start() {
 
-        // start parseConfigFile with path to file
-        parseConfigFile(CONFIG_FILE_PATH);
-        return false;
+        return serverManager.start();
     }
 
     @Override
     public boolean stop() {
 
-        return false;
+        return serverManager.stop();
     }
 
     @Override
     public boolean shutdown() {
-        // TODO
-        return false;
+
+        return serverManager.shutdown();
     }
 
-    //@return  name of new server
     @Override
-    public ServerNode addNode(String cacheStrategy, int cacheSize) {
-        // TODO
+    public IECSNode addNode(String cacheStrategy, int cacheSize) {
+
         if(entityList.isEmpty()){
-            printError("no more nodes are available");
+            LOGGER.error("no more nodes are available");
             return null;
         }
         else{
-            ServerNode node = new ServerNode(entityList.removeFirst(),cacheSize,cacheStrategy);
-//            serverManager.addKVServer(node);
-            return node;
+            setupNodes(1, cacheStrategy, cacheSize);
+            try {
+                serverManager.addNode(cacheStrategy, cacheSize);
+            }catch(KeeperException | InterruptedException e){
+                LOGGER.error("Error attempting to add node");
+                return null;
+            }
+            return list.get(list.size() - 1);
         }
     }
 
-    //@return  set of strings containing the names of the nodes
     @Override
     public Collection<IECSNode> addNodes(int count, String cacheStrategy, int cacheSize) {
-        for (int i =0; i<count; i++){
 
-            ServerNode n = new ServerNode(entityList.removeFirst(), cacheSize, cacheStrategy);
+        setupNodes(count, cacheStrategy, cacheSize);
+        for (int i =0; i<count; i++){
             try {
-                serverManager.addKVServer(n);
+                serverManager.addNode(cacheStrategy, cacheSize);
             } catch (KeeperException | InterruptedException e) {
-                LOGGER.error("Error attempting to add node #" + count + " in addNodes. Node name: " + n.getNodeName());
+                LOGGER.error("Error attempting to add node #" + count);
+                return null;
             }
         }
-        //need to change here through ServerManager API.
-        return null;
+        return list;
     }
 
     @Override
     public Collection<IECSNode> setupNodes(int count, String cacheStrategy, int cacheSize) {
-        // TODO
-        return null;
+
+        for(int i = 0; i < count; ++i){
+            ServerNode node = new ServerNode(entityList.removeFirst(), cacheSize, cacheStrategy);
+            list.add(node);
+            map.put(node.getNodeName(),node);
+
+        }
+        return list;
     }
 
     @Override
     public boolean awaitNodes(int count, int timeout) throws Exception {
-        // TODO
+
         return false;
     }
 
@@ -96,22 +108,26 @@ public class ECSClient implements IECSClient {
     public boolean removeNodes(Collection<String> nodeNames) {
 
         for (Iterator<String> iterator = nodeNames.iterator(); iterator.hasNext();) {
-
-//            serverManager.removeNode(iterator.next());
+            try {
+                serverManager.removeNode(iterator.next());
+            }catch (KeeperException | InterruptedException e){
+                e.printStackTrace();
+                return false;
+            }
         }
-        return false;
+        return true;
     }
 
     @Override
     public Map<String, IECSNode> getNodes() {
-        // TODO
-        return null;
+
+        return map;
     }
 
     @Override
     public IECSNode getNodeByKey(String Key) {
-        // TODO
-        return null;
+        IECSNode node = serverManager.getNodeByKey(Key);
+        return node;
     }
 
     /**
@@ -167,9 +183,12 @@ public class ECSClient implements IECSClient {
 
                 int cacheSize = Integer.parseInt(tokens[1]);
                 String cacheStrategy = tokens[2];
-//                if (addNode(cacheStrategy, cacheSize) == null) {
-//                    printError("Error occurred in adding a server node");
-//                }
+                if (addNode(cacheStrategy, cacheSize) == null) {
+                    printError("Error occurred in adding a server node");
+                }
+                else{
+                    System.out.println("new server node added to the ECS");
+                }
             }
         }else if(tokens[0].equals("addNodes")) {
             if(tokens.length != 4){
@@ -180,24 +199,33 @@ public class ECSClient implements IECSClient {
                 int cacheSize = Integer.parseInt(tokens[2]);
                 String cacheStrategy = tokens[3];
                 if(addNodes(count,cacheStrategy,cacheSize) == null){
-                    printError("Error occurred in adding "+tokens[1]+" server nodes");
+                    printError("Failed in adding "+tokens[1]+" server nodes");
+                }
+                else{
+                    System.out.println(tokens[1] + " nodes added to the ECS");
                 }
             }
         } else if(tokens[0].equals("removeNode")) {
-            if(tokens.length != 2) {
+            int num_args = tokens.length;
+            if(num_args < 2) {
                 printError("Invalid number of arguments");
             }
             else{
-
+                    ArrayList<String> nodes = new ArrayList<String>();
+                    for(int i = 1; i < num_args; i++){
+                        nodes.add(tokens[i]);
+                    }
+                    if(removeNodes(nodes) == false){
+                        printError("failed to remove " + Integer.toString(num_args - 1) +" nodes");
+                    }
+                    else{
+                        System.out.println("node deletion succeed");
+                    }
             }
         } else if(tokens[0].equals("help")) {
             help();
         }
-        else if(tokens[0].length() == 0){
-            //do nothing
-        }
         else{
-            System.out.println("enter key = "+tokens[0]);
             printError("Unknown command");
             help();
         }
@@ -205,54 +233,54 @@ public class ECSClient implements IECSClient {
 
     public void help() {
         StringBuilder sb = new StringBuilder();
-        sb.append(PROMPT).append("KVCLIENT HELP (Usage):\n");
+        sb.append(PROMPT).append("ECSCLIENT HELP (Usage):\n");
         sb.append(PROMPT);
         sb.append("::::::::::::::::::::::::::::::::");
         sb.append("::::::::::::::::::::::::::::::::\n");
 
-        sb.append(PROMPT).append("connect <host> <port>");
-        sb.append("\t establishes a connection to a server\n");
+        sb.append(PROMPT).append("addNodes <numberOfNodes> <cacheSize> <replacementStrategy>");
+        sb.append("\t launch server nodes\n");
 
-        sb.append(PROMPT).append("put <key> <value>");
-        sb.append("\t\t put a key-value pair into the storage server \n");
+        sb.append(PROMPT).append("start");
+        sb.append("\t\t starts the storage services on all participating storage servers \n");
 
-        sb.append(PROMPT).append("get <key>");
-        sb.append("\t\t\t retrieve value for the given key from the storage server \n");
+        sb.append(PROMPT).append("stop");
+        sb.append("\t\t stops the storage services on all participating storage servers \n");
 
-        sb.append(PROMPT).append("disconnect");
-        sb.append("\t\t\t disconnects from the server \n");
+        sb.append(PROMPT).append("shutDown");
+        sb.append("\t\t Stops all server instances and exits the remote processes. \n");
 
-        sb.append(PROMPT).append("logLevel <level>");
-        sb.append("\t\t\t set logger to the specified log level \n");
-        sb.append(PROMPT).append("\t\t\t\t ");
-        sb.append("ALL | DEBUG | INFO | WARN | ERROR | FATAL | OFF \n");
+        sb.append(PROMPT).append("addNode <cacheSize> <replacementStrategy>");
+        sb.append("\t\t Add a new server to the storage service at an arbitrary position .\n");
+        sb.append(PROMPT).append("removeNode <server_index> ");
+        sb.append("\t\t Remove a server from the storage service at an arbitrary position. \n");
 
-        sb.append(PROMPT).append("quit ");
-        sb.append("\t\t\t Tears down the active connection to the server and exits the program");
-        System.out.println(sb.toString());
     }
 
 
     public void run(){
+
+        // start parseConfigFile with path to file
+       // parseConfigFile(CONFIG_FILE_PATH);
+
         while(!stop) {
-//            stdin = new BufferedReader(new InputStreamReader(System.in)); //Buffered Reader pointed at STDIN
-//            System.out.print(PROMPT);
-//            try {
-////                String cmdLine = stdin.readLine(); // reads input after prompt
-////                this.handleCommand(cmdLine);
-//            } catch (IOException e) {
-//                stop = true;
-//                printError("CLI does not respond - Application terminated ");
-//            }
+            stdin = new BufferedReader(new InputStreamReader(System.in)); //Buffered Reader pointed at STDIN
+            System.out.print(PROMPT);
+            try {
+                String cmdLine = stdin.readLine(); // reads input after prompt
+                this.handleCommand(cmdLine);
+            } catch (IOException e) {
+                stop = true;
+                printError("CLI does not respond - Application terminated ");
+            }
         }
     }
 
     public static void main(String[] args) {
-        // TODO
+
         ECSClient client = new ECSClient();
         client.run();
         System.exit(1);
-        //parse the config file
 
     }
 }

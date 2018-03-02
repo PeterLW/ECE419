@@ -35,7 +35,26 @@ public class ServerManager {
         return true;
     }
 
-    public void removeNode(ServerNode n) {
+    public boolean shutdown(){
+        return true;
+    }
+
+    public boolean start(){
+        return true;
+    }
+
+    public boolean stop(){
+        return true;
+    }
+
+    public void addNode(String cacheStrategy, int cacheSize) throws KeeperException, InterruptedException{
+
+        //TODO: Create a new KVServer with the specified cache size and replacement strategy
+        // and add it to the storage service at an arbitrary position.
+
+    }
+
+    public void removeNode(ServerNode n) throws KeeperException, InterruptedException{
         String id = n.getNodeId();
         zookeeperManager.removeKVServer(n);
         if (hashMap.containsKey(id)){
@@ -43,6 +62,13 @@ public class ServerManager {
         } else {
             LOGGER.debug("Trying to remove server: " + n.getNodeName() + " id: " + n.getNodeId() + " but server not in hash map");
         }
+    }
+
+    public void removeNode(String NodeName)throws KeeperException, InterruptedException{
+
+    }
+    public ServerNode getNodeByKey(String Key) {
+        return null;
     }
 
     public void close(){

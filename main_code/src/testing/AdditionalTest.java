@@ -5,7 +5,7 @@ import common.cache.StorageManager;
 import common.disk.DBManager;
 import common.messages.KVMessage;
 import common.messages.Message;
-import org.junit.Test;
+//import org.junit.Test;
 
 import junit.framework.TestCase;
 
@@ -16,7 +16,7 @@ public class AdditionalTest extends TestCase {
 	
 	// TODO add your test cases, at least 3
 
-	@Test
+	//@Test
 	public void testMessage(){
 		/*
 		 * ensures Message is serialized properly
@@ -30,7 +30,7 @@ public class AdditionalTest extends TestCase {
 	}
 
 
-	@Test
+	//@Test
 	public void testFIFO(){
 		/* FIFO implementation
 		 * ensures correct keys are in cache
@@ -49,7 +49,7 @@ public class AdditionalTest extends TestCase {
 		assertTrue(sm.inCache("5"));
 	}
 
-	@Test
+	//@Test
 	public void testLRU(){
 		/* LRU implementation
 		 * ensures correct keys are in cache
@@ -73,7 +73,7 @@ public class AdditionalTest extends TestCase {
 		assertTrue(sm.inCache("3"));
 	}
 
-	@Test
+	//@Test
 	public void testLFU(){
 		/* LFU implementation
 		 * ensures correct keys are in cache
@@ -116,7 +116,7 @@ public class AdditionalTest extends TestCase {
 		assertTrue(sm.inCache("2"));
 	}
 	
-	@Test
+	//@Test
 	public void testWriteThroughCache() {
 		/*
 		 * ensures KVs are properly written to database through cache structure
@@ -133,7 +133,7 @@ public class AdditionalTest extends TestCase {
 		assertTrue(sm.inDatabase("a3"));
 	}
 
-	@Test
+	//@Test
 	public void testInsertionPolicy(){
 		/*
 		 * Ensures that cache inserts into free slots after free slots created after deleteKV
@@ -173,7 +173,7 @@ public class AdditionalTest extends TestCase {
 		assertTrue(sm.inCache("4"));
 	}
 
-	@Test
+	//@Test
 	public void testDeleteKV() {
 		/* tests to ensure that KV are deleted
 		 * from database and cache
@@ -205,7 +205,7 @@ public class AdditionalTest extends TestCase {
 
 	}
 
-	@Test
+	//@Test
 	public void testdB() {
 		/* tests that database creates persistent file storage
 		 * and deletes when called

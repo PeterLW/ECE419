@@ -4,8 +4,8 @@ import common.cache.StorageManager;
 import common.disk.DBManager;
 
 import junit.framework.TestCase;
-import org.junit.Before;
-import org.junit.Test;
+//import org.junit.Before;
+//import org.junit.Test;
 
 import java.util.ArrayList;
 
@@ -18,7 +18,7 @@ public class CacheTest extends TestCase{
         add("LFU");
     }};
 
-    @Test
+    //@Test
     public void testInsert(){
         for (String strategy: cacheStrategy) {
            StorageManager sm = new StorageManager(10, strategy);
@@ -38,7 +38,7 @@ public class CacheTest extends TestCase{
            }
        }
    }
-    @Test
+    //@Test
     public void testUpdate(){
         for (String strategy: cacheStrategy) {
             StorageManager rm = new StorageManager(10, strategy);
@@ -65,7 +65,7 @@ public class CacheTest extends TestCase{
         }
     }
 
-    @Test
+    //@Test
     public void testDelete(){
         for (String strategy: cacheStrategy) {
             StorageManager sm = new StorageManager(10, strategy);
@@ -97,7 +97,7 @@ public class CacheTest extends TestCase{
         }
     }
 
-    @Test
+    //@Test
     public void testGet(){
         for (String strategy: cacheStrategy) {
             StorageManager sm = new StorageManager(10, strategy);

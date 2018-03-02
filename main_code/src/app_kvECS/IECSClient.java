@@ -73,3 +73,12 @@ public interface IECSClient {
      */
     public IECSNode getNodeByKey(String Key);
 }
+/*
+
+addNode( ): Create a new KVServer with the specified cache size and replacement strategy
+ and add it to the storage service at an arbitrary position.
+
+ setupNode( ): Create IECSNodes for the servers, but do not issue the ssh call
+ to start the processes. Should be invoked by addNode(s)
+
+ */
