@@ -1,5 +1,6 @@
 package ecs;
 
+import app_kvServer.ServerStatus;
 import common.zookeeper.ZookeeperECSManager;
 import org.apache.log4j.Logger;
 import org.apache.zookeeper.KeeperException;
@@ -78,7 +79,7 @@ public class ServerManager {
     }
 
     public static void main(String[] args) throws IOException, InterruptedException, KeeperException {
-//        ServerNode n = new ServerNode("11111","localhost",1111);
+        //        ServerNode n = new ServerNode("11111","localhost",1111);
 //        n.cacheStrategy = "SSSS";
 //        n.cacheSize = 111;
 //        System.out.println(n.getNodeId());

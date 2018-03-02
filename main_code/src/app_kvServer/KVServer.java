@@ -1,16 +1,18 @@
 package app_kvServer;
-import java.net.BindException;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.io.IOException;
-
 import common.cache.StorageManager;
-import common.zookeeper.ZookeeperManager;
 import common.zookeeper.ZookeeperWatcher;
 import ecs.ServerNode;
 import logger.LogSetup;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.apache.zookeeper.KeeperException;
+
+import java.io.IOException;
+import java.net.BindException;
+import java.net.ServerSocket;
+import java.net.Socket;
+
+import lombok.*;
 
 public class KVServer implements IKVServer {
     //log info
@@ -26,12 +28,11 @@ public class KVServer implements IKVServer {
 
     private static int numConnectedClients = 0;
 
-    //cache info
-	private int cacheSize;
-	private String cacheStrategy;
+    //cache info - stored in ServerNode now
+//	private int cacheSize;
+//	private String cacheStrategy;
 	private static StorageManager storage;
 
-	private static ServerStatus serverStatus = ServerStatus.STARTING; // when first booted up, it's in starting stage
 	/* This needs to be passed into ClientConnections & ZookeeperWatcher thread */
 	private static ServerNode serverNode;
 
@@ -60,14 +61,23 @@ public class KVServer implements IKVServer {
 	public KVServer(String name, String zkHostname, int zkPort) { // m2 interface
 		ZookeeperWatcher zookeeperWatcher = null;
 		try {
-			zookeeperWatcher = new ZookeeperWatcher(zkHostname,100000,name);
+			String zookeeperHost = zkHostname + ":" + Integer.toString(zkPort);
+			zookeeperWatcher = new ZookeeperWatcher(zookeeperHost,100000,name);
 		} catch (IOException | InterruptedException e) {
 			LOGGER.error("Failed to connect to zookeeper server");
 			System.exit(-1);
 		}
 
+		try {
+			serverNode = zookeeperWatcher.initServerNode();
+			zookeeperWatcher.setServerNode(serverNode); // zookeeperWatcher may change this when receive data updates
+		} catch (KeeperException | InterruptedException e){
+			LOGGER.error("Failed to get data from zNode ",e);
+			System.exit(-1);
+		}
+		storage = new StorageManager(serverNode.getCacheSize(), serverNode.getCacheStrategy());
 
-		//		storage = new StorageManager(cacheSize, strategy);
+		zookeeperWatcher.run(); // NOW IT SETS THE WATCH AND WAITS FOR DATA CHANGES
 	}
 
 //	public KVServer(int port, int cacheSize, String strategy) { // m1 interface
@@ -113,13 +123,13 @@ public class KVServer implements IKVServer {
     public CacheStrategy getCacheStrategy(){
 		// TODO Auto-generated method stub
         //LOGGER.info("Server ("+hostname+","+port+") : CacheManager Strategy is "+ cacheStrategy);
-		return string_to_enum_cache_strategy(cacheStrategy);
+		return string_to_enum_cache_strategy(serverNode.getCacheStrategy());
 	}
 
 	@Override
     public int getCacheSize(){
 		// TODO Auto-generated method stub
-		return cacheSize;
+		return serverNode.getCacheSize();
 	}
 
     @Override

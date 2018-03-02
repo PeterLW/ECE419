@@ -1,26 +1,33 @@
 package ecs;
 
+import app_kvServer.ServerStatus;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.math.BigInteger;
 
 public class ServerNode implements IECSNode {
+    /*
+     * This is what's to be stored as data in the zNode corresponding to the KVServer
+     *      serialized to JSON format before storing
+     */
     private String name;
     private String host;
-//    private String id; // "ipaddress:port"
     private int port;
     private BigInteger[] range = new BigInteger[2];
 
+    private transient ServerStatus statusChange; // really only used by KVServer, for ECSClient this is unreliable
+
+    // cache values
     private int cacheSize;
     private String cacheStrategy;
-    // private ServerStatus statusChange; // for updates to znodes that are status changes: Ie. Start/Stop, otherwise this should be null.
 
-    private transient String[] hexStringRange = new String[2]; // do not serialize
-
+    private transient String[] hexStringRange = new String[2];
 
     public ServerNode(ConfigEntity e, int cacheSize, String cacheStrategy){
         this.name = e.getHostName();
         this.host = e.getIpAddr();
         this.port = e.getPortNum();
-//        this.id = this.host + ":" +this.port;
         this.cacheSize = cacheSize;
         this.cacheStrategy = cacheStrategy;
     }
@@ -29,7 +36,6 @@ public class ServerNode implements IECSNode {
         this.name = name;
         this.host = ip;
         this.port = port;
-//        this.id = this.host + ":" +this.port;
     }
 
     public BigInteger[] getRange(){
@@ -80,4 +86,11 @@ public class ServerNode implements IECSNode {
         return hexStringRange;
     }
 
+    public int getCacheSize(){
+        return this.cacheSize;
+    }
+
+    public String getCacheStrategy(){
+        return this.cacheStrategy;
+    }
 }
