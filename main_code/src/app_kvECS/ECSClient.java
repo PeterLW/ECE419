@@ -21,12 +21,8 @@ public class ECSClient implements IECSClient {
     private static final Logger LOGGER = Logger.getLogger(ServerManager.class);
 
     private final ServerManager serverManager = new ServerManager();
-    private LinkedList<ConfigEntity> entityList = new LinkedList<ConfigEntity>();
-
     private static final String PROMPT = "ECSCLIENT> ";
     private int timeout = 5000;
-    private static final String CONFIG_FILE_PATH = "ecs.config";
-    private static final LinkedList<ServerNode>nodeList = new LinkedList<ServerNode>();
     private final BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in)); //Buffered Reader pointed at STDIN
     private boolean stop = false;
 
@@ -65,13 +61,14 @@ public class ECSClient implements IECSClient {
     public IECSNode addNode(String cacheStrategy, int cacheSize) {
 
         Collection<IECSNode>list = setupNodes(1,cacheStrategy,cacheSize);
+        boolean flag;
         try {
-            awaitNodes(1, timeout);
+            flag = awaitNodes(1, timeout);
         }catch(Exception e){
             e.printStackTrace();
             return null;
         }
-       return nodeList.getLast();
+       return (flag == true) ? list.iterator().next():null;
 
     }
 
@@ -86,13 +83,14 @@ public class ECSClient implements IECSClient {
     public Collection<IECSNode> addNodes(int count, String cacheStrategy, int cacheSize) {
 
         Collection<IECSNode>list = setupNodes(count,cacheStrategy,cacheSize);
+        boolean flag;
         try {
-            awaitNodes(count, timeout);
+            flag = awaitNodes(count, timeout);
         }catch(Exception e){
             e.printStackTrace();
             return null;
         }
-        return list;
+        return (flag == true) ? list : null;
     }
 
     /**
@@ -103,16 +101,8 @@ public class ECSClient implements IECSClient {
     public Collection<IECSNode> setupNodes(int count, String cacheStrategy, int cacheSize) { // this function is redundant.
         LinkedList<IECSNode>list = new LinkedList<IECSNode>();
         for(int i = 0; i < count; ++i){
-            ServerNode node = new ServerNode(entityList.removeFirst(), cacheSize, cacheStrategy);
-            list.add(node);
-            nodeList.add(node);
-            try {
-                serverManager.addNode(node, cacheStrategy,cacheSize);
-            } catch (InterruptedException | KeeperException e) {
-                LOGGER.error("Trying to add KVServer " + node.getNodeName() + " to Zookeeper, Failed due to exception ", e);
-                System.out.println("Trying to add KVServer " + node.getNodeName() + " to Zookeeper, Failed due to exception ");
-                e.printStackTrace();
-            }
+
+            list.add(serverManager.addNode( cacheSize, cacheStrategy));
         }
         return list;
     }
@@ -136,72 +126,24 @@ public class ECSClient implements IECSClient {
     @Override
     public boolean removeNodes(Collection<String> nodeNames) {
         for (String name : nodeNames) {
-
-                for(ServerNode n:nodeList) {
-                    if (name.equals(n.getNodeName())) {
-                        try {
-                            serverManager.removeNode(n.getNodeName());
-                        } catch (KeeperException | InterruptedException e) {
-                            e.printStackTrace();
-                            return false;
-                        }
-                    }
-                }
+            try {
+                serverManager.removeNode(name);
+            } catch (KeeperException | InterruptedException e) {
+                e.printStackTrace();
+                return false;
+            }
         }
         return true;
     }
 
     @Override
     public HashMap<String, IECSNode> getNodes() {
-        HashMap<String, IECSNode> map =  new HashMap<String, IECSNode>();
-        for (int i = 0; i < nodeList.size(); i++) {
-            ServerNode node = nodeList.get(i);
-            map.put(node.getNodeName(),node);
-        }
-        return map;
+        return serverManager.getServerMap();
     }
 
     @Override
     public IECSNode getNodeByKey(String Key) {
-        String serverID = serverManager.getServerName(Key);
-        for (ServerNode node : nodeList) {
-            if (serverID.equals(node.getNodeName())) {
-                return node;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * parse the ecs.config file to get a list of IPs
-     * @return a string array containing info regarding one machine
-     */
-    private void parseConfigFile(String filePath){
-        try {
-            File file = new File(filePath);
-            FileReader fileReader = new FileReader(file);
-            BufferedReader bufferedReader = new BufferedReader(fileReader);
-            StringBuffer stringBuffer = new StringBuffer();
-
-            String line = null;
-            while ((line = bufferedReader.readLine()) != null) {
-                stringBuffer.append(line);
-                stringBuffer.append(",");
-            }
-            fileReader.close();
-            String machine_list = stringBuffer.toString();
-            String[] splitArray = machine_list.split(",");
-
-            int length = splitArray.length;
-            for(int i = 0; i < length; i++){
-                String[] entry = splitArray[i].split("\\s+");
-                ConfigEntity node = new ConfigEntity(entry[0],entry[1],Integer.parseInt(entry[2]));
-                entityList.add(node);
-            }
-            bufferedReader.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        return serverManager.getServerName(Key);
     }
 
     private void printError(String error){
@@ -296,12 +238,13 @@ public class ECSClient implements IECSClient {
         sb.append("\t\t Add a new server to the storage service at an arbitrary position .\n");
         sb.append(PROMPT).append("removeNode <server_index> ");
         sb.append("\t\t Remove a server from the storage service at an arbitrary position. \n");
+        System.out.println(sb);
+
     }
 
 
     public void run(){
-        // start parseConfigFile with path to file
-       // parseConfigFile(CONFIG_FILE_PATH);
+
         while(!stop) {
             System.out.print(PROMPT);
             try {
@@ -317,7 +260,6 @@ public class ECSClient implements IECSClient {
     public static void main(String[] args) {
 
         ECSClient client = new ECSClient();
-        System.out.print("fuck");
         client.run();
         System.exit(1);
 

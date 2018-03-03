@@ -19,6 +19,7 @@ public class ServerNode implements IECSNode {
     private int cacheSize;
     private String cacheStrategy;
 
+
     private transient ServerStatus serverStatus; // really only used by KVServer, for ECSClient this is unreliable
     private transient String[] hexStringRange = new String[2]; // this is only generated when accessor function is called
 

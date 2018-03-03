@@ -1,7 +1,7 @@
 package app_kvServer;
 import com.sun.security.ntlm.Server;
 import common.cache.StorageManager;
-import common.metadata.Metadata;
+import common.Metadata.Metadata;
 import common.zookeeper.ZookeeperWatcher;
 import ecs.ServerNode;
 import logger.LogSetup;

@@ -1,6 +1,6 @@
 package common.zookeeper;
 
-import common.metadata.Metadata;
+import common.Metadata.Metadata;
 import ecs.ServerNode;
 import org.apache.log4j.Logger;
 import org.apache.zookeeper.KeeperException;

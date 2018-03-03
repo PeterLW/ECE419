@@ -1,18 +1,18 @@
-package common.metadata;
+package common.Metadata;
 
 import java.math.BigInteger;
 
 public class Node implements Comparable<Node>{
-    String address;
+    String id;
     BigInteger hash;
 
-    public Node(String address, BigInteger hash){
-        this.address = address;
+    public Node(String id, BigInteger hash){
+        this.id = id;
         this.hash = hash;
     }
 
     public Node(){
-        this.address = address;
+        this.id = id;
         this.hash = hash;
     }
 

@@ -1,4 +1,4 @@
-package common.metadata;
+package common.Metadata;
 
 import java.security.*;
 import java.lang.*;
@@ -22,6 +22,7 @@ public class Metadata {
         this.HashToServer = HashToServer;
     }
 
+    //primarily for KVClient to search correct server
     private void build_bst(){
         System.out.println("building bst...");
         remove_all();
@@ -34,47 +35,66 @@ public class Metadata {
             System.out.println("build: " + server);
             add_server(server);
         }
+        first_node = servers_bst.first();
+        last_node = servers_bst.last();
     }
 
-    public String find_server(BigInteger hash){
+    public String find_server(String Key){
+        BigInteger hash = null;
+        try {
+            hash = getMD5(Key);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
         Node temp = new Node("0.0.0.0", hash);
 
         if(hash.compareTo(last_node.hash) == 1)
-            return first_node.address;
+            return first_node.id;
         else{
-            return servers_bst.higher(temp).address;
+            return servers_bst.higher(temp).id;
         }
     }
 
-    public void update_hash2server(){
-        Iterator i = servers_bst.iterator();
 
-        if(i.hasNext()){
-            first_node = servers_bst.first();
-            last_node = servers_bst.last();
-        }
+    /*        ECS only                    */
 
-        while (i.hasNext()) {
-            Node current_node = (Node) i.next();
-            HashToServer.put(current_node.hash, current_node.address);
-        }
-    }
+//    public void init_hash2server(){
+//        Iterator i = servers_bst.iterator();
+//
+//        if(i.hasNext()){
+//            first_node = servers_bst.first();
+//            last_node = servers_bst.last();
+//        }
+//
+//        while (i.hasNext()) {
+//            Node current_node = (Node) i.next();
+//            HashToServer.put(current_node.hash, current_node.id);
+//        }
+//    }
 
-    public void remove_server(String server){
+    public void remove_server(String serverID){
         try {
-            Node s = new Node(server, getMD5(server));
-            if(servers_bst.contains(s))
+            Node s = new Node(serverID, getMD5(serverID));
+            if(servers_bst.contains(s)) {
                 servers_bst.remove(s);
+                first_node = servers_bst.first();
+                last_node = servers_bst.last();
+                HashToServer.remove(s.hash);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public void add_server(String server){
+    public void add_server(String serverID){
         try {
-            Node s = new Node(server, getMD5(server));
-            if(!servers_bst.contains(s))
+            Node s = new Node(serverID, getMD5(serverID));
+            if(!servers_bst.contains(s)) {
                 servers_bst.add(s);
+                first_node = servers_bst.first();
+                last_node = servers_bst.last();
+                HashToServer.put(s.hash, s.id);
+            }
             else
                 System.err.println("Server already exist or Hash collosion!!");
         } catch (Exception e) {
@@ -110,7 +130,7 @@ public class Metadata {
             System.out.println("Printing BST...");
             while (i.hasNext()) {
                 Node temp = (Node) i.next();
-                System.out.println(temp.hash + ": " + temp.address);
+                System.out.println(temp.hash + ": " + temp.id);
             }
             System.out.println("--------------------------------------------");
         }
@@ -141,7 +161,7 @@ public class Metadata {
         m.add_server("f");
         m.remove_server("c");
         m.remove_server("f");
-        m.update_hash2server();
+       // m.update_hash2server();
         m.printdata("bst");
         m.printdata("h2s");
 
@@ -156,7 +176,7 @@ public class Metadata {
 
         //test for find server
         BigInteger test_val = new BigInteger("16955237001963240173058271559858726496");
-        String server = m.find_server(test_val);
+        String server = m.find_server(String.valueOf(test_val));
         System.out.println(server);
     }
 }

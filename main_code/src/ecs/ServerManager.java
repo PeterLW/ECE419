@@ -1,70 +1,96 @@
 package ecs;
 
 import app_kvServer.ServerStatus;
+import common.Metadata.Metadata;
 import common.zookeeper.ZookeeperECSManager;
 import org.apache.log4j.Logger;
 import org.apache.zookeeper.KeeperException;
-
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.HashMap;
+import java.io.*;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.Map;
 
 public class ServerManager {
 //    // hash values (start) -> serverNode
 //    private TreeMap<String,ServerNode> tree = new TreeMap<String,ServerNode>();
 
     // name: (serverName ip) -> serverNode
-    private HashMap<String,ServerNode> hashMap = new HashMap<String,ServerNode>(); // stores the active running nodes
-
+    private HashMap<String,IECSNode> hashMap = new HashMap<String,IECSNode>(); // stores the active running nodes
+    private LinkedList<ConfigEntity> entityList = new LinkedList<ConfigEntity>();
     private ZookeeperECSManager zookeeperManager;
     private static Logger LOGGER = Logger.getLogger(ServerManager.class);
-    private int getNumOfServerConnected = 0;
+    private Metadata metadataManager = new Metadata();
+    private static final String CONFIG_FILE_PATH = "ecs.config";
 
     public ServerManager(){
         try {
             zookeeperManager = new ZookeeperECSManager("localhost:2181",10000); // session timeout ms
+            // start parseConfigFile with path to file
+            parseConfigFile(CONFIG_FILE_PATH);
         } catch (Exception e) {
             LOGGER.error("Failed to connect to zookeeper. Check that zookeeper server has started and is running on localhost:2181");
             throw new RuntimeException("Failed to connect to zookeeper. Check that zookeeper server has started and is running on localhost:2181", e);
         }
     }
 
-    public HashMap<String,ServerNode> getServerMap(){
+    public HashMap<String,IECSNode> getServerMap(){
         return hashMap;
     }
 
     public int getNumOfServerConnected(){
 
-        return getNumOfServerConnected;
+        //TODO: need to finish the accept( ) first.
+        return 0;
     }
     //this function will do the ssh thing.
     private void remoteLaunchServer(int portNum){
 
+
     }
 
-    public boolean addNode(ServerNode n) throws KeeperException, InterruptedException {
-        // have a default cache strategy & cache Size
-        return addNode(n,"LRU",100);
-    }
+    public ServerNode addNode(int cacheSize, String cacheStrategy){
 
+        ServerNode node = new ServerNode(entityList.removeFirst(), cacheSize, cacheStrategy);
+        try {
+            addNode(node, cacheStrategy, cacheSize);
+            return node;
+        }catch (KeeperException | InterruptedException e){
+            e.printStackTrace();
+            return null;
+        }
+    }
 
     public boolean addNode(ServerNode n, String cacheStrategy, int cacheSize) throws KeeperException, InterruptedException { // change to throw?
         String id = n.getNodeName();
         if (hashMap.containsKey(id)) {
             return false;
         }
+        zookeeperManager.addKVServer(n);
+        hashMap.put(id,n);
+        metadataManager.add_server(n.getNodeHost() + " : " + Integer.toString(n.getNodePort()));
         remoteLaunchServer(n.getNodePort());
         return true;
     }
 
-    public boolean addKVServer(ServerNode n, String cacheStrategy, int cacheSize) throws KeeperException, InterruptedException { // change to throw?
-        String id = n.getNodeName(); // ip:port
-        if (hashMap.containsKey(id)) {
-            return false;
+    public IECSNode getServerName(String Key){
+
+        String[] temp = metadataManager.find_server(Key).split(":");
+        Iterator i = hashMap.entrySet().iterator();
+
+        while(i.hasNext()){
+            Map.Entry pair = (Map.Entry)i.next();
+            IECSNode n = (IECSNode)pair.getValue();
+            if(temp[0].equals(n.getNodeHost()) && temp[1].equals(n.getNodePort())){
+                return n;
+            }
         }
-        zookeeperManager.addKVServer(n);
-        hashMap.put(id,n);
-        return true;
+        return null;
     }
 
     public boolean start(){
@@ -85,25 +111,58 @@ public class ServerManager {
         }
     }
 
-    public String getServerName(String Key){
-
-        return null;
-    }
-
-    //ServerIndex: Ip addr + port number
+    //ServerIndex: NodeName
     public void removeNode(String ServerIndex)throws KeeperException, InterruptedException{
 
+        IECSNode node = hashMap.get(ServerIndex);
         zookeeperManager.removeKVServer(ServerIndex);
+        ConfigEntity entity = new ConfigEntity(node.getNodeHost(), node.getNodeHost(), node.getNodePort());
+        entityList.add(entity);
         if (hashMap.containsKey(ServerIndex)){
+            metadataManager.remove_server(node.getNodeHost() + " : "+ Integer.toString(node.getNodePort()));
             hashMap.remove(ServerIndex);
+
         } else {
             LOGGER.debug("Trying to remove server: " + ServerIndex + " but server not in hash map");
         }
 
     }
 
+    /**
+     * parse the ecs.config file to get a list of IPs
+     * @return a string array containing info regarding one machine
+     */
+    private void parseConfigFile(String filePath){
+        try {
+            File file = new File(filePath);
+            FileReader fileReader = new FileReader(file);
+            BufferedReader bufferedReader = new BufferedReader(fileReader);
+            StringBuffer stringBuffer = new StringBuffer();
+
+            String line = null;
+            while ((line = bufferedReader.readLine()) != null) {
+                stringBuffer.append(line);
+                stringBuffer.append(",");
+            }
+            fileReader.close();
+            String machine_list = stringBuffer.toString();
+            String[] splitArray = machine_list.split(",");
+
+            int length = splitArray.length;
+            for(int i = 0; i < length; i++){
+                String[] entry = splitArray[i].split("\\s+");
+                ConfigEntity node = new ConfigEntity(entry[0],entry[1],Integer.parseInt(entry[2]));
+                entityList.add(node);
+            }
+            bufferedReader.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     public static void main(String[] args) throws IOException, InterruptedException, KeeperException {
         ServerManager serverManager = new ServerManager();
+
 
         for (int i = 12; i<17; i++){
             String name = "SERVER_" + Integer.toString(i);

@@ -88,7 +88,6 @@ public class ZookeeperECSManager extends ZookeeperManager{
         super.close();
     }
 
-
     private boolean updateZNode(String path, String memberName, byte[] data) throws KeeperException, InterruptedException {
         String fullPath = path + "/" + memberName;
         Stat stat = zooKeeper.exists(fullPath, false);
