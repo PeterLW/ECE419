@@ -1,5 +1,7 @@
 package app_kvServer;
+import com.sun.security.ntlm.Server;
 import common.cache.StorageManager;
+import common.metadata.Metadata;
 import common.zookeeper.ZookeeperWatcher;
 import ecs.ServerNode;
 import logger.LogSetup;
@@ -11,8 +13,7 @@ import java.io.IOException;
 import java.net.BindException;
 import java.net.ServerSocket;
 import java.net.Socket;
-
-import lombok.*;
+import java.net.SocketTimeoutException;
 
 public class KVServer implements IKVServer {
     //log info
@@ -32,6 +33,8 @@ public class KVServer implements IKVServer {
 //	private int cacheSize;
 //	private String cacheStrategy;
 	private static StorageManager storage;
+
+	private static Metadata metadata;
 
 	/* This needs to be passed into ClientConnections & ZookeeperWatcher thread */
 	private static ServerNode serverNode;
@@ -71,6 +74,7 @@ public class KVServer implements IKVServer {
 		try {
 			serverNode = zookeeperWatcher.initServerNode();
 			zookeeperWatcher.setServerNode(serverNode); // zookeeperWatcher may change this when receive data updates
+			serverNode.setServerStatus(ServerStatus.STARTING);
 		} catch (KeeperException | InterruptedException e){
 			LOGGER.error("Failed to get data from zNode ",e);
 			System.exit(-1);
@@ -79,14 +83,6 @@ public class KVServer implements IKVServer {
 
 		zookeeperWatcher.run(); // NOW IT SETS THE WATCH AND WAITS FOR DATA CHANGES
 	}
-
-//	public KVServer(int port, int cacheSize, String strategy) { // m1 interface
-//		// TODO Auto-generated method stub
-//		this.port = port;
-//		this.cacheSize = cacheSize;
-//		this.cacheStrategy = strategy;
-//		storage = new StorageManager(cacheSize, strategy);
-//	}
 
     public boolean isRunning() {
         return this.running;
@@ -185,8 +181,13 @@ public class KVServer implements IKVServer {
 		while(!this.stop) {
 			// waits for connection
 			if(this.serverSocket != null) {
-				while(isRunning()){
-					
+
+				if (serverNode.getServerStatus() == ServerStatus.STARTING){
+					// Starting:
+					// get Metadata object,
+				}
+
+				while(serverNode.getServerStatus() == ServerStatus.RUNNING){
 					Socket client = null;
 					try {
 						client = serverSocket.accept(); // blocking call
@@ -194,11 +195,15 @@ public class KVServer implements IKVServer {
 						ClientConnection connection = new ClientConnection(client, storage, numConnectedClients);
 						LOGGER.info("Connected to " + client.getInetAddress().getHostName() + " on port " + client.getPort());
 						new Thread(connection).start();
+					} catch (SocketTimeoutException e){
+						/* don't really need to do anything, the timeout is so that periodically,
+						 KVServer will check to see if the ServerStatus changed
+						*/
 					} catch (IOException e) {
-
 						LOGGER.error("Error! " +  "Unable to establish connection. \n");
 					}
 				}
+
 			}
 		}
 	}
@@ -210,6 +215,7 @@ public class KVServer implements IKVServer {
             this.hostname = serverSocket.getInetAddress().getHostName();
 			this.port = this.serverSocket.getLocalPort();
 			LOGGER.info("Server listening on port: " + this.serverSocket.getLocalPort());
+			this.serverSocket.setSoTimeout(1000); // 1 s
 			return true;
 		} catch (IOException e) {
 			LOGGER.error("Error! Cannot open server socket:");

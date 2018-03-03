@@ -1,6 +1,5 @@
 package common.zookeeper;
 
-import com.google.gson.Gson;
 import ecs.ServerNode;
 import org.apache.log4j.Logger;
 import org.apache.zookeeper.*;
@@ -8,7 +7,6 @@ import org.apache.zookeeper.data.Stat;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
 
 public class ZookeeperECSManager extends ZookeeperManager{
     /*
@@ -47,17 +45,60 @@ public class ZookeeperECSManager extends ZookeeperManager{
     }
 
     public void addKVServer(ServerNode n) throws KeeperException, InterruptedException {
-        String jsonServerData = gson.toJson(n);
+        ZNodeMessage message = new ZNodeMessage(n,UpdateType.NEW_ZNODE);
+        String jsonServerData = gson.toJson(message);
         System.out.println(jsonServerData); // debug
         this.addZNode(ZNODE_HEAD,n.getNodeName(),toByteArray(jsonServerData));
     }
 
-    public void removeKVServer(ServerNode n) throws KeeperException, InterruptedException {
-        this.deleteZNode(ZNODE_HEAD,n.getNodeName());
+    public void updateRange(ServerNode n) throws KeeperException, InterruptedException {
+        ZNodeMessage message = new ZNodeMessage(n,UpdateType.HASH_RANGE_UPDATE);
+        String jsonServerData = gson.toJson(message);
+        System.out.println(jsonServerData); // debug
+        this.updateZNode(ZNODE_HEAD,n.getNodeName(),toByteArray(jsonServerData));
+    }
+
+    public void startKVServer(ServerNode n) throws KeeperException, InterruptedException {
+        ZNodeMessage message = new ZNodeMessage(n,UpdateType.START_SERVER);
+        String jsonServerData = gson.toJson(message);
+        System.out.println(jsonServerData); // debug
+        this.updateZNode(ZNODE_HEAD,n.getNodeName(),toByteArray(jsonServerData));
+    }
+
+    public void stopKVServer(ServerNode n) throws KeeperException, InterruptedException {
+        ZNodeMessage message = new ZNodeMessage(n,UpdateType.STOP_SERVER);
+        String jsonServerData = gson.toJson(message);
+        System.out.println(jsonServerData); // debug
+        this.updateZNode(ZNODE_HEAD,n.getNodeName(),toByteArray(jsonServerData));
+    }
+
+    public void shutdownKVServer(ServerNode n) throws KeeperException, InterruptedException {
+        ZNodeMessage message = new ZNodeMessage(n,UpdateType.SHUTDOWN_SERVER);
+        String jsonServerData = gson.toJson(message);
+        System.out.println(jsonServerData); // debug
+        this.updateZNode(ZNODE_HEAD,n.getNodeName(),toByteArray(jsonServerData));
     }
 
     public void removeKVServer(String name) throws KeeperException, InterruptedException {
         this.deleteZNode(ZNODE_HEAD,name);
+    }
+
+    public void close() throws InterruptedException {
+        clearZNodes();
+        super.close();
+    }
+
+
+    private boolean updateZNode(String path, String memberName, byte[] data) throws KeeperException, InterruptedException {
+        String fullPath = path + "/" + memberName;
+        Stat stat = zooKeeper.exists(fullPath, false);
+        if (stat != null){
+            zooKeeper.setData(fullPath,data,-1);
+            return true;
+        } else {
+            LOGGER.error("Attempting to update znode: " + fullPath + " , however it does not exist");
+            return false;
+        }
     }
 
     private void addZNode(String path, String memberName, byte[] data) throws KeeperException, InterruptedException { // KeeperException can be thrown if data to large
@@ -73,11 +114,6 @@ public class ZookeeperECSManager extends ZookeeperManager{
             System.out.println("Trying to add znode: " + fullPath + " ,but already exists, updating data instead");
             zooKeeper.setData(fullPath,data,-1);
         }
-    }
-
-    public void close() throws InterruptedException {
-        clearZNodes();
-        super.close();
     }
 
     private void deleteZNode(String path, String groupName) throws KeeperException, InterruptedException {

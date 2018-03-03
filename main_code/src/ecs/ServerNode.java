@@ -1,8 +1,7 @@
 package ecs;
 
 import app_kvServer.ServerStatus;
-import lombok.Getter;
-import lombok.Setter;
+import common.zookeeper.UpdateType;
 
 import java.math.BigInteger;
 
@@ -16,13 +15,12 @@ public class ServerNode implements IECSNode {
     private int port;
     private BigInteger[] range = new BigInteger[2];
 
-    private transient ServerStatus statusChange; // really only used by KVServer, for ECSClient this is unreliable
-
     // cache values
     private int cacheSize;
     private String cacheStrategy;
 
-    private transient String[] hexStringRange = new String[2];
+    private transient ServerStatus serverStatus; // really only used by KVServer, for ECSClient this is unreliable
+    private transient String[] hexStringRange = new String[2]; // this is only generated when accessor function is called
 
     public ServerNode(ConfigEntity e, int cacheSize, String cacheStrategy){
         this.name = e.getHostName();
@@ -93,4 +91,13 @@ public class ServerNode implements IECSNode {
     public String getCacheStrategy(){
         return this.cacheStrategy;
     }
+
+    public void setServerStatus(ServerStatus newStatus){
+        serverStatus = newStatus;
+    }
+
+    public ServerStatus getServerStatus(){
+        return serverStatus;
+    }
+
 }

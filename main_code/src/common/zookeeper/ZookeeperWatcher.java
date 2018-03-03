@@ -8,7 +8,6 @@ import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
 
 import java.io.IOException;
-import java.math.BigInteger;
 import java.util.concurrent.Semaphore;
 
 public class ZookeeperWatcher extends ZookeeperManager implements Runnable {
@@ -22,13 +21,16 @@ public class ZookeeperWatcher extends ZookeeperManager implements Runnable {
      */
     private static Logger LOGGER = Logger.getLogger(ZookeeperECSManager.class);
     private static String fullPath = null;
-    private static ServerNode serverNode; // ZookeeperWatcher needs to update serverNode whenever there's a new hash change, so must have link to it
+    private static ServerNode serverNode;
+    /* ZookeeperWatcher needs to update serverNode whenever there's a new hash change, so must have link to it
+        not actually 100% sure serverNode variable needed but we'll see...
+     */
 
     private Semaphore semaphore = new Semaphore(1);
 
     public ZookeeperWatcher(String zookeeperHost, int sessionTimeout, String name) throws IOException, InterruptedException {
         super(zookeeperHost,sessionTimeout);
-        fullPath = ZNODE_HEAD + "/" + ZNODE_SERVER_PREFIX + name;
+        fullPath = ZNODE_HEAD + "/" + name;
     }
 
     /**
@@ -38,8 +40,8 @@ public class ZookeeperWatcher extends ZookeeperManager implements Runnable {
     public ServerNode initServerNode() throws KeeperException, InterruptedException {
         byte[] data = zooKeeper.getData(fullPath,false,null);
         String dataString = new String(data);
-        ServerNode newNode = gson.fromJson(dataString,ServerNode.class);
-        return newNode;
+        ZNodeMessage newNode = gson.fromJson(dataString,ZNodeMessage.class);
+        return newNode.serverNode;
     }
 
     public void setServerNode(ServerNode n){
@@ -65,13 +67,32 @@ public class ZookeeperWatcher extends ZookeeperManager implements Runnable {
             }
         }, null);
 
-        ServerNode temp = gson.fromJson(new String(data),ServerNode.class);
-        BigInteger newRange[] = temp.getRange();
-        BigInteger oldRange[] = serverNode.getRange();
+        ZNodeMessage temp = gson.fromJson(new String(data),ZNodeMessage.class);
 
-        if (newRange[0] != oldRange[0] || newRange[1] != oldRange[1]){
-            // time to do updates!
+        // in progress
+        switch(temp.updateType){
+            case NEW_ZNODE:
+                System.out.println("Data has changed");
+                System.out.println(new String(data));
+                break;
+            case START_SERVER:
+                System.out.println("Data has changed");
+                System.out.println(new String(data));
+                break;
+            case STOP_SERVER:
+                System.out.println("Data has changed");
+                System.out.println(new String(data));
+                break;
+            case SHUTDOWN_SERVER:
+                System.out.println("Data has changed");
+                System.out.println(new String(data));
+                break;
+            case HASH_RANGE_UPDATE:
+                System.out.println("Data has changed");
+                System.out.println(new String(data));
+                break;
         }
+
     }
 
     @Override
@@ -89,5 +110,12 @@ public class ZookeeperWatcher extends ZookeeperManager implements Runnable {
         } catch (InterruptedException e) {
             LOGGER.error("Failed to acquire semaphore, ",e);
         }
+    }
+
+    public static void main(String[] args) throws IOException, InterruptedException, KeeperException {
+        ZookeeperWatcher zookeeperWatcher = new ZookeeperWatcher("localhost:2181",10000,"TEST_SERVER_0 localhost");
+        ServerNode n = zookeeperWatcher.initServerNode();
+        zookeeperWatcher.setServerNode(n);
+        zookeeperWatcher.run();
     }
 }
