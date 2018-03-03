@@ -1,22 +1,31 @@
 package ecs;
 
+import app_kvServer.ServerStatus;
+import common.zookeeper.UpdateType;
+
 import java.math.BigInteger;
 
 public class ServerNode implements IECSNode {
+    /*
+     * This is what's to be stored as data in the zNode corresponding to the KVServer
+     *      serialized to JSON format before storing
+     */
     private String name;
     private String host;
-    private String id; // "ipaddress:port"
     private int port;
     private BigInteger[] range = new BigInteger[2];
-    private transient String[] hexStringRange = new String[2]; // do not serialize
+
+    // cache values
     private int cacheSize;
     private String cacheStrategy;
+
+    private transient ServerStatus serverStatus; // really only used by KVServer, for ECSClient this is unreliable
+    private transient String[] hexStringRange = new String[2]; // this is only generated when accessor function is called
 
     public ServerNode(ConfigEntity e, int cacheSize, String cacheStrategy){
         this.name = e.getHostName();
         this.host = e.getIpAddr();
         this.port = e.getPortNum();
-        this.id = this.host + ":" +this.port;
         this.cacheSize = cacheSize;
         this.cacheStrategy = cacheStrategy;
     }
@@ -25,7 +34,15 @@ public class ServerNode implements IECSNode {
         this.name = name;
         this.host = ip;
         this.port = port;
-        this.id = this.host + ":" +this.port;
+    }
+
+    public BigInteger[] getRange(){
+        return range;
+    }
+
+    public void setRange(BigInteger[] range){
+        this.range[0] = range[0];
+        this.range[1] = range[1];
     }
 
     public void setRange(BigInteger start, BigInteger end){
@@ -34,12 +51,6 @@ public class ServerNode implements IECSNode {
         }
         range[0] = start;
         range[1] = end;
-        hexStringRange[0] = start.toString();
-        hexStringRange[1] = end.toString();
-    }
-
-    public String getServerName(){
-        return this.name;
     }
 
     @Override
@@ -49,16 +60,11 @@ public class ServerNode implements IECSNode {
         nodeName.append(" ");
         nodeName.append(host);
         return nodeName.toString();
-
     }
 
     @Override
     public String getNodeHost() {
         return host;
-    }
-
-    public String getNodeId(){
-        return id;
     }
 
     @Override
@@ -68,6 +74,25 @@ public class ServerNode implements IECSNode {
 
     @Override
     public String[] getNodeHashRange() {
+        hexStringRange[0] = range[0].toString();
+        hexStringRange[1] = range[1].toString();
         return hexStringRange;
     }
+
+    public int getCacheSize(){
+        return this.cacheSize;
+    }
+
+    public String getCacheStrategy(){
+        return this.cacheStrategy;
+    }
+
+    public void setServerStatus(ServerStatus newStatus){
+        serverStatus = newStatus;
+    }
+
+    public ServerStatus getServerStatus(){
+        return serverStatus;
+    }
+
 }

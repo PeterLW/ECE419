@@ -50,7 +50,7 @@ public interface IECSClient {
     public Collection<IECSNode> setupNodes(int count, String cacheStrategy, int cacheSize);
 
     /**
-     * Wait for all nodes to report status or until timeout expires
+     * Wait for all nodes to report value or until timeout expires
      * @param count     number of nodes to wait for
      * @param timeout   the timeout in milliseconds
      * @return  true if all nodes reported successfully, false otherwise

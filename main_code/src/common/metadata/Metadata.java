@@ -1,4 +1,4 @@
-package common.Metadata;
+package common.metadata;
 
 import java.security.*;
 import java.lang.*;
@@ -6,7 +6,7 @@ import java.math.BigInteger;
 import java.util.*;
 
 public class Metadata {
-
+    // bst
     private static TreeSet<Node> servers_bst;
     private static HashMap<BigInteger, String> HashToServer;
     private Node first_node = null;
