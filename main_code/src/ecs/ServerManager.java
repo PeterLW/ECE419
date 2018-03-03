@@ -1,5 +1,6 @@
 package ecs;
 
+
 import app_kvServer.ServerStatus;
 import common.Metadata.Metadata;
 import common.zookeeper.ZookeeperECSManager;
@@ -94,6 +95,7 @@ public class ServerManager {
     }
 
     public boolean start(){
+//        for (Map.Entry<String,ServerNode> entry : hashMap.)
         return true;
     } // look into
 
