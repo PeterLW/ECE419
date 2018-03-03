@@ -1,9 +1,10 @@
 package app_kvECS;
 
-import java.util.Map;
+import java.util.HashMap;
 import java.util.Collection;
 
 import ecs.IECSNode;
+import ecs.ServerNode;
 
 public interface IECSClient {
     /**
@@ -66,7 +67,7 @@ public interface IECSClient {
     /**
      * Get a map of all nodes
      */
-    public Map<String, IECSNode> getNodes();
+    public HashMap<String, IECSNode> getNodes();
 
     /**
      * Get the specific node responsible for the given key

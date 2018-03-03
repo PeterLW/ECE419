@@ -15,6 +15,7 @@ public class ServerManager {
 
     private ZookeeperManager zookeeperManager;
     private static Logger LOGGER = Logger.getLogger(ServerManager.class);
+    private int getNumOfServerConnected = 0;
 
     public ServerManager(){
         try {
@@ -29,21 +30,42 @@ public class ServerManager {
         return hashMap;
     }
 
-    public boolean addKVServer(ServerNode n) throws KeeperException, InterruptedException {
-        // have a default cache strategy & cache Size
-        return addKVServer(n,"LRU",100);
+    public int getNumOfServerConnected(){
+
+        return getNumOfServerConnected;
+    }
+    //this function will do the ssh thing.
+    private void remoteLaunchServer(int portNum){
+
+
     }
 
-    public boolean addKVServer(ServerNode n, String cacheStrategy, int cacheSize) throws KeeperException, InterruptedException { // change to throw?
+    public boolean addNode(ServerNode n) throws KeeperException, InterruptedException {
+        // have a default cache strategy & cache Size
+        return addNode(n,"LRU",100);
+    }
+
+    public boolean addNode(ServerNode n, String cacheStrategy, int cacheSize) throws KeeperException, InterruptedException { // change to throw?
         String id = n.getNodeId(); // ip:port
         if (hashMap.containsKey(id)) {
             return false;
         }
-
+        remoteLaunchServer(n.getNodePort());
         zookeeperManager.addKVServer(n);
         hashMap.put(id,n);
         return true;
     }
+
+//    public boolean addKVServer(ServerNode n, String cacheStrategy, int cacheSize) throws KeeperException, InterruptedException { // change to throw?
+//        String id = n.getNodeId(); // ip:port
+//        if (hashMap.containsKey(id)) {
+//            return false;
+//        }
+//
+//        zookeeperManager.addKVServer(n);
+//        hashMap.put(id,n);
+//        return true;
+//    }
 
     public boolean shutdown(){
         return true;
@@ -68,7 +90,13 @@ public class ServerManager {
         }
     }
 
-    public void removeNode(String NodeName)throws KeeperException, InterruptedException{
+    public String getServerID(String Key){
+
+        return null;
+    }
+    //ServerIndex: Ip addr + port number
+    public void removeNode(String ServerIndex)throws KeeperException, InterruptedException{
+
 
     }
     public ServerNode getNodeByKey(String Key) {
@@ -110,7 +138,7 @@ public class ServerManager {
             String name = "SERVER_" + Integer.toString(i);
             int port = 1111+i;
             ServerNode n = new ServerNode(name,"localhost",port);
-            boolean success = serverManager.addKVServer(n,"something", 100);
+            boolean success = serverManager.addNode(n,"something", 100);
             System.out.println(success);
         }
         System.in.read();

@@ -14,7 +14,6 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.zookeeper.KeeperException;
 
-
 import java.util.*;
 import java.io.*;
 
@@ -23,9 +22,11 @@ public class ECSClient implements IECSClient {
     private final ServerManager serverManager = new ServerManager();
     private LinkedList<ConfigEntity> entityList = new LinkedList<ConfigEntity>();
 
-    private static final Map<String,IECSNode> map = new HashMap<String, IECSNode>();
     private static final String PROMPT = "ECSCLIENT> ";
+    private int timeout = 5000;
+
     private static final String CONFIG_FILE_PATH = "ecs.config";
+    private static final LinkedList<ServerNode>nodeList = new LinkedList<ServerNode>();
     private BufferedReader stdin;
     private boolean stop;
 
@@ -67,12 +68,16 @@ public class ECSClient implements IECSClient {
      */
     @Override
     public IECSNode addNode(String cacheStrategy, int cacheSize) {
-        LinkedList<IECSNode> list = (LinkedList<IECSNode>) setupNodes(1,cacheStrategy,cacheSize);
-        IECSNode n = list.removeFirst();
-        /* @Aaron: This is where the ssh script should go
-            https://piazza.com/class/jc6l5ut99r35yl?cid=179
-        */
-        return n;
+
+        Collection<IECSNode>list = setupNodes(1,cacheStrategy,cacheSize);
+        try {
+            awaitNodes(1, timeout);
+        }catch(Exception e){
+            e.printStackTrace();
+            return null;
+        }
+       return nodeList.getLast();
+
     }
 
     /**
@@ -84,15 +89,13 @@ public class ECSClient implements IECSClient {
      */
     @Override
     public Collection<IECSNode> addNodes(int count, String cacheStrategy, int cacheSize) {
-        Collection<IECSNode> list = setupNodes(count,cacheStrategy,cacheSize);
-        for (IECSNode node : list){
-            /* @Aaron: This is where the ssh script should go
-            https://piazza.com/class/jc6l5ut99r35yl?cid=179
-            */
 
-//                serverManager.addNode(cacheStrategy, cacheSize);
-            // I need the server name and port to add NOD I CAN'T just add a node with just this...
-            // omgosh.
+        Collection<IECSNode>list = setupNodes(count,cacheStrategy,cacheSize);
+        try {
+            awaitNodes(count, timeout);
+        }catch(Exception e){
+            e.printStackTrace();
+            return null;
         }
         return list;
     }
@@ -107,8 +110,9 @@ public class ECSClient implements IECSClient {
         for(int i = 0; i < count; ++i){
             ServerNode node = new ServerNode(entityList.removeFirst(), cacheSize, cacheStrategy);
             list.add(node);
+            nodeList.add(node);
             try {
-                serverManager.addKVServer(node, cacheStrategy,cacheSize);
+                serverManager.addNode(node, cacheStrategy,cacheSize);
             } catch (InterruptedException | KeeperException e) {
                 LOGGER.error("Trying to add KVServer " + node.getServerName() + " to Zookeeper, Failed due to exception ", e);
                 System.out.println("Trying to add KVServer " + node.getServerName() + " to Zookeeper, Failed due to exception ");
@@ -121,16 +125,13 @@ public class ECSClient implements IECSClient {
     @Override
     public boolean awaitNodes(int count, int timeout) throws Exception {
 
-        return false;
-    }
-
-    @Override
-    public boolean removeNodes(Collection<String> nodeNames) {
-        for (String name : nodeNames) {
-            try {
-                serverManager.removeNode(name);
-            }catch (KeeperException | InterruptedException e){
-                e.printStackTrace();
+        long endTimeMillis = System.currentTimeMillis() + timeout;
+        while (true) {
+            // method logic
+            if (serverManager.getNumOfServerConnected() >= count)
+                break;
+            if (System.currentTimeMillis() > endTimeMillis) {
+                // do some clean-up
                 return false;
             }
         }
@@ -138,15 +139,42 @@ public class ECSClient implements IECSClient {
     }
 
     @Override
-    public Map<String, IECSNode> getNodes() {
-//        HashMap<String, ServerNode> s =  serverManager.getServerMap();
-        return null;
+    public boolean removeNodes(Collection<String> nodeNames) {
+        for (String name : nodeNames) {
+
+                for(ServerNode n:nodeList) {
+                    if (name.equals(n.getNodeName())) {
+                        try {
+                            serverManager.removeNode(n.getNodeId());
+                        } catch (KeeperException | InterruptedException e) {
+                            e.printStackTrace();
+                            return false;
+                        }
+                    }
+                }
+        }
+        return true;
+    }
+
+    @Override
+    public HashMap<String, IECSNode> getNodes() {
+        HashMap<String, IECSNode> map =  new HashMap<String, IECSNode>();
+        for (int i = 0; i < nodeList.size(); i++) {
+            ServerNode node = nodeList.get(i);
+            map.put(node.getNodeName(),node);
+        }
+        return map;
     }
 
     @Override
     public IECSNode getNodeByKey(String Key) {
-        ServerNode node = serverManager.getNodeByKey(Key);
-        return node;
+        String serverID = serverManager.getServerID(Key);
+        for(ServerNode node:nodeList) {
+                if (serverID.equals(node.getNodeId())) {
+                    return node;
+                }
+            }
+        return null;
     }
 
     /**
@@ -297,6 +325,7 @@ public class ECSClient implements IECSClient {
     public static void main(String[] args) {
 
         ECSClient client = new ECSClient();
+        System.out.print("fuck");
         client.run();
         System.exit(1);
 
