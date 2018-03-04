@@ -10,6 +10,25 @@ import org.apache.zookeeper.Watcher;
 import java.io.IOException;
 import java.util.concurrent.Semaphore;
 
+/**
+ IMPORTANT:
+    Instructions:
+        When KVServer Application first starts running, the 'main' thread starts up an instance of ZookeeperWatcher to
+        connect to zookeeper
+        It uses zookeeper watcher to get data from the znode with the same name as it
+        (a KVServer must know it's name at start-up, perhaps passed in as a command line argument in the script?)
+
+        After getting the data from the znode with the same name as it, the KVServer application has a ServerNode object.
+
+        To get the data from the znode with the same name as it (the first time you do this from KVServer)
+        use initServerNode().
+
+        Then use setServerNode() to pass the same ServerNode object back into the Zookeeper Watcher object
+
+        (If you use the KVServer  that I started to modify, look in the KVServer(...) constructor, much of this is already
+        implemented (:
+ */
+
 public class ZookeeperWatcher extends ZookeeperManager implements Runnable {
     /*
         On each KVServer, this class is the zookeeper interface manager
@@ -33,10 +52,6 @@ public class ZookeeperWatcher extends ZookeeperManager implements Runnable {
         fullPath = ZNODE_HEAD + "/" + name;
     }
 
-    /**
-     * call this first to get data (at KVserver starting to run)
-     * It is not meant to set a watch
-     */
     public ServerNode initServerNode() throws KeeperException, InterruptedException {
         byte[] data = zooKeeper.getData(fullPath,false,null);
         String dataString = new String(data);
