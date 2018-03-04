@@ -10,7 +10,7 @@ public class ZNodeMessage {
     public ServerNode serverNode;
 
     private BigInteger[] moveDataRange = null;
-    private String targetName;
+    private String targetName = null;
 
     /*
         The targetName can be:
