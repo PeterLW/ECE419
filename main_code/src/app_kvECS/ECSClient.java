@@ -18,6 +18,12 @@ import java.util.*;
 import java.io.*;
 
 public class ECSClient implements IECSClient {
+
+    public enum SYSTEM_STATE{
+        INIT,
+        RUNNING
+    }
+
     private static final Logger LOGGER = Logger.getLogger(ServerManager.class);
 
     private final ServerManager serverManager = new ServerManager();
@@ -25,6 +31,7 @@ public class ECSClient implements IECSClient {
     private int timeout = 5000;
     private final BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in)); //Buffered Reader pointed at STDIN
     private boolean stop = false;
+    private SYSTEM_STATE system_state;
 
     static {
         try {
@@ -36,7 +43,7 @@ public class ECSClient implements IECSClient {
         }
     }
 
-    public ECSClient(){}
+    public ECSClient(){system_state = SYSTEM_STATE.INIT;}
 
     @Override
     public boolean start() {
@@ -100,9 +107,29 @@ public class ECSClient implements IECSClient {
     @Override
     public Collection<IECSNode> setupNodes(int count, String cacheStrategy, int cacheSize) { // this function is redundant.
         LinkedList<IECSNode>list = new LinkedList<IECSNode>();
-        for(int i = 0; i < count; ++i){
 
-            list.add(serverManager.addNode( cacheSize, cacheStrategy));
+        if(system_state == SYSTEM_STATE.INIT) {
+
+            for (int i = 0; i < count; ++i) {
+
+                ServerNode node = serverManager.addNode(cacheSize, cacheStrategy);
+                list.add(node);
+            }
+            serverManager.updateMetaDataZNode();
+
+            for(int i = 0; i < count; ++i){
+                serverManager.remoteLaunchServer(list.get(i).getNodePort());
+            }
+            system_state = SYSTEM_STATE.RUNNING;
+        }
+        else{
+            for(int i = 0; i < count; ++i){
+
+                ServerNode node = serverManager.addNode(cacheSize, cacheStrategy);
+                list.add(node);
+                serverManager.updateMetaDataZNode();
+                serverManager.remoteLaunchServer(list.get(i).getNodePort());
+            }
         }
         return list;
     }
@@ -127,7 +154,9 @@ public class ECSClient implements IECSClient {
     public boolean removeNodes(Collection<String> nodeNames) {
         for (String name : nodeNames) {
             try {
-                serverManager.removeNode(name);
+                if(! serverManager.removeNode(name)){
+                    return false;
+                }
             } catch (KeeperException | InterruptedException e) {
                 e.printStackTrace();
                 return false;

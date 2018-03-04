@@ -21,6 +21,8 @@ import com.jcraft.jsch.*;
 
 
 public class ServerManager {
+
+
 //    // hash values (start) -> serverNode
 //    private TreeMap<String,ServerNode> tree = new TreeMap<String,ServerNode>();
 
@@ -35,8 +37,10 @@ public class ServerManager {
     private static final String knownHostPath = "~/.ssh/known_hosts";
     private int TIMEOUT = 5000;
 
+
     public ServerManager(){
         try {
+
             zookeeperManager = new ZookeeperECSManager("localhost:2181",10000); // session timeout ms
             System.out.println("Working Directory = " +
                     System.getProperty("user.dir"));
@@ -91,7 +95,8 @@ public class ServerManager {
         }
     }
 
-    private void remoteLaunchServer(int portNum){
+
+    public void remoteLaunchServer(int portNum){
 
         JSch ssh = new JSch();
         String username;
@@ -133,7 +138,7 @@ public class ServerManager {
 
         ServerNode node = new ServerNode(entityList.removeFirst(), cacheSize, cacheStrategy);
         try {
-            addNode(node, cacheStrategy, cacheSize);
+            addServer(node, cacheStrategy, cacheSize);
             return node;
         }catch (KeeperException | InterruptedException e){
             e.printStackTrace();
@@ -141,21 +146,68 @@ public class ServerManager {
         }
     }
 
-    public boolean addNode(ServerNode n, String cacheStrategy, int cacheSize) throws KeeperException, InterruptedException { // change to throw?
+    private ServerNode updateHashMapElement(String id, BigInteger[] newRange){
+
+        ServerNode node = null;
+        for (String key : hashMap.keySet()) {
+            node = (ServerNode) hashMap.get(key);
+            String nodeID = node.getNodeHost() + ":" + node.getNodePort();
+            if(nodeID.equals(id)){
+                node.setRange(newRange[0],newRange[1]);
+                hashMap.put(id, node);
+                break;
+            }
+        }
+        return node;
+    }
+
+    private boolean updateSuccessor(String serverNodeID, ServerNode n){
+
+        BigInteger[] range = metadataManager.findHashRange(serverNodeID);
+        if(range != null) {
+            n.setRange(range[0], range[1]);
+            BigInteger[] successorRange = metadataManager.getNewSuccessorRange(serverNodeID);
+            if (successorRange != null) {
+                String successorID = metadataManager.getSuccessor(serverNodeID);
+                if (successorID != null) {
+                    ServerNode updatedNode = updateHashMapElement(successorID, successorRange);
+                    try {
+                        zookeeperManager.updateRange(updatedNode);
+                    }catch (KeeperException | InterruptedException e){
+                        e.printStackTrace();
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+
+    private boolean addServer(ServerNode n, String cacheStrategy, int cacheSize) throws KeeperException, InterruptedException { // change to throw?
+
         String id = n.getNodeName();
         if (hashMap.containsKey(id)) {
             return false;
         }
-        zookeeperManager.addKVServer(n);
         hashMap.put(id,n);
-        metadataManager.add_server(n.getNodeHost() + " : " + Integer.toString(n.getNodePort()));
-        remoteLaunchServer(n.getNodePort());
-        return true;
+        String serverNodeID = n.getNodeHost() + ":" + Integer.toString(n.getNodePort());
+        metadataManager.addServer(serverNodeID);
+        zookeeperManager.addKVServer(n);
+        return updateSuccessor(serverNodeID, n);
+
+    }
+
+    public void updateMetaDataZNode(){
+
+        //TODO: need API
+       //zookeeperManager.addMetaData();
+
     }
 
     public IECSNode getServerName(String Key){
 
-        String[] temp = metadataManager.find_server(Key).split(":");
+        String[] temp = metadataManager.findServer(Key).split(":");
         Iterator i = hashMap.entrySet().iterator();
 
         while(i.hasNext()){
@@ -169,39 +221,65 @@ public class ServerManager {
     }
 
     public boolean start(){
-//        for (Map.Entry<String,ServerNode> entry : hashMap.)
-        return true;
-    } // look into
 
-    public boolean stop(){ // look into
+        for (String key : hashMap.keySet()) {
+            ServerNode node = (ServerNode) hashMap.get(key);
+            try {
+                zookeeperManager.startKVServer(node);
+            }catch (KeeperException | InterruptedException e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
         return true;
-    } // do not delete nodes
+    }
+
+    public boolean stop(){
+        for (String key : hashMap.keySet()) {
+            ServerNode node = (ServerNode) hashMap.get(key);
+            try {
+                zookeeperManager.stopKVServer(node);
+            }catch (KeeperException | InterruptedException e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+        return true;
+    }
 
     public boolean shutdown(){
-        try {
-            zookeeperManager.close();
-            return true;
-        } catch (InterruptedException e) {
-            LOGGER.error("Zookeeper connection failed to close ",e);
-            return false;
+        for (String key : hashMap.keySet()) {
+            ServerNode node = (ServerNode) hashMap.get(key);
+            try {
+                zookeeperManager.shutdownKVServer(node);
+            }catch (KeeperException | InterruptedException e) {
+                e.printStackTrace();
+                return false;
+            }
         }
+        return true;
     }
 
     //ServerIndex: NodeName
-    public void removeNode(String ServerIndex)throws KeeperException, InterruptedException{
+    public boolean removeNode(String ServerIndex)throws KeeperException, InterruptedException{
 
         IECSNode node = hashMap.get(ServerIndex);
-        zookeeperManager.removeKVServer(ServerIndex);
+        //if remove node, add the node back to entity list for next launch
         ConfigEntity entity = new ConfigEntity(node.getNodeHost(), node.getNodeHost(), node.getNodePort());
         entityList.add(entity);
         if (hashMap.containsKey(ServerIndex)){
-            metadataManager.remove_server(node.getNodeHost() + " : "+ Integer.toString(node.getNodePort()));
+            metadataManager.removeServer(node.getNodeHost() + " : " + Integer.toString(node.getNodePort()));
             hashMap.remove(ServerIndex);
 
-        } else {
-            LOGGER.debug("Trying to remove server: " + ServerIndex + " but server not in hash map");
+            String serverNodeID = node.getNodeHost() + ":" + Integer.toString(node.getNodePort());
+            if(updateSuccessor(serverNodeID, (ServerNode) node)){
+                zookeeperManager.removeKVServer(ServerIndex);
+                return true;
+            }
+            else
+                return false;
         }
-
+        return false;
     }
 
     /**
@@ -244,8 +322,8 @@ public class ServerManager {
             String name = "SERVER_" + Integer.toString(i);
             int port = 1111+i;
             ServerNode n = new ServerNode(name,"localhost",port);
-            boolean success = serverManager.addNode(n,"something", 100);
-            System.out.println(success);
+           // boolean success = serverManager.addNode(n,"something", 100);
+           // System.out.println(success);
         }
         System.in.read();
 
@@ -265,4 +343,5 @@ public class ServerManager {
         serverManager.zookeeperManager.addKVServer(n);
 
     }
+
 }
