@@ -172,7 +172,7 @@ public class ServerManager {
                 if (successorID != null) {
                     ServerNode updatedNode = updateHashMapElement(successorID, successorRange);
                     try {
-                        zookeeperManager.updateRange(updatedNode);
+                        zookeeperManager.updateRangeKVServer(updatedNode);
                     }catch (KeeperException | InterruptedException e){
                         e.printStackTrace();
                         return false;
