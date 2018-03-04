@@ -15,6 +15,9 @@ import java.io.*;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
+import com.jcraft.jsch.*;
+
+
 
 public class ServerManager {
 //    // hash values (start) -> serverNode
@@ -26,13 +29,19 @@ public class ServerManager {
     private ZookeeperECSManager zookeeperManager;
     private static Logger LOGGER = Logger.getLogger(ServerManager.class);
     private Metadata metadataManager = new Metadata();
-    private static final String CONFIG_FILE_PATH = "ecs.config";
+    private static final String RELATIVE_CONFIG_FILE_PATH = "/src/app_kvECS/ecs.config";
+    private static final String privateKeyPath = "/nfs/ug/homes-5/x/xushuran/Desktop/java_test_files/id_rsa";
+    private static final String knownHostPath = "~/.ssh/known_hosts";
+    private int TIMEOUT = 5000;
 
     public ServerManager(){
         try {
             zookeeperManager = new ZookeeperECSManager("localhost:2181",10000); // session timeout ms
+            System.out.println("Working Directory = " +
+                    System.getProperty("user.dir"));
             // start parseConfigFile with path to file
-            parseConfigFile(CONFIG_FILE_PATH);
+            String filePath = System.getProperty("user.dir") + RELATIVE_CONFIG_FILE_PATH;
+            parseConfigFile(filePath);
         } catch (Exception e) {
             LOGGER.error("Failed to connect to zookeeper. Check that zookeeper server has started and is running on localhost:2181");
             throw new RuntimeException("Failed to connect to zookeeper. Check that zookeeper server has started and is running on localhost:2181", e);
@@ -48,10 +57,75 @@ public class ServerManager {
         //TODO: need to finish the accept( ) first.
         return 0;
     }
-    //this function will do the ssh thing.
+    private static void readChannelOutput(Channel channel){
+
+        byte[] buffer = new byte[1024];
+
+        try{
+            InputStream in = channel.getInputStream();
+            String line = "";
+            while (true){
+                while (in.available() > 0) {
+                    int i = in.read(buffer, 0, 1024);
+                    if (i < 0) {
+                        break;
+                    }
+                    line = new String(buffer, 0, i);
+                    System.out.println(line);
+                }
+
+                if(line.contains("logout")){
+                    break;
+                }
+
+                if (channel.isClosed()){
+                    break;
+                }
+                try {
+                    Thread.sleep(1000);
+                } catch (Exception ee){}
+            }
+        }catch(Exception e){
+            System.out.println("Error while reading channel output: "+ e);
+        }
+    }
+
     private void remoteLaunchServer(int portNum){
 
+        JSch ssh = new JSch();
+        String username;
+        username = "xushuran";
+        String host = "128.100.13.174";
+        //String command = "java -jar /nfs/ug/homes-5/x/xushuran/Desktop/java_test_files/HelloWorld.jar";
+        String command = "echo Yo";
+        Session session;
 
+        try{
+            ssh.setKnownHosts(knownHostPath);
+            session = ssh.getSession(username,host,portNum);
+            ssh.addIdentity(privateKeyPath);
+            session.setConfig("StrictHostKeyChecking", "no");
+            session.connect(TIMEOUT);
+            System.out.println("Connected to " + username + "@" + host + ":" + portNum);
+
+
+            Channel channel = session.openChannel("exec");
+            ((ChannelExec) channel).setCommand(command);
+            channel.setInputStream(null);
+            ((ChannelExec) channel).setErrStream(System.err);
+            InputStream in = channel.getInputStream();
+            channel.connect();
+
+            readChannelOutput(channel);
+            System.out.println("Connection is closed");
+            channel.disconnect();
+            session.disconnect();
+
+        }catch(JSchException e){
+            e.printStackTrace();
+        }catch(IOException e){
+            e.printStackTrace();
+        }
     }
 
     public ServerNode addNode(int cacheSize, String cacheStrategy){

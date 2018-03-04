@@ -80,7 +80,7 @@ public class KVServer implements IKVServer {
 			System.exit(-1);
 		}
 		storage = new StorageManager(serverNode.getCacheSize(), serverNode.getCacheStrategy());
-
+		metadata = new Metadata();
 		zookeeperWatcher.run(); // NOW IT SETS THE WATCH AND WAITS FOR DATA CHANGES
 	}
 
