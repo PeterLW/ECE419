@@ -10,8 +10,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 
+/**
+ *  this class is for test purposes only
+ */
 public class ListGroupForever {
-    // test purposes only
     private ZooKeeper zooKeeper;
     private Semaphore semaphore = new Semaphore(1);
 

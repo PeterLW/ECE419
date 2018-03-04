@@ -49,7 +49,7 @@ public class ZookeeperWatcher extends ZookeeperManager implements Runnable {
     }
 
     public Metadata getMetadata() throws KeeperException, InterruptedException {
-        String metadataPath = ZNODE_HEAD + "/" + ZNODE_CONFIG_NODE;
+        String metadataPath = ZNODE_HEAD + "/" + ZNODE_METADATA_NODE;
         zooKeeper.sync(metadataPath,null,null);
         byte[] data = zooKeeper.getData(metadataPath,false,null);
         String dataString = new String(data);
@@ -70,7 +70,7 @@ public class ZookeeperWatcher extends ZookeeperManager implements Runnable {
         ZNodeMessage temp = gson.fromJson(new String(data),ZNodeMessage.class);
 
         // in progress
-        switch(temp.updateType){
+        switch(temp.zNodeMessageStatus){
             case NEW_ZNODE:
                 System.out.println("Data has changed");
                 System.out.println(new String(data));
