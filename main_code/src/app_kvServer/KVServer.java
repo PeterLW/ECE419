@@ -1,4 +1,5 @@
 package app_kvServer;
+
 import com.sun.security.ntlm.Server;
 import common.cache.StorageManager;
 import common.Metadata.Metadata;
@@ -15,6 +16,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 
+// IN PROGRESS
 public class KVServer implements IKVServer {
     //log info
     private static final String PROMPT = "KVSERVER>";
@@ -35,7 +37,6 @@ public class KVServer implements IKVServer {
 	private static StorageManager storage;
 
 	private static Metadata metadata;
-
 	/* This needs to be passed into ClientConnections & ZookeeperWatcher thread */
 	private static ServerNode serverNode;
 
@@ -99,6 +100,21 @@ public class KVServer implements IKVServer {
 			default:
 				return CacheStrategy.None;
 		}
+	}
+
+	/*
+		For update & initKVServer, confirm argument type & return type when the
+		following question is answered:
+		https://piazza.com/class/jc6l5ut99r35yl?cid=270
+	 */
+	@Override
+	public void initKVServer(byte[] metadata, int cacheSize, String replacementStrategy) {
+
+	}
+
+	@Override
+	public void update(byte[] metadata) {
+
 	}
 
 	@Override
@@ -252,12 +268,11 @@ public class KVServer implements IKVServer {
 
 	@Override
 	public void start() {
-
 	}
 
 	@Override
 	public void stop() {
-
+		serverNode.setServerStatus(ServerStatus.STOPPED);
 	}
 
 	@Override

@@ -1,7 +1,6 @@
 package ecs;
 
 import app_kvServer.ServerStatus;
-import common.zookeeper.UpdateType;
 
 import java.math.BigInteger;
 

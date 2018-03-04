@@ -8,6 +8,9 @@ public interface IKVServer {
         FIFO
     };
 
+    public void initKVServer(byte[] metadata, int cacheSize, String replacementStrategy);
+
+    public void update(byte[] metadata);
     /**
      * Get the port number of the server
      * @return  port number
