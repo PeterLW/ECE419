@@ -2,14 +2,36 @@ package common.zookeeper;
 
 import ecs.ServerNode;
 
-public class ZNodeMessage {
-    public UpdateType updateType;
-    // when znode is updated, the KVserver will look at this value to determine what the update is for
+import java.math.BigInteger;
 
+public class ZNodeMessage {
+    // when znode is updated, the KVserver will look at this value to determine what the update is for
+    public ZNodeMessageStatus zNodeMessageStatus;
     public ServerNode serverNode;
 
-    public ZNodeMessage(ServerNode n, UpdateType updateType){
+    private BigInteger[] moveDataRange = null;
+    private String targetName = null;
+
+    /*
+        The targetName can be:
+            1 variable:
+            a String with value: "ip:port"
+
+            2 variables:
+            String targetNameIP
+            int targetNamePort
+     */
+
+    public ZNodeMessage(ServerNode n, ZNodeMessageStatus ZNodeMessageStatus){
         this.serverNode = n;
-        this.updateType = updateType;
+        this.zNodeMessageStatus = ZNodeMessageStatus;
+    }
+
+    public void setMoveDataParameters(BigInteger[] moveDataRange, String targetName){
+        this.moveDataRange = new BigInteger[2];
+        this.moveDataRange[0] = moveDataRange[0];
+        this.moveDataRange[1] = moveDataRange[1];
+
+        this.targetName = targetName;
     }
 }

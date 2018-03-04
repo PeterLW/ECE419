@@ -9,5 +9,5 @@ logs/*
 *m1-client.jar
 DBRoot/*
 *zookeeper*.jar
-
+*.log
 
