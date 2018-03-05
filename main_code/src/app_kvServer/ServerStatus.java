@@ -3,14 +3,12 @@ import ecs.ServerNode;
 import java.math.BigInteger;
 
 public class ServerStatus {
-
-    private ServerNode serverNode;
-    private BigInteger[] moveRange;
+    
     private ServerStatusType status;
+    private BigInteger[] moveRange;
     private  String targetName;
 
     public ServerStatus(ServerNode s, BigInteger[] moveRange, String targetName, ServerStatusType newStatus){
-        this.serverNode = s;
         this.moveRange = moveRange;
         this.targetName = targetName;
         this.status = newStatus;
@@ -29,8 +27,6 @@ public class ServerStatus {
         return this.serverNode;
     }
     public void updateKVServerStatus(ServerNode newNode, BigInteger[] moveRange, String newTargetName, ServerStatusType newStatus){
-
-        this.serverNode = newNode;
         this.moveRange = moveRange;
         this.targetName = newTargetName;
         this.status = newStatus;
