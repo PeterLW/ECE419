@@ -23,7 +23,7 @@ public class ServerStatus {
     public synchronized BigInteger[] getMoveRange(){
         return this.moveRange;
     }
-    public void updateKVServerStatus(ServerNode newNode, BigInteger[] moveRange, String newTargetName, ServerStatusType newStatus){
+    public void updateKVServerStatus(BigInteger[] moveRange, String newTargetName, ServerStatusType newStatus){
         this.moveRange = moveRange;
         this.targetName = newTargetName;
         this.status = newStatus;
