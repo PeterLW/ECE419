@@ -3,7 +3,7 @@ import ecs.ServerNode;
 import java.math.BigInteger;
 
 public class ServerStatus {
-    
+
     private ServerStatusType status;
     private BigInteger[] moveRange;
     private  String targetName;
