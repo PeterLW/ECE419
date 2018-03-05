@@ -1,6 +1,5 @@
 package app_kvServer;
 
-import com.sun.security.ntlm.Server;
 import common.cache.StorageManager;
 import common.Metadata.Metadata;
 import common.zookeeper.ZookeeperWatcher;
@@ -13,8 +12,6 @@ import org.apache.zookeeper.KeeperException;
 import java.io.IOException;
 import java.net.BindException;
 import java.net.ServerSocket;
-import java.net.Socket;
-import java.net.SocketTimeoutException;
 
 // IN PROGRESS
 public class KVServer implements IKVServer {
@@ -36,7 +33,6 @@ public class KVServer implements IKVServer {
 //	private String cacheStrategy;
 	private static StorageManager storage;
 
-	private static Metadata metadata;
 	/* This needs to be passed into ClientConnections & ZookeeperWatcher thread */
 	private static ServerNode serverNode;
 
@@ -75,13 +71,12 @@ public class KVServer implements IKVServer {
 		try {
 			serverNode = zookeeperWatcher.initServerNode();
 			zookeeperWatcher.setServerNode(serverNode); // zookeeperWatcher may change this when receive data updates
-			serverNode.setServerStatus(ServerStatus.STARTING);
+			serverNode.setServerStatus(ServerStatus.LOCKWRITE);
 		} catch (KeeperException | InterruptedException e){
 			LOGGER.error("Failed to get data from zNode ",e);
 			System.exit(-1);
 		}
 		storage = new StorageManager(serverNode.getCacheSize(), serverNode.getCacheStrategy());
-		metadata = new Metadata();
 		zookeeperWatcher.run(); // NOW IT SETS THE WATCH AND WAITS FOR DATA CHANGES
 	}
 
@@ -107,12 +102,10 @@ public class KVServer implements IKVServer {
 		following question is answered:
 		https://piazza.com/class/jc6l5ut99r35yl?cid=270
 	 */
-	@Override
 	public void initKVServer(byte[] metadata, int cacheSize, String replacementStrategy) {
 
 	}
 
-	@Override
 	public void update(byte[] metadata) {
 
 	}
@@ -194,34 +187,7 @@ public class KVServer implements IKVServer {
 	public void run(){
 		// TODO Auto-generated method stub
 		this.running = initializeServer();
-		while(!this.stop) {
-			// waits for connection
-			if(this.serverSocket != null) {
 
-				if (serverNode.getServerStatus() == ServerStatus.STARTING){
-					// Starting:
-					// get Metadata object,
-				}
-
-				while(serverNode.getServerStatus() == ServerStatus.RUNNING){
-					Socket client = null;
-					try {
-						client = serverSocket.accept(); // blocking call
-						numConnectedClients++;
-						ClientConnection connection = new ClientConnection(client, storage, numConnectedClients);
-						LOGGER.info("Connected to " + client.getInetAddress().getHostName() + " on port " + client.getPort());
-						new Thread(connection).start();
-					} catch (SocketTimeoutException e){
-						/* don't really need to do anything, the timeout is so that periodically,
-						 KVServer will check to see if the ServerStatus changed
-						*/
-					} catch (IOException e) {
-						LOGGER.error("Error! " +  "Unable to establish connection. \n");
-					}
-				}
-
-			}
-		}
 	}
 
 	private boolean initializeServer() {
@@ -274,6 +240,7 @@ public class KVServer implements IKVServer {
 	public void stop() {
 		serverNode.setServerStatus(ServerStatus.STOPPED);
 	}
+
 
 	@Override
 	public void lockWrite() {
