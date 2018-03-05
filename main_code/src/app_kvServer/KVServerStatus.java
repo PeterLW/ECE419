@@ -17,17 +17,25 @@ public class KVServerStatus {
         this.status = newStatus;
     }
 
-    public ServerStatus getStatus(){
+    public synchronized ServerStatus getStatus(){
         return this.status;
     }
-    public String getTargetName(){
+    public synchronized String getTargetName(){
         return this.targetName;
     }
-    public BigInteger[] getMoveRange(){
+    public synchronized BigInteger[] getMoveRange(){
         return this.moveRange;
     }
-    public ServerNode getServerNode(){
+    public synchronized  ServerNode getServerNode(){
         return this.serverNode;
     }
+    public void updateKVServerStatus(ServerNode newNode, BigInteger[] moveRange, String newTargetName, ServerStatus newStatus){
+
+        this.serverNode = newNode;
+        this.moveRange = moveRange;
+        this.targetName = newTargetName;
+        this.status = newStatus;
+    }
+
 
 }

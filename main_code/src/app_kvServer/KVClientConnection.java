@@ -225,7 +225,7 @@ public class KVClientConnection implements Runnable {
     public void unlockWrite() {
 
     }
-    
+
     public boolean moveData(String[] hashRange, String targetName) throws Exception {
         return false;
     }
