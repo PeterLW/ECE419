@@ -10,7 +10,6 @@ public class ZookeeperMetaData extends ZookeeperManager {
     private static Logger LOGGER = Logger.getLogger(ZookeeperECSManager.class);
     private static final String METADATA_FULLPATH = ZNODE_HEAD + "/" + ZNODE_METADATA_NODE;
 
-
     public ZookeeperMetaData(String zookeeperHost, int sessionTimeout) throws IOException, InterruptedException {
         super(zookeeperHost,sessionTimeout);
     }
