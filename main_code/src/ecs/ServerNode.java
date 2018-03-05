@@ -1,7 +1,6 @@
 package ecs;
 
 import app_kvServer.ServerStatus;
-import app_kvServer.KVServerStatus;
 import java.math.BigInteger;
 
 public class ServerNode implements IECSNode {
@@ -19,7 +18,7 @@ public class ServerNode implements IECSNode {
     private String cacheStrategy;
 
     // transient means it's not serialized to JSON (therefore these fields are not stored in zNode)
-    private transient KVServerStatus kvServerStatus; // really only used by KVServer, for ECSClient this is unreliable
+    private transient ServerStatus serverStatus; // really only used by KVServer, for ECSClient this is unreliable
     private transient String[] hexStringRange = new String[2]; // this is only generated when accessor function is called
 
     public ServerNode(ConfigEntity e, int cacheSize, String cacheStrategy){
@@ -87,12 +86,12 @@ public class ServerNode implements IECSNode {
         return this.cacheStrategy;
     }
 
-    public void setServerStatus(KVServerStatus newStatus){
-        kvServerStatus = newStatus;
+    public void setServerStatus(ServerStatus newStatus){
+        serverStatus = newStatus;
     }
 
-    public KVServerStatus getServerStatus(){
-        return kvServerStatus;
+    public ServerStatus getServerStatus(){
+        return serverStatus;
     }
 
 }
