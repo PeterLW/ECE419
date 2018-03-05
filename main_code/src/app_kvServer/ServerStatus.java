@@ -8,7 +8,7 @@ public class ServerStatus {
     private BigInteger[] moveRange;
     private  String targetName;
 
-    public ServerStatus(ServerNode s, BigInteger[] moveRange, String targetName, ServerStatusType newStatus){
+    public ServerStatus(BigInteger[] moveRange, String targetName, ServerStatusType newStatus){
         this.moveRange = moveRange;
         this.targetName = targetName;
         this.status = newStatus;
