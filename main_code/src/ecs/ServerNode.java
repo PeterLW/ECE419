@@ -18,7 +18,7 @@ public class ServerNode implements IECSNode {
     private int cacheSize;
     private String cacheStrategy;
 
-
+    // transient means it's not serialized to JSON (therefore these fields are not stored in zNode)
     private transient ServerStatus serverStatus; // really only used by KVServer, for ECSClient this is unreliable
     private transient String[] hexStringRange = new String[2]; // this is only generated when accessor function is called
 
