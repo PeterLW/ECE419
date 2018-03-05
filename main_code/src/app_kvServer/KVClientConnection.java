@@ -21,7 +21,6 @@ import java.net.SocketTimeoutException;
 // IN PROGRESS
 public class KVClientConnection implements Runnable {
     //log info
-
     public enum CacheStrategy_t {
         None,
         LRU,
@@ -42,7 +41,6 @@ public class KVClientConnection implements Runnable {
     //cache info - stored in ServerNode now
     private static StorageManager storage;
 
-    private static Metadata metadata; //need it to transfer to KVClient
     /* This needs to be passed into ClientConnections & ZookeeperWatcher thread */
     private static ServerNode serverNode;
 
@@ -58,78 +56,9 @@ public class KVClientConnection implements Runnable {
     }
 
     //todo: inccomplete now
-    public KVClientConnection(StorageManager storageManager){
+    public KVClientConnection(StorageManager storageManager, String hostName, String portNum){
 
 
-    }
-
-
-
-    private CacheStrategy_t string_to_enum_cache_strategy(String str) {
-        switch (str.toLowerCase()){
-            case "LRU":
-                return CacheStrategy_t.LRU;
-            case "LFU":
-                return CacheStrategy_t.LFU;
-            case "FIFO":
-                return CacheStrategy_t.FIFO;
-            default:
-                return CacheStrategy_t.None;
-        }
-    }
-
-
-    public int getPort(){
-        // TODO Auto-generated method stub
-//		LOGGER.info(">Server port: " + this.port);
-        return port;
-    }
-
-    public String getHostname(){
-        // TODO Auto-generated method stubc
-//		LOGGER.info("Server hostname: " + hostname);
-        return hostname;
-    }
-
-    public CacheStrategy_t getCacheStrategy(){
-        // TODO Auto-generated method stub
-        //LOGGER.info("Server ("+hostname+","+port+") : CacheManager Strategy is "+ cacheStrategy);
-        return string_to_enum_cache_strategy(serverNode.getCacheStrategy());
-    }
-
-    public int getCacheSize(){
-        // TODO Auto-generated method stub
-        return serverNode.getCacheSize();
-    }
-
-    public boolean inStorage(String key){
-        // TODO Auto-generated method stub
-        if(key != null && !(key.isEmpty()) && !(key.equals("")) && !(key.contains(" ")) && !(key.length() > 20)) {
-            return storage.inDatabase(key);
-        }
-        else{
-            return false;
-        }
-    }
-
-    public boolean inCache(String key){
-        // TODO Auto-generated method stub
-        return storage.inCache(key);
-    }
-
-    public String getKV(String key) throws Exception{
-        // TODO Auto-generated method stub
-        return storage.getKV(key);
-    }
-
-    public void putKV(String key, String value) throws Exception{
-        // TODO Auto-generated method stub
-        if(storage.putKV(key, value)){
-            LOGGER.info("Server ("+hostname+","+port+") : Success in putKV");
-        }
-        else{
-            LOGGER.info("Server ("+hostname+","+port+") : Error in putKV");
-        }
     }
 
     public void run(){
@@ -211,24 +140,24 @@ public class KVClientConnection implements Runnable {
 
      */
 
-    public void start() {
-    }
-
-    public void stop() {
-        serverNode.setServerStatus(ServerStatus.STOPPED);
-    }
-
-    public void lockWrite() {
-
-    }
-
-    public void unlockWrite() {
-
-    }
-
-    public boolean moveData(String[] hashRange, String targetName) throws Exception {
-        return false;
-    }
+//    public void start() {
+//    }
+//
+//    public void stop() {
+//        serverNode.setServerStatus(ServerStatus.STOPPED);
+//    }
+//
+//    public void lockWrite() {
+//
+//    }
+//
+//    public void unlockWrite() {
+//
+//    }
+//
+//    public boolean moveData(String[] hashRange, String targetName) throws Exception {
+//        return false;
+//    }
 
     public static void main(String[] args){
         //TODO read from cmdline the arguments needed to start KVServer
