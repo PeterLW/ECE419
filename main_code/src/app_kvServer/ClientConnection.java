@@ -1,17 +1,23 @@
 package app_kvServer;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.net.Socket;
-
 import com.google.gson.Gson;
+import common.Metadata.Metadata;
 import common.cache.StorageManager;
 import common.messages.KVMessage;
 import common.messages.KVMessage.StatusType;
 import common.messages.Message;
+import ecs.ServerNode;
 import org.apache.log4j.*;
 import common.transmission.Transmission;
 import java.lang.String;
+import java.security.MessageDigest;
 import java.util.HashSet;
+import common.zookeeper.ZookeeperMetaData;
+import common.Metadata.Metadata;
+import org.apache.zookeeper.KeeperException;
 
 /**
  * Represents a connection end point for a particular client that is 
@@ -30,33 +36,127 @@ public class ClientConnection implements Runnable {
 	private Transmission transmission;
 	private int clientId;
 	private HashSet<Integer> seqIdValues = new HashSet<Integer>();
+	private ZookeeperMetaData zookeeperMetaData;
+	private ServerNode serverNode;
 
 	/**
 	 * Constructs a new CientConnection object for a given TCP socket.
 	 *
 	 * @param clientSocket the Socket object for the client connection.
 	 */
-	public ClientConnection(Socket clientSocket, StorageManager caching, int clientId) {
+	public ClientConnection(Socket clientSocket, ServerNode node ,StorageManager caching, int clientId, String zookeeperHost, int sessionTimeout) {
 		this.clientSocket = clientSocket;
 		this.clientId = clientId;
 		this.isOpen = true;
 		this.transmission = new Transmission();
 		this.storageManager = caching;
 
+		try {
+			this.zookeeperMetaData = new ZookeeperMetaData(zookeeperHost, sessionTimeout);
+		}catch(IOException | InterruptedException e){
+			e.printStackTrace();
+		}
+
+		this.serverNode = node;
 		String clientIdString = Integer.toString(clientId);
 		transmission.sendMessage(toByteArray(clientIdString),clientSocket);
 	}
 
+    private BigInteger getMD5(String input) throws Exception{
+
+        MessageDigest md=MessageDigest.getInstance("MD5");
+        md.update(input.getBytes(),0,input.length());
+        String hash_temp = new BigInteger(1,md.digest()).toString(16);
+        BigInteger hash = new BigInteger(hash_temp, 16);
+        return hash;
+    }
+
+    private boolean isKeyInValidRange(String key){
+
+        BigInteger[] range = serverNode.getRange();
+        BigInteger hashValue = null;
+        try {
+             hashValue = getMD5(key);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        if(range[0].compareTo(range[1]) == 0) { //if there is only one server running
+            return true;
+        }
+        else if(range[0].compareTo(range[1]) > 0){ //if key is in the first node, range[0]>range[1] in the hash ring
+            if((hashValue.compareTo(range[0]) > 0 ) || (hashValue.compareTo(range[1]) < 0 )){
+                return true;
+            }
+            else
+                return false;
+        }
+        else{ //normal case
+            if((hashValue.compareTo(range[0]) > 0) && (hashValue.compareTo(range[1]) < 0)){
+                return true;
+            }
+            else
+                return false;
+        }
+    }
+
+    private void RespondMsg(Message received_msg, KVMessage.StatusType responseType, Metadata metaData){
+
+        Message return_msg = new Message(responseType, clientId, received_msg.getSeq(), received_msg.getKey(), received_msg.getValue());
+        received_msg.setMetaData(metaData);
+        boolean success = transmission.sendMessage(toByteArray(gson.toJson(return_msg)), clientSocket);
+	    if (!success) {
+	        LOGGER.error("Send message failed to client " + this.clientId);
+	    }
+    }
+
+    private void HandleRequest(Message msg){
+        if(isKeyInValidRange(msg.getKey())) {
+            processMessage(msg);
+        }
+        else{
+            Metadata metadata = null;
+            try {
+                metadata = zookeeperMetaData.getMetadata();
+            }catch (KeeperException | InterruptedException e){
+                e.printStackTrace();
+            }
+            RespondMsg(msg, StatusType.SERVER_NOT_RESPONSIBLE, metadata);
+        }
+    }
 
 	/**
 	 * Initializes and starts the client connection.
 	 * Loops until the connection is closed or aborted by the client.
 	 */
 	public void run() {
-        Message latestMsg = new Message();
+		Message latestMsg;
 		while (isOpen) {
-            try {
-				 latestMsg = transmission.receiveMessage(clientSocket);
+
+			try {
+				latestMsg = transmission.receiveMessage(clientSocket);
+				if(serverNode.getServerStatus().getStatus() == ServerStatusType.INITIALIZE ||
+						serverNode.getServerStatus().getStatus() == ServerStatusType.IDLE){
+
+					RespondMsg(latestMsg, StatusType.SERVER_STOPPED, null);
+				}
+				else if(serverNode.getServerStatus().getStatus() == ServerStatusType.RUNNING){
+                    HandleRequest(latestMsg);
+				}
+				else if(serverNode.getServerStatus().getStatus() == ServerStatusType.READ_ONLY ||
+						serverNode.getServerStatus().getStatus() == ServerStatusType.MOVE_DATA_SENDER ||
+						serverNode.getServerStatus().getStatus() == ServerStatusType.MOVE_DATA_RECEIVER){
+
+					if(latestMsg.getStatus() == KVMessage.StatusType.PUT){
+						RespondMsg(latestMsg, StatusType.SERVER_WRITE_LOCK, null);
+					}
+					else{
+                        HandleRequest(latestMsg);
+					}
+				}
+				else{
+                    //Do Nothing here for M2 ....
+				}
+
 				/* connection either terminated by the client or lost due to
 				 * network problems*/
 			} catch (IOException ioe) {
@@ -71,7 +171,7 @@ public class ClientConnection implements Runnable {
 					LOGGER.error("Error! Unable to tear down connection for client: " + this.clientId, ioe);
 				}
 			}
-            processMessage(latestMsg);
+
 		}
 	}
 
@@ -80,7 +180,6 @@ public class ClientConnection implements Runnable {
 				LOGGER.error("Message received is null");
 				return;
 			}
-
 			/*
 			 * we never did seq numbers, but we talked about it in the report so...
 			 * 'error handling stuff'

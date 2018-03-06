@@ -7,10 +7,10 @@ import java.util.*;
 
 public class Metadata {
     // bst
-    private static TreeSet<Node> servers_bst;
+    private transient static TreeSet<Node> servers_bst;
     private static HashMap<BigInteger, String> HashToServer;
-    private Node first_node = null;
-    private Node last_node = null;
+    private transient Node first_node = null;
+    private transient Node last_node = null;
 
     public Metadata(){
         servers_bst = new TreeSet<Node>();

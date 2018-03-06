@@ -6,7 +6,7 @@ public class ServerStatus {
 
     private ServerStatusType status;
     private BigInteger[] moveRange;
-    private  String targetName;
+    private String targetName;
 
     public ServerStatus(BigInteger[] moveRange, String targetName, ServerStatusType newStatus){
         this.moveRange = moveRange;

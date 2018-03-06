@@ -21,29 +21,17 @@ import java.net.SocketTimeoutException;
 // IN PROGRESS
 public class KVClientConnection implements Runnable {
     //log info
-    public enum CacheStrategy_t {
-        None,
-        LRU,
-        LFU,
-        FIFO
-    };
-
     private static final Logger LOGGER = Logger.getLogger(app_kvServer.KVClientConnection.class);
-
     //connection info
-    private int port;
-    private String hostname = null;
     private ServerSocket serverSocket;
     private boolean stop = false;
-    private boolean running = false;
     private static int numConnectedClients = 0;
-
     //cache info - stored in ServerNode now
     private static StorageManager storage;
-
     /* This needs to be passed into ClientConnections & ZookeeperWatcher thread */
     private static ServerNode serverNode;
-
+    private String zookeeperHost;
+    private int sessionTimeout;
 
     static {
         try {
@@ -56,57 +44,84 @@ public class KVClientConnection implements Runnable {
     }
 
     //todo: inccomplete now
-    public KVClientConnection(StorageManager storageManager, String hostName, String portNum){
+    public KVClientConnection(StorageManager storageManager, ServerNode node,String zookeeperHost, int sessionTimeout ){
 
-
+        this.storage = storageManager;
+        this.serverNode = node;
+        this.zookeeperHost = zookeeperHost;
+        this.sessionTimeout = sessionTimeout;
     }
 
-    public void run(){
-        // TODO Auto-generated method stub
-        this.running = initializeServer();
-        while(!this.stop) {
+    public void run() {
+
+        initializeServer();
+        while (!this.stop) {
             // waits for connection
-            if(this.serverSocket != null) {
+            if (this.serverSocket != null) {
 
-                if (serverNode.getServerStatus() == ServerStatus.STARTING){
-                    // Starting:
-                    // get Metadata object,
-                }
+                Socket client = null;
+                try {
+                    client = serverSocket.accept(); // blocking call
+                    numConnectedClients++;
+                    ClientConnection connection = new ClientConnection(client, serverNode, storage, numConnectedClients, zookeeperHost, sessionTimeout);
+                    LOGGER.info("Connected to " + client.getInetAddress().getHostName() + " on port " + client.getPort());
+                    new Thread(connection).start();
 
-                while(serverNode.getServerStatus() == ServerStatus.RUNNING){
-                    Socket client = null;
-                    try {
-                        client = serverSocket.accept(); // blocking call
-                        numConnectedClients++;
-                        ClientConnection connection = new ClientConnection(client, storage, numConnectedClients);
-                        LOGGER.info("Connected to " + client.getInetAddress().getHostName() + " on port " + client.getPort());
-                        new Thread(connection).start();
-                    } catch (SocketTimeoutException e){
+                } catch (SocketTimeoutException e) {
 						/* don't really need to do anything, the timeout is so that periodically,
 						 KVServer will check to see if the ServerStatus changed
 						*/
-                    } catch (IOException e) {
-                        LOGGER.error("Error! " +  "Unable to establish connection. \n");
-                    }
+                } catch (IOException e) {
+                    LOGGER.error("Error! " + "Unable to establish connection. \n");
                 }
-
             }
         }
     }
 
+//    public void run(){
+//        // TODO Auto-generated method stub
+//        initializeServer();
+//        while(!this.stop) {
+//            // waits for connection
+//            if(this.serverSocket != null) {
+//
+//                if (serverNode.getServerStatus() == ServerStatus.STARTING){
+//                    // Starting:
+//                    // get Metadata object,
+//                }
+//
+//                while(serverNode.getServerStatus() == ServerStatus.RUNNING){
+//                    Socket client = null;
+//                    try {
+//                        client = serverSocket.accept(); // blocking call
+//                        numConnectedClients++;
+//                        ClientConnection connection = new ClientConnection(client, storage, numConnectedClients);
+//                        LOGGER.info("Connected to " + client.getInetAddress().getHostName() + " on port " + client.getPort());
+//                        new Thread(connection).start();
+//                    } catch (SocketTimeoutException e){
+//						/* don't really need to do anything, the timeout is so that periodically,
+//						 KVServer will check to see if the ServerStatus changed
+//						*/
+//                    } catch (IOException e) {
+//                        LOGGER.error("Error! " +  "Unable to establish connection. \n");
+//                    }
+//                }
+//
+//            }
+//        }
+//    }
+
     private boolean initializeServer() {
         LOGGER.info("Initialize server ...");
         try {
-            this.serverSocket = new ServerSocket(this.port);
-            this.hostname = serverSocket.getInetAddress().getHostName();
-            this.port = this.serverSocket.getLocalPort();
-            LOGGER.info("Server listening on port: " + this.serverSocket.getLocalPort());
+            this.serverSocket = new ServerSocket(this.serverNode.getNodePort());
+            LOGGER.info("Server listening on port: " + this.serverNode.getNodePort());
             this.serverSocket.setSoTimeout(1000); // 1 s
             return true;
         } catch (IOException e) {
             LOGGER.error("Error! Cannot open server socket:");
             if(e instanceof BindException){
-                LOGGER.error("Port " + port + " is already bound!");
+                LOGGER.error("Port " + this.serverNode.getNodePort() + " is already bound!");
             }
             return false;
         }
@@ -117,9 +132,8 @@ public class KVClientConnection implements Runnable {
         try {
             serverSocket.close();
         } catch (IOException e) {
-            LOGGER.error("Error! " + "Unable to close socket on port: " + port, e);
+            LOGGER.error("Error! " + "Unable to close socket on port: " + serverNode.getNodePort(), e);
         }
-        running = false;
         stop = true;
     }
 
@@ -128,36 +142,10 @@ public class KVClientConnection implements Runnable {
         try {
             serverSocket.close();
         } catch (IOException e) {
-            LOGGER.error("Error! " + "Unable to close socket on port: " + port, e);
+            LOGGER.error("Error! " + "Unable to close socket on port: " + serverNode.getNodePort(), e);
         }
-        running = false;
         stop = true;
     }
-
-    /*
-
-    They will be invoked by having listening the current server status.
-
-     */
-
-//    public void start() {
-//    }
-//
-//    public void stop() {
-//        serverNode.setServerStatus(ServerStatus.STOPPED);
-//    }
-//
-//    public void lockWrite() {
-//
-//    }
-//
-//    public void unlockWrite() {
-//
-//    }
-//
-//    public boolean moveData(String[] hashRange, String targetName) throws Exception {
-//        return false;
-//    }
 
     public static void main(String[] args){
         //TODO read from cmdline the arguments needed to start KVServer

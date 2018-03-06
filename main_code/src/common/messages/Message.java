@@ -1,10 +1,16 @@
 package common.messages;
 
+import common.Metadata.Metadata;
 import lombok.Setter;
+
+import java.math.BigInteger;
+import java.util.HashMap;
 
 public class Message implements KVMessage {
 
     private StatusType status;
+    private Metadata metadata = null;
+
     @Setter private int seq = -1;
     @Setter private int clientId = -1;
     @Setter private String key;
@@ -28,6 +34,13 @@ public class Message implements KVMessage {
     }
 
     public Message(){}
+
+    public void setMetaData(Metadata metadata){
+        this.metadata = metadata;
+    }
+    public Metadata getMetaData(){
+        return this.metadata;
+    }
 
     /* checks to make sure valid variables are not null, for StatusType
      */
@@ -66,4 +79,6 @@ public class Message implements KVMessage {
     public ecs.IECSNode getResponsibleServer() {
         return null;
     }
+
+
 }
