@@ -3,6 +3,9 @@ package common.cache;
 import org.apache.log4j.Logger;
 import common.disk.DBManager;
 
+import java.math.BigInteger;
+import java.util.ArrayList;
+
 public class StorageManager {
 
     private static Logger logger = Logger.getLogger(StorageManager.class);
@@ -91,5 +94,10 @@ public class StorageManager {
 
     public void printCacheKeys() {
         cacheStructure.printCacheKeys();
+    }
+
+    public ArrayList<String> returnKeysInRange(BigInteger range[]){
+        ArrayList<String> keys = dbManager.returnKeysInRange(range);
+        return keys;
     }
 }
