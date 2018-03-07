@@ -1,4 +1,4 @@
-package common.Metadata;
+package common.metadata;
 
 import java.math.BigInteger;
 
