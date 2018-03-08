@@ -17,13 +17,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.StringJoiner;
+import org.apache.log4j.Logger;
 
 public class DBManager {
     /* writes Files in
      * UTF-8 encoding
      */
-    private final static String ROOT_PATH =  "DBRoot";
     private static Logger LOGGER = Logger.getLogger(DBManager.class);
+    private final static String ROOT_PATH =  "DBRoot";
 
     public DBManager(){
         initializeDB();
@@ -127,15 +128,25 @@ public class DBManager {
         for(File file : files){
             String filename = file.getName();
             BigInteger hash = getMD5(filename);
-            System.out.println("MD5 hash of " + filename + " is " + hash);
+//            System.out.println("MD5 hash of " + filename + " is " + hash);
             //move data to first node, means the node added is the first node in hash ring
             if(flag > 0){
-                if(hash.compareTo(range[0]) > 0 || hash.compareTo(range[1]) < 0)
+                if(hash.compareTo(range[0]) > 0 || hash.compareTo(range[1]) < 0) {
                     keys.add(filename);
+                    System.out.println("1:send file: " + filename + " , hash: " + hash);
+                }
+                else {
+                    LOGGER.error("Key not in range");
+                }
             }
             else if(flag < 0){
-                if(hash.compareTo(range[0]) > 0 && hash.compareTo(range[1]) < 0)
+                if(hash.compareTo(range[0]) > 0 && hash.compareTo(range[1]) < 0) {
                     keys.add(filename);
+                    System.out.println("2:send file: " + filename + " , hash: " + hash);
+                }
+                else {
+                    LOGGER.error("Key not in range");
+                }
             }
             else{
 

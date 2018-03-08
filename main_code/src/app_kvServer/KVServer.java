@@ -239,6 +239,7 @@ public class KVServer implements IKVServer {
 	@Override
 	public void stop() {
 		//serverNode.setServerStatus(ServerStatus.STOPPED);
+
 	}
 
 

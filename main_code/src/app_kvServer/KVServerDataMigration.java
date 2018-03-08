@@ -4,6 +4,8 @@ import common.cache.StorageManager;
 import common.messages.KVMessage;
 import common.messages.Message;
 import common.transmission.Transmission;
+import logger.LogSetup;
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import com.google.gson.Gson;
 
@@ -11,6 +13,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.security.MessageDigest;
 import java.util.ArrayList;
 import ecs.ServerNode;
 
@@ -39,17 +42,18 @@ public class KVServerDataMigration implements  Runnable {
     //Q: where is the kill handler ? (i.e. what if the main thread sends a kill signal here , does
     //cathy use this class as an object or run this thread at startup ? Need a mechanism to kill and close this thread.
     public void run() {
-        while(serverNode.getServerStatus().getStatus() != ServerStatusType.MOVE_DATA_SENDER &&
-                serverNode.getServerStatus().getStatus() != ServerStatusType.MOVE_DATA_RECEIVER) {
 
+        while(true) {
             if (serverNode.getServerStatus().getStatus() == ServerStatusType.MOVE_DATA_SENDER) {
                 try {
                     Socket senderSocket = new Socket(address, port);
+                    System.out.println("connecting to receiver...");
                     send_data(senderSocket);
                     senderSocket.close();
                 } catch (IOException e) {
                     LOGGER.error("Failed to connect data migration receiver");
                 }
+                break;
             } else if (serverNode.getServerStatus().getStatus() == ServerStatusType.MOVE_DATA_RECEIVER) {
                 try {
                     ServerSocket receiverSocket = new ServerSocket(port);
@@ -61,7 +65,11 @@ public class KVServerDataMigration implements  Runnable {
                     LOGGER.error("Failed to connect data migration sender");
                 }
             } else {
-
+                try {
+                    Thread.sleep(1);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
@@ -76,6 +84,7 @@ public class KVServerDataMigration implements  Runnable {
             Message recvMsg = transmission.receiveMessage(senderSocket);
             if (recvMsg.getStatus() == KVMessage.StatusType.PUT_SUCCESS) {
                 storageManager.deleteRV(key);
+                System.out.println(recvMsg.getStatus().toString());
             } else {
                 //todo... possibly retry and send error message
                 LOGGER.error("Sender: failed to migrate a packet");
@@ -121,8 +130,49 @@ public class KVServerDataMigration implements  Runnable {
         return tmp;
     }
 
-    public void main(){
 
-    }
+
+//    public static void main(String[] args){
+//
+//        try {
+//            new LogSetup("logs/server.log", Level.DEBUG);
+//        } catch (IOException e) {
+//            System.out.println("Error! Unable to initialize logger!");
+//            e.printStackTrace();
+//            System.exit(1);
+//        }
+//
+//        StorageManager sm = new StorageManager(1000, "FIFO");
+//        sm.clearAll();
+//        sm.putKV("a", "a");
+//        sm.putKV("b", "b");
+//        sm.putKV("c", "c");
+//        sm.putKV("d", "d");
+//
+//        BigInteger[] hashRange = new BigInteger[2];
+//        try {
+//            hashRange[0] = getMD5("0");
+//            hashRange[1] = getMD5("k");
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//
+//        ServerStatus status = new ServerStatus(hashRange, "192.168.1.132:50000", ServerStatusType.MOVE_DATA_SENDER);
+//        ServerNode serverNode = new ServerNode("server", "192.168.1.132", 50000);
+//        serverNode.setServerStatus(status);
+//
+//        KVServerDataMigration dm = new KVServerDataMigration("192.168.1.132:50000", hashRange, serverNode, sm);
+//        dm.run();
+//
+//    }
+//
+//    public static BigInteger getMD5(String input) throws Exception{
+//
+//        MessageDigest md=MessageDigest.getInstance("MD5");
+//        md.update(input.getBytes(),0,input.length());
+//        String hash_temp = new BigInteger(1,md.digest()).toString(16);
+//        BigInteger hash = new BigInteger(hash_temp, 16);
+//        return hash;
+//    }
 
 }
