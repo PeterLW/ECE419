@@ -26,6 +26,7 @@ public class KVServer implements IKVServer {
     private boolean stop = false;
 
     private static int numConnectedClients = 0; // this variable should be in KVClientConnection
+
 	private static StorageManager storage;
 
 	/* This needs to be passed into ClientConnections & ZookeeperWatcher thread */
