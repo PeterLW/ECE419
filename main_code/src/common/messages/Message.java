@@ -1,6 +1,6 @@
 package common.messages;
 
-import common.Metadata.Metadata;
+import common.metadata.Metadata;
 import lombok.Setter;
 
 import java.math.BigInteger;

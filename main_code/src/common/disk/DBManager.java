@@ -123,16 +123,17 @@ public class DBManager {
     public ArrayList<String> returnKeysInRange(BigInteger range[]){
         File[] files = new File(ROOT_PATH).listFiles();
         ArrayList<String> keys = new ArrayList<>();
+        int flag = range[0].compareTo(range[1]);
         for(File file : files){
             String filename = file.getName();
             BigInteger hash = getMD5(filename);
             System.out.println("MD5 hash of " + filename + " is " + hash);
             //move data to first node, means the node added is the first node in hash ring
-            if(range[0].compareTo(range[1]) > 0){
+            if(flag > 0){
                 if(hash.compareTo(range[0]) > 0 || hash.compareTo(range[1]) < 0)
                     keys.add(filename);
             }
-            else if(range[0].compareTo(range[1]) < 0){
+            else if(flag < 0){
                 if(hash.compareTo(range[0]) > 0 && hash.compareTo(range[1]) < 0)
                     keys.add(filename);
             }
@@ -144,7 +145,7 @@ public class DBManager {
         return keys;
     }
 
-    public BigInteger getMD5(String input)  {
+    private BigInteger getMD5(String input)  {
 
         MessageDigest md= null;
         try {

@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.net.Socket;
 import com.google.gson.Gson;
-import common.Metadata.Metadata;
+import common.metadata.Metadata;
 import common.cache.StorageManager;
 import common.messages.KVMessage;
 import common.messages.KVMessage.StatusType;
@@ -16,7 +16,6 @@ import java.lang.String;
 import java.security.MessageDigest;
 import java.util.HashSet;
 import common.zookeeper.ZookeeperMetaData;
-import common.Metadata.Metadata;
 import org.apache.zookeeper.KeeperException;
 
 /**

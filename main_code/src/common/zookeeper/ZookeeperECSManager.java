@@ -45,7 +45,7 @@ public class ZookeeperECSManager extends ZookeeperManager{
         }
     }
 
-    public void updateMetadataZNode(common.Metadata.Metadata metadata) throws KeeperException, InterruptedException {
+    public void updateMetadataZNode(common.metadata.Metadata metadata) throws KeeperException, InterruptedException {
         String jsonMetadataData = gson.toJson(metadata);
         System.out.println(jsonMetadataData);
         this.updateZNode(ZNODE_HEAD,ZNODE_METADATA_NODE,toByteArray(jsonMetadataData));

@@ -2,7 +2,7 @@ package ecs;
 
 
 import app_kvServer.ServerStatus;
-import common.Metadata.Metadata;
+import common.metadata.Metadata;
 import common.zookeeper.ZookeeperECSManager;
 import org.apache.log4j.Logger;
 import org.apache.zookeeper.KeeperException;

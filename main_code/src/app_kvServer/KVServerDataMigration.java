@@ -36,6 +36,8 @@ public class KVServerDataMigration implements  Runnable {
         this.storageManager = storageManager;
     }
 
+    //Q: where is the kill handler ? (i.e. what if the main thread sends a kill signal here , does
+    //cathy use this class as an object or run this thread at startup ? Need a mechanism to kill and close this thread.
     public void run() {
         while(serverNode.getServerStatus().getStatus() != ServerStatusType.MOVE_DATA_SENDER &&
                 serverNode.getServerStatus().getStatus() != ServerStatusType.MOVE_DATA_RECEIVER) {
@@ -44,6 +46,7 @@ public class KVServerDataMigration implements  Runnable {
                 try {
                     Socket senderSocket = new Socket(address, port);
                     send_data(senderSocket);
+                    senderSocket.close();
                 } catch (IOException e) {
                     LOGGER.error("Failed to connect data migration receiver");
                 }
@@ -63,17 +66,26 @@ public class KVServerDataMigration implements  Runnable {
         }
     }
 
-    public void send_data(Socket senderSocket){
+    public void send_data(Socket senderSocket) throws IOException {
         ArrayList<String> keys = storageManager.returnKeysInRange(hashRange);
-        for(String key : keys){
+        for (String key : keys) {
             String value = storageManager.getKV(key);
             Message message = new Message(KVMessage.StatusType.PUT, 0, 0, key, value);
             transmission.sendMessage(toByteArray(gson.toJson(message)), senderSocket);
-            storageManager.deleteRV(key);
+
+            Message recvMsg = transmission.receiveMessage(senderSocket);
+            if (recvMsg.getStatus() == KVMessage.StatusType.PUT_SUCCESS) {
+                storageManager.deleteRV(key);
+            } else {
+                //todo... possibly retry and send error message
+                LOGGER.error("Sender: failed to migrate a packet");
+            }
         }
         Message message = new Message(KVMessage.StatusType.CLOSE_REQ, 0, 0, null, null);
         transmission.sendMessage(toByteArray(gson.toJson(message)), senderSocket);
     }
+
+    //need to send PUT_SUCCESS as ACK, then either return signal to main thread
 
     public void receive_data(Socket receiverSocket) throws IOException{
 
@@ -81,10 +93,14 @@ public class KVServerDataMigration implements  Runnable {
         while(!(data.getStatus() == KVMessage.StatusType.CLOSE_REQ)) {
             if(data.getStatus() == KVMessage.StatusType.PUT) {
                 storageManager.putKV(data.getKey(), data.getValue());
+
+                Message retMessage = new Message(KVMessage.StatusType.PUT_SUCCESS, 0, 0, null, null);
+                transmission.sendMessage(toByteArray(gson.toJson(retMessage)), receiverSocket);
+
                 data = transmission.receiveMessage(receiverSocket);
             }
             else{
-                LOGGER.error("Wrong data migration status");
+                LOGGER.error("Receiver: Wrong data migration status");
                 break;
             }
         }
@@ -93,6 +109,7 @@ public class KVServerDataMigration implements  Runnable {
     //generic function, better move to a common file as well as getMD5() function
     private static final char LINE_FEED = 0x0A;
     private static final char RETURN = 0x0D;
+
     private byte[] toByteArray(String s){
         byte[] bytes = s.getBytes();
         byte[] ctrBytes = new byte[]{LINE_FEED, RETURN};

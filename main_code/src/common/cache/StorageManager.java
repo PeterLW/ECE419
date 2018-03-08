@@ -97,7 +97,6 @@ public class StorageManager {
     }
 
     public ArrayList<String> returnKeysInRange(BigInteger range[]){
-        ArrayList<String> keys = dbManager.returnKeysInRange(range);
-        return keys;
+        return dbManager.returnKeysInRange(range);
     }
 }

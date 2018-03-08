@@ -71,7 +71,7 @@ public class KVServer implements IKVServer {
 		try {
 			serverNode = zookeeperWatcher.initServerNode();
 			zookeeperWatcher.setServerNode(serverNode); // zookeeperWatcher may change this when receive data updates
-			serverNode.setServerStatus(ServerStatus.LOCKWRITE);
+			//serverNode.setServerStatus(ServerStatus.LOCKWRITE);
 		} catch (KeeperException | InterruptedException e){
 			LOGGER.error("Failed to get data from zNode ",e);
 			System.exit(-1);
@@ -238,7 +238,7 @@ public class KVServer implements IKVServer {
 
 	@Override
 	public void stop() {
-		serverNode.setServerStatus(ServerStatus.STOPPED);
+		//serverNode.setServerStatus(ServerStatus.STOPPED);
 	}
 
 
