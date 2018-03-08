@@ -17,7 +17,7 @@ import java.security.MessageDigest;
 import java.util.ArrayList;
 import ecs.ServerNode;
 
-public class KVServerDataMigration implements  Runnable {
+public class KVServerDataMigration implements Runnable {
 
     private  String address;
     private int port;
@@ -43,6 +43,8 @@ public class KVServerDataMigration implements  Runnable {
     //cathy use this class as an object or run this thread at startup ? Need a mechanism to kill and close this thread.
     public void run() {
 
+        System.out.println("system starts ....\n");
+
         while(true) {
             if (serverNode.getServerStatus().getStatus() == ServerStatusType.MOVE_DATA_SENDER) {
                 try {
@@ -58,16 +60,19 @@ public class KVServerDataMigration implements  Runnable {
                 try {
                     ServerSocket receiverSocket = new ServerSocket(port);
                     Socket socket = receiverSocket.accept();
+                    System.out.println("Connected to the sender, start receiving packets\n");
                     receive_data(socket);
                     socket.close();
                     receiverSocket.close();
+                    System.out.println("Socket closed\n");
                 } catch (IOException e) {
                     LOGGER.error("Failed to connect data migration sender");
                 }
             } else {
                 try {
                     Thread.sleep(1);
-                } catch (InterruptedException e) {
+
+                }catch (InterruptedException e){
                     e.printStackTrace();
                 }
             }
@@ -101,9 +106,12 @@ public class KVServerDataMigration implements  Runnable {
         Message data = transmission.receiveMessage(receiverSocket);
         while(!(data.getStatus() == KVMessage.StatusType.CLOSE_REQ)) {
             if(data.getStatus() == KVMessage.StatusType.PUT) {
+
+                System.out.println("Packets (" + data.getKey() +"," + data.getValue() + ") " + "received\n");
                 storageManager.putKV(data.getKey(), data.getValue());
 
                 Message retMessage = new Message(KVMessage.StatusType.PUT_SUCCESS, 0, 0, null, null);
+                System.out.println("PUT_SUCCESS: sent ack to the sender");
                 transmission.sendMessage(toByteArray(gson.toJson(retMessage)), receiverSocket);
 
                 data = transmission.receiveMessage(receiverSocket);
@@ -113,6 +121,7 @@ public class KVServerDataMigration implements  Runnable {
                 break;
             }
         }
+        System.out.println("CLOSE_REQ: finished receiving packets\n");
     }
 
     //generic function, better move to a common file as well as getMD5() function
@@ -129,7 +138,6 @@ public class KVServerDataMigration implements  Runnable {
 
         return tmp;
     }
-
 
 
 //    public static void main(String[] args){
@@ -175,4 +183,31 @@ public class KVServerDataMigration implements  Runnable {
 //        return hash;
 //    }
 
+
+//    public static void main(String[] args){
+//
+//         {
+//            try {
+//                new LogSetup("logs/server.log", Level.DEBUG);
+//            } catch (IOException e) {
+//                System.out.println("Error! Unable to initialize logger!");
+//                e.printStackTrace();
+//                System.exit(1);
+//            }
+//        }
+//
+//        StorageManager sm = new StorageManager(1000, "LRU");
+//        sm.clearAll();
+//        BigInteger[] hashRange = new BigInteger[2];
+//
+//        String ip = "192.168.1.132";
+//        String port = "50000";
+//        String targetName = ip + ":"  + port;
+//        ServerNode node = new ServerNode(targetName,  ip, Integer.parseInt(port));
+//        ServerStatus initStatus = new ServerStatus(hashRange, targetName, ServerStatusType.MOVE_DATA_RECEIVER);
+//        node.setServerStatus( initStatus);
+//
+//        KVServerDataMigration dut = new KVServerDataMigration(targetName, hashRange, node, sm);
+//        dut.run();
+//    }
 }
