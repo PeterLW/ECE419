@@ -58,8 +58,8 @@ public class KVServer implements IKVServer {
 	// in progress
 	public KVServer(String name, String zkHostname, int zkPort) { // m2 interface
 		ZookeeperWatcher zookeeperWatcher = null;
+		String zookeeperHost = zkHostname + ":" + Integer.toString(zkPort);
 		try {
-			String zookeeperHost = zkHostname + ":" + Integer.toString(zkPort);
 			zookeeperWatcher = new ZookeeperWatcher(zookeeperHost,100000,name, upcomingStatusQueue);
 		} catch (IOException | InterruptedException e) {
 			LOGGER.error("Failed to connect to zookeeper server");
@@ -78,13 +78,14 @@ public class KVServer implements IKVServer {
 		storage = new StorageManager(serverNode.getCacheSize(), serverNode.getCacheStrategy());
 		zookeeperWatcher.run(); // NOW IT SETS THE WATCH AND WAITS FOR DATA CHANGES
 
-		// TODO: HERE IS WHERE YOU INITIALIZE THE KVCLIENCONNECTION
-		// & then run it
+		KVClientConnection kvClientConnection = new KVClientConnection(storage,serverNode,zookeeperHost,10000);
+		kvClientConnection.run();
 	}
 
 //    public boolean isRunning() {
 //        return this.running;
 //    }
+
 
 	private CacheStrategy string_to_enum_cache_strategy(String str) {
 		switch (str.toLowerCase()){

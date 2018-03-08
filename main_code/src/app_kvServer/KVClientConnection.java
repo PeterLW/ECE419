@@ -43,7 +43,6 @@ public class KVClientConnection implements Runnable {
 
     //todo: inccomplete now
     public KVClientConnection(StorageManager storageManager, ServerNode node,String zookeeperHost, int sessionTimeout ){
-
         this.storage = storageManager;
         this.serverNode = node;
         this.zookeeperHost = zookeeperHost;
@@ -51,7 +50,6 @@ public class KVClientConnection implements Runnable {
     }
 
     public void run() {
-
         initializeServer();
         while (!this.stop) {
             // waits for connection
