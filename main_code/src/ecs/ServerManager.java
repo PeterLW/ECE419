@@ -1,14 +1,11 @@
 package ecs;
 
-
 import app_kvServer.ServerStatus;
 import common.metadata.Metadata;
 import common.zookeeper.ZookeeperECSManager;
 import org.apache.log4j.Logger;
 import org.apache.zookeeper.KeeperException;
 import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.HashMap;
@@ -18,11 +15,7 @@ import java.util.LinkedList;
 import java.util.Map;
 import com.jcraft.jsch.*;
 
-
-
 public class ServerManager {
-
-
 //    // hash values (start) -> serverNode
 //    private TreeMap<String,ServerNode> tree = new TreeMap<String,ServerNode>();
 
