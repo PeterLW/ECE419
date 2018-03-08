@@ -31,6 +31,8 @@ public class KVServer implements IKVServer {
 	/* This needs to be passed into ClientConnections & ZookeeperWatcher thread */
 	private static ServerNode serverNode;
 
+	private static UpcomingStatusQueue upcomingStatusQueue = new UpcomingStatusQueue();
+
 	/**
 	 * Start KV Server at given port
 	 * @param port given port for storage server to operate
@@ -57,7 +59,7 @@ public class KVServer implements IKVServer {
 		ZookeeperWatcher zookeeperWatcher = null;
 		try {
 			String zookeeperHost = zkHostname + ":" + Integer.toString(zkPort);
-			zookeeperWatcher = new ZookeeperWatcher(zookeeperHost,100000,name);
+			zookeeperWatcher = new ZookeeperWatcher(zookeeperHost,100000,name, upcomingStatusQueue);
 		} catch (IOException | InterruptedException e) {
 			LOGGER.error("Failed to connect to zookeeper server");
 			System.exit(-1);

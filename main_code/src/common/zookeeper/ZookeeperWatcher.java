@@ -1,5 +1,6 @@
 package common.zookeeper;
 
+import app_kvServer.UpcomingStatusQueue;
 import ecs.ServerNode;
 import org.apache.log4j.Logger;
 import org.apache.zookeeper.KeeperException;
@@ -30,14 +31,16 @@ import java.util.concurrent.Semaphore;
 
 public class ZookeeperWatcher extends ZookeeperMetaData implements Runnable {
     private static Logger LOGGER = Logger.getLogger(ZookeeperECSManager.class);
-    private static String fullPath = null;
     private static ServerNode serverNode;
+    private static UpcomingStatusQueue upcomingStatusQueue;
+    private static String fullPath = null;
 
     private Semaphore semaphore = new Semaphore(1);
 
-    public ZookeeperWatcher(String zookeeperHost, int sessionTimeout, String name) throws IOException, InterruptedException {
+    public ZookeeperWatcher(String zookeeperHost, int sessionTimeout, String name, UpcomingStatusQueue _upcomingStatusQueue) throws IOException, InterruptedException {
         super(zookeeperHost,sessionTimeout);
         fullPath = ZNODE_HEAD + "/" + name;
+        upcomingStatusQueue = _upcomingStatusQueue;
     }
 
     public ServerNode initServerNode() throws KeeperException, InterruptedException {
