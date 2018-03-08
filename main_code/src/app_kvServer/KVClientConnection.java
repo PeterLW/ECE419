@@ -2,7 +2,6 @@ package app_kvServer;
 import app_kvServer.ClientConnection;
 import app_kvServer.IKVServer;
 import app_kvServer.ServerStatus;
-//import com.sun.security.ntlm.Server;
 import common.cache.StorageManager;
 import common.metadata.Metadata;
 import common.zookeeper.ZookeeperWatcher;
@@ -10,7 +9,6 @@ import ecs.ServerNode;
 import logger.LogSetup;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import org.apache.zookeeper.KeeperException;
 
 import java.io.IOException;
 import java.net.BindException;
@@ -58,7 +56,6 @@ public class KVClientConnection implements Runnable {
         while (!this.stop) {
             // waits for connection
             if (this.serverSocket != null) {
-
                 Socket client = null;
                 try {
                     client = serverSocket.accept(); // blocking call
@@ -77,39 +74,6 @@ public class KVClientConnection implements Runnable {
             }
         }
     }
-
-//    public void run(){
-//        // TODO Auto-generated method stub
-//        initializeServer();
-//        while(!this.stop) {
-//            // waits for connection
-//            if(this.serverSocket != null) {
-//
-//                if (serverNode.getServerStatus() == ServerStatus.STARTING){
-//                    // Starting:
-//                    // get Metadata object,
-//                }
-//
-//                while(serverNode.getServerStatus() == ServerStatus.RUNNING){
-//                    Socket client = null;
-//                    try {
-//                        client = serverSocket.accept(); // blocking call
-//                        numConnectedClients++;
-//                        ClientConnection connection = new ClientConnection(client, storage, numConnectedClients);
-//                        LOGGER.info("Connected to " + client.getInetAddress().getHostName() + " on port " + client.getPort());
-//                        new Thread(connection).start();
-//                    } catch (SocketTimeoutException e){
-//						/* don't really need to do anything, the timeout is so that periodically,
-//						 KVServer will check to see if the ServerStatus changed
-//						*/
-//                    } catch (IOException e) {
-//                        LOGGER.error("Error! " +  "Unable to establish connection. \n");
-//                    }
-//                }
-//
-//            }
-//        }
-//    }
 
     private boolean initializeServer() {
         LOGGER.info("Initialize server ...");
@@ -149,7 +113,5 @@ public class KVClientConnection implements Runnable {
 
     public static void main(String[] args){
         //TODO read from cmdline the arguments needed to start KVServer
-//			KVServer server = new KVServer(50000,10,"LRU"); // these should be from cmdline
-//			server.run();
     }
 }

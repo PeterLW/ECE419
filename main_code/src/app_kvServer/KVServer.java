@@ -1,7 +1,7 @@
 package app_kvServer;
 
 import common.cache.StorageManager;
-import common.metadata.*;
+import common.metadata.Metadata;
 import common.zookeeper.ZookeeperWatcher;
 import ecs.ServerNode;
 import logger.LogSetup;
@@ -10,7 +10,6 @@ import org.apache.log4j.Logger;
 import org.apache.zookeeper.KeeperException;
 
 import java.io.IOException;
-import java.net.BindException;
 import java.net.ServerSocket;
 
 // IN PROGRESS
@@ -26,11 +25,7 @@ public class KVServer implements IKVServer {
     private boolean running = false;
     private boolean stop = false;
 
-    private static int numConnectedClients = 0;
-
-    //cache info - stored in ServerNode now
-//	private int cacheSize;
-//	private String cacheStrategy;
+    private static int numConnectedClients = 0; // this variable should be in KVClientConnection
 	private static StorageManager storage;
 
 	/* This needs to be passed into ClientConnections & ZookeeperWatcher thread */
@@ -68,21 +63,25 @@ public class KVServer implements IKVServer {
 			System.exit(-1);
 		}
 
-		try {
+		try { // get serverNode
 			serverNode = zookeeperWatcher.initServerNode();
 			zookeeperWatcher.setServerNode(serverNode); // zookeeperWatcher may change this when receive data updates
-			//serverNode.setServerStatus(ServerStatus.LOCKWRITE);
+			ServerStatus ss = new ServerStatus(ServerStatusType.INITIALIZE);
+			serverNode.setServerStatus(ss);
 		} catch (KeeperException | InterruptedException e){
 			LOGGER.error("Failed to get data from zNode ",e);
 			System.exit(-1);
 		}
 		storage = new StorageManager(serverNode.getCacheSize(), serverNode.getCacheStrategy());
 		zookeeperWatcher.run(); // NOW IT SETS THE WATCH AND WAITS FOR DATA CHANGES
+
+		// TODO: HERE IS WHERE YOU INITIALIZE THE KVCLIENCONNECTION
+		// & then run it
 	}
 
-    public boolean isRunning() {
-        return this.running;
-    }
+//    public boolean isRunning() {
+//        return this.running;
+//    }
 
 	private CacheStrategy string_to_enum_cache_strategy(String str) {
 		switch (str.toLowerCase()){
@@ -102,13 +101,13 @@ public class KVServer implements IKVServer {
 		following question is answered:
 		https://piazza.com/class/jc6l5ut99r35yl?cid=270
 	 */
-	public void initKVServer(byte[] metadata, int cacheSize, String replacementStrategy) {
-
-	}
-
-	public void update(byte[] metadata) {
-
-	}
+//	public void initKVServer(byte[] metadata, int cacheSize, String replacementStrategy) {
+//
+//	}
+//
+//	public void update(byte[] metadata) {
+//
+//	}
 
 	@Override
 	public int getPort(){
@@ -186,31 +185,32 @@ public class KVServer implements IKVServer {
 
 	public void run(){
 		// TODO Auto-generated method stub
-		this.running = initializeServer();
+		while(true){
 
-	}
-
-	private boolean initializeServer() {
-		LOGGER.info("Initialize server ...");
-		try {
-			this.serverSocket = new ServerSocket(this.port);
-            this.hostname = serverSocket.getInetAddress().getHostName();
-			this.port = this.serverSocket.getLocalPort();
-			LOGGER.info("Server listening on port: " + this.serverSocket.getLocalPort());
-			this.serverSocket.setSoTimeout(1000); // 1 s
-			return true;
-		} catch (IOException e) {
-			LOGGER.error("Error! Cannot open server socket:");
-			if(e instanceof BindException){
-				LOGGER.error("Port " + port + " is already bound!");
-			}
-			return false;
 		}
 	}
+//
+//	private boolean initializeServer() {
+//		LOGGER.info("Initialize server ...");
+//		try {
+//			this.serverSocket = new ServerSocket(this.port);
+//          this.hostname = serverSocket.getInetAddress().getHostName();
+//			this.port = this.serverSocket.getLocalPort();
+//			LOGGER.info("Server listening on port: " + this.serverSocket.getLocalPort());
+//			this.serverSocket.setSoTimeout(1000); // 1 s
+//			return true;
+//		} catch (IOException e) {
+//			LOGGER.error("Error! Cannot open server socket:");
+//			if(e instanceof BindException){
+//				LOGGER.error("Port " + port + " is already bound!");
+//			}
+//			return false;
+//		}
+//	}
 
 	@Override
     public void kill(){ //here kill( ) will be same as close( ) as we are using write-through cache. For now, leave it as the same as close()
-		// TODO Auto-generated method stub
+		// TODO
         try {
             serverSocket.close();
         } catch (IOException e) {
@@ -222,7 +222,7 @@ public class KVServer implements IKVServer {
 
 	@Override
     public void close(){
-		// TODO Auto-generated method stub
+		// TODO
 		try {
 			serverSocket.close();
 		} catch (IOException e) {
@@ -232,14 +232,14 @@ public class KVServer implements IKVServer {
 		stop = true;
 	}
 
+	//TODO
 	@Override
 	public void start() {
+
 	}
 
 	@Override
 	public void stop() {
-		//serverNode.setServerStatus(ServerStatus.STOPPED);
-
 	}
 
 
