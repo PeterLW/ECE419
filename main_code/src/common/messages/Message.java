@@ -9,12 +9,12 @@ import java.util.HashMap;
 public class Message implements KVMessage {
 
     private StatusType status;
-    private Metadata metadata = null;
 
     @Setter private int seq = -1;
     @Setter private int clientId = -1;
     @Setter private String key;
     @Setter private String value;
+    private Metadata metadata = null;
 
 
     public Message(StatusType status, int clientId, int seq, String key,String value) {

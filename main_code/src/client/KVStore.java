@@ -6,7 +6,9 @@ import java.net.Socket;
 import java.net.SocketException;
 
 import com.google.gson.Gson;
+import com.jcraft.jsch.IO;
 import common.messages.Message;
+import common.metadata.Metadata;
 import logger.LogSetup;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -34,6 +36,8 @@ public class KVStore implements KVCommInterface {
 	private Message message = null;
 	private Transmission transmit;
 
+	Metadata metadata = null;
+
 	/**
 	 * Initialize KVStore with address and port of KVServer
 	 *
@@ -45,10 +49,11 @@ public class KVStore implements KVCommInterface {
 		this.address = address;
 		this.port = port;
 		this.transmit = new Transmission();
+		this.metadata = new Metadata();
 	}
 
 	@Override
-	public void connect() throws Exception{
+	public void connect() throws IOException{
 		// TODO Auto-generated method stub
         clientSocket = new Socket(address, port);
 		clientSocket.setSoTimeout(TIMEOUT);
@@ -87,11 +92,42 @@ public class KVStore implements KVCommInterface {
 		return false;
 	}
 
+
+
+	public void updateMetadataAndResend(Message msg, String key, String value) throws IOException{
+		if(msg.getStatus() == StatusType.SERVER_NOT_RESPONSIBLE){
+			metadata = msg.getMetaData();
+			put(key,value);
+		}
+	}
+
+	public boolean checkValidServer(String key){
+		String targetServer = metadata.findServer(key);
+		if(targetServer == null)
+			return true;
+
+		String[] temp = targetServer.split(":");
+		if(this.address.equals(temp[0]) && this.port == Integer.parseInt(temp[1]))
+			return true;
+		else {
+			this.address = temp[0];
+			this.port = Integer.parseInt(temp[1]);
+			return false;
+		}
+	}
+
+
 	@Override
-	public Message put(String key, String value) throws Exception {
+	public Message put(String key, String value) throws IOException {
 		// when the value == null somewhere down the line gets a NullPointerException .__.
 		// should we just set value to empty string here?
 		// TODO Auto-generated method stub
+
+		if(!checkValidServer(key)) {
+			clientSocket.close();
+			connect();
+		}
+
 		Message received_stat = null;
 		boolean isTimeOut = false;
 
