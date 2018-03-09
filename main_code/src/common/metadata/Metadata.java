@@ -1,5 +1,8 @@
 package common.metadata;
 
+import com.sun.security.ntlm.Server;
+import ecs.ServerNode;
+
 import java.security.*;
 import java.lang.*;
 import java.math.BigInteger;
@@ -49,6 +52,10 @@ public class Metadata {
             servers_bst.add(s);
     }
 
+
+    public String findServer(ServerNode n){
+        return findServer(n.getNodeHostPort());
+    }
     /**
      * findServer( ): this function is called on KVClient side.
      */
@@ -88,9 +95,13 @@ public class Metadata {
 //        }
 //    }
 
-    public void removeServer(String serverID){
+    public void removeServer(ServerNode node){
+        removeServer(node.getNodeHostPort());
+    }
+
+    public void removeServer(String serverIpPort){
         try {
-            Node s = new Node(serverID, getMD5(serverID));
+            Node s = new Node(serverIpPort, getMD5(serverIpPort));
             if(servers_bst.contains(s)) {
                 servers_bst.remove(s);
                 first_node = servers_bst.first();
@@ -102,12 +113,16 @@ public class Metadata {
         }
     }
 
+    public void addServer(ServerNode node) {
+        addServer(node.getNodeHostPort());
+    }
+
     /**
      * Purpose: to add a new Server
      */
-    public void addServer(String serverID){
+    public void addServer(String serverIpPort){
         try {
-            Node s = new Node(serverID, getMD5(serverID));
+            Node s = new Node(serverIpPort, getMD5(serverIpPort));
             if(!servers_bst.contains(s)) {
                 servers_bst.add(s);
                 first_node = servers_bst.first();
@@ -175,6 +190,10 @@ public class Metadata {
         return null;
     }
 
+    public String getSuccesor(ServerNode n){
+        return getSuccessor(n.getNodeHostPort());
+    }
+
     public String getSuccessor(String id){
         Node n = findNode(id);
         if(n == null){
@@ -192,6 +211,11 @@ public class Metadata {
    updateSuccessor( ) works for both adding nodes and removing nodes.
    lower doesn't change, the higher will change for all cases.
      */
+
+    public BigInteger[] getSuccessorRange(ServerNode n){
+        return getSuccessorRange(n.getNodeHostPort());
+    }
+
     public BigInteger[] getSuccessorRange(String id){
         BigInteger[] successorRange;
         Node n = findNode(id);
@@ -220,6 +244,10 @@ public class Metadata {
     If only one node in BST, we return low range = high range = server's hash. And this needs to be interpreted
     in KVServer side.
      */
+    public BigInteger[] getHashRange(ServerNode n) {
+        return getHashRange(n.getNodeHostPort());
+    }
+
     public BigInteger[] getHashRange(String id){
 
         if(!servers_bst.contains(id))
