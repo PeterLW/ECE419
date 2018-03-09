@@ -60,6 +60,10 @@ public class ServerNode implements IECSNode {
         return (name + "_" + host + "_" + Integer.toString(port));
     }
 
+    public String getNodeHostPort(){
+        return(host + ":" + Integer.toString(port));
+    }
+
     @Override
     public String getNodeHost() {
         return host;
