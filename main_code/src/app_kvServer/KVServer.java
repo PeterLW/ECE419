@@ -5,6 +5,7 @@ import common.metadata.Metadata;
 import common.zookeeper.ZookeeperWatcher;
 import ecs.ServerNode;
 import logger.LogSetup;
+import org.apache.commons.cli.*;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.zookeeper.KeeperException;
@@ -57,6 +58,11 @@ public class KVServer implements IKVServer {
 
 	// in progress
 	public KVServer(String name, String zkHostname, int zkPort) { // m2 interface
+		if (name == null){
+			LOGGER.error("KVServer must have name argument to start up");
+			System.exit(-1);
+			return;
+		}
 		ZookeeperWatcher zookeeperWatcher = null;
 		String zookeeperHost = zkHostname + ":" + Integer.toString(zkPort);
 		try {
@@ -85,7 +91,6 @@ public class KVServer implements IKVServer {
 //    public boolean isRunning() {
 //        return this.running;
 //    }
-
 
 	private CacheStrategy string_to_enum_cache_strategy(String str) {
 		switch (str.toLowerCase()){
@@ -190,7 +195,10 @@ public class KVServer implements IKVServer {
 	public void run(){
 		// TODO Auto-generated method stub
 		while(true){
-
+			ServerStatusType statusType = serverNode.getServerStatus().getStatus();
+			if (statusType == ServerStatusType.MOVE_DATA_RECEIVER || statusType == ServerStatusType.MOVE_DATA_SENDER){
+				// TODO: START YOUR MOVEDATA THREAD THINGY
+			}
 		}
 	}
 //
@@ -264,7 +272,39 @@ public class KVServer implements IKVServer {
 
 	public static void main(String[] args){
 		//TODO read from cmdline the arguments needed to start KVServer
-//			KVServer server = new KVServer(50000,10,"LRU"); // these should be from cmdline
-//			server.run();
+		Options options = new Options();
+
+		options.addOption("name",true,"The serverName as what's returned from getNodeName()");
+		options.getOption("name").setRequired(true);
+		options.addOption("zkhost",true,"Zookeeper Host (IP Address)");
+		options.addOption("zkport",true,"Zookeeper port");
+		options.getOption("zkport").setType(Integer.class);
+
+		CommandLineParser cmdLineParser = new DefaultParser();
+
+		// default values
+		String name = null, zkhost = "localhost";
+		int zkport = 2185; // double check
+
+		try {
+			CommandLine cmdLine = cmdLineParser.parse(options, args);
+
+			if (cmdLine.hasOption("name")){
+				name = cmdLine.getOptionValue("name").toString();
+			}
+
+			if (cmdLine.hasOption("zkhost")){
+				zkhost = cmdLine.getOptionValue("zkhost").toString();
+			}
+
+			if (cmdLine.hasOption("zkport")){
+				zkport = Integer.parseInt(cmdLine.getOptionValue("zkport"));
+			}
+		} catch (ParseException e) {
+			LOGGER.error("Error parsing command line arguments", e);
+			System.exit(-1);
+		}
+		KVServer kvServer = new KVServer(name,zkhost,zkport);
+		kvServer.run();
 	}
 }

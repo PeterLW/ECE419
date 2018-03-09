@@ -272,7 +272,6 @@ public class ECSClient implements IECSClient {
     }
 
     public void run(){
-
         while(!stop) {
             System.out.print(PROMPT);
             try {
