@@ -93,11 +93,13 @@ public class ZookeeperWatcher extends ZookeeperMetaData implements Runnable {
                         next.setServerStatus(ServerStatusType.READ_ONLY);
                         serverNode.setServerStatus(next);
                     }
+                    break;
                 case IDLE:
                     if (next.getTransition() == ZNodeMessageStatus.START_SERVER){
                         next.setServerStatus(ServerStatusType.RUNNING);
                         serverNode.setServerStatus(next);
                     }
+                    break;
                 case READ_ONLY:
                     if (next.getTransition() == ZNodeMessageStatus.UNLOCK_WRITE){
                         next.setServerStatus(ServerStatusType.RUNNING);
@@ -109,6 +111,7 @@ public class ZookeeperWatcher extends ZookeeperMetaData implements Runnable {
                         next.setMoveRangeStatus(ServerStatusType.MOVE_DATA_SENDER,temp.getMoveDataRange(),temp.getTargetName());
                         serverNode.setServerStatus(next);
                     }
+                    break;
                 case MOVE_DATA_RECEIVER:
                 case MOVE_DATA_SENDER:
                     if (curr.isReady()){
@@ -116,6 +119,7 @@ public class ZookeeperWatcher extends ZookeeperMetaData implements Runnable {
                         serverNode.setServerStatus(next);
                         proceed = false;
                     }
+                    break;
                 case CLOSE:
                     proceed = false;
                     exitLoop = true;
