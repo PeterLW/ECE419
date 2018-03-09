@@ -31,6 +31,7 @@ public class KVClientConnection implements Runnable {
     private static ServerNode serverNode;
     private String zookeeperHost;
     private int sessionTimeout;
+    private Metadata metadata;
 
     static {
         try {
@@ -48,7 +49,14 @@ public class KVClientConnection implements Runnable {
         this.serverNode = node;
         this.zookeeperHost = zookeeperHost;
         this.sessionTimeout = sessionTimeout;
+        this.metadata = new Metadata();
     }
+/* The following setter and getter are used for debugging purpose */
+
+    public Metadata getMetadata(){
+        return metadata;
+    }
+
 
     public void run() {
         initializeServer();
@@ -130,6 +138,8 @@ public class KVClientConnection implements Runnable {
         node.setRange(range);
 
         KVClientConnection kc = new KVClientConnection(storageManager,  node, zookeeperHost,  sessionTimeout);
+
+       // kc.getMetadata().addServer(hostname);
         kc.run();
     }
 

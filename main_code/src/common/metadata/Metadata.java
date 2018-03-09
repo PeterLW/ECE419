@@ -43,6 +43,10 @@ public class Metadata {
         last_node = servers_bst.last();
     }
 
+    public LinkedHashMap<BigInteger, String> getMetadata(){
+        return HashToServer;
+    }
+
     /**
      * helper function for build_bst()
      */

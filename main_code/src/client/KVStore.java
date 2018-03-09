@@ -38,8 +38,6 @@ public class KVStore implements KVCommInterface {
 
 	private Message message = null;
 	private Transmission transmit;
-    private Metadata metaData;
-
 
 	private Metadata metadata = null;
 
@@ -111,7 +109,7 @@ public class KVStore implements KVCommInterface {
             metadata = gson.fromJson(msg.getMetaData(), Metadata.class);
             //update bst, so checkValidServer will pass
             metadata.build_bst();
-            printmetadata();
+           // printmetadata();
 			put(key,value);
 		}
 	}
@@ -131,12 +129,8 @@ public class KVStore implements KVCommInterface {
 		}
 	}
 
-
 	@Override
 	public Message put(String key, String value) throws IOException {
-		// when the value == null somewhere down the line gets a NullPointerException .__.
-		// should we just set value to empty string here?
-		// TODO Auto-generated method stub
 
 		if(!checkValidServer(key)) {
 			clientSocket.close();
@@ -210,7 +204,6 @@ public class KVStore implements KVCommInterface {
 				// read timed out - you may throw an exception of your choice
 				LOGGER.debug("timeout");
 				isTimeOut = true;
-
 			}
 
 			if (isTimeOut) { // try again once
