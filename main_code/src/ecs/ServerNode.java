@@ -52,13 +52,12 @@ public class ServerNode implements IECSNode {
         range[1] = end;
     }
 
+    /*
+     * A unique way to refer to Servers
+     */
     @Override
     public String getNodeName() {
-        StringBuilder nodeName = new StringBuilder();
-        nodeName.append(name);
-        nodeName.append(" ");
-        nodeName.append(host);
-        return nodeName.toString();
+        return (name + "_" + host + "_" + Integer.toString(port));
     }
 
     @Override
@@ -71,6 +70,7 @@ public class ServerNode implements IECSNode {
         return port;
     }
 
+    // TODO: does this produce the right string.
     @Override
     public String[] getNodeHashRange() {
         hexStringRange[0] = range[0].toString();
