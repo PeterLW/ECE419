@@ -1,6 +1,5 @@
 package ecs;
 
-import app_kvServer.ServerStatus;
 import common.metadata.Metadata;
 import common.zookeeper.ZookeeperECSManager;
 import org.apache.log4j.Logger;
@@ -8,33 +7,36 @@ import org.apache.zookeeper.KeeperException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.math.BigInteger;
-import java.util.HashMap;
+import java.util.*;
 import java.io.*;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.Map;
+
 import com.jcraft.jsch.*;
 
 public class ServerManager {
-//    // hash values (start) -> serverNode
-//    private TreeMap<String,ServerNode> tree = new TreeMap<String,ServerNode>();
-
-    // name: (serverName ip) -> serverNode
-    private HashMap<String,IECSNode> hashMap = new HashMap<String,IECSNode>(); // stores the active running nodes
-    private LinkedList<ConfigEntity> entityList = new LinkedList<ConfigEntity>();
-    private ZookeeperECSManager zookeeperManager;
     private static Logger LOGGER = Logger.getLogger(ServerManager.class);
-    private Metadata metadataManager = new Metadata();
-    private static final String RELATIVE_CONFIG_FILE_PATH = "/src/app_kvECS/ecs.config";
-    private static final String privateKeyPath = "/nfs/ug/homes-5/x/xushuran/Desktop/java_test_files/id_rsa";
-    private static final String knownHostPath = "~/.ssh/known_hosts";
+    private static Metadata metadataManager = new Metadata();
+
+    private static final String RELATIVE_CONFIG_FILE_PATH = "/src/app_kvECS/ecs.config"; // SHOULD BE an argument passed in at start-up
+
+    // TODO:
+    // @Aaron, go on piazza, there's alot of questions about this, something about doing ssh without supplying a password. see if you can figure
+    // this out, for when demoing on not our account (though I guess this is a lower priority item... )
+    private static final String PRIVATE_KEY_PATH = "/nfs/ug/homes-5/x/xushuran/Desktop/java_test_files/id_rsa";
+    private static final String KNOWN_HOST_PATH = "~/.ssh/known_hosts";
+
+    //    // hash values (start) -> serverNode
+//    private TreeMap<String,ServerNode> tree = new TreeMap<String,ServerNode>();
+    // name: (serverName ip) -> serverNode
+    // linked hash map has better performance when iterating
+    private LinkedHashMap<String,IECSNode> hashMap = new LinkedHashMap<String,IECSNode>(); // stores the active running nodes
+    private LinkedList<ConfigEntity> entityList = new LinkedList<ConfigEntity>();
+    private ZookeeperECSManager zookeeperECSManager;
     private int TIMEOUT = 5000;
 
 
     public ServerManager(){
         try {
-
-            zookeeperManager = new ZookeeperECSManager("localhost:2181",10000); // session timeout ms
+            zookeeperECSManager = new ZookeeperECSManager("localhost:2181",10000); // session timeout ms
             System.out.println("Working Directory = " +
                     System.getProperty("user.dir"));
             // start parseConfigFile with path to file
@@ -100,9 +102,9 @@ public class ServerManager {
         Session session;
 
         try{
-            ssh.setKnownHosts(knownHostPath);
+            ssh.setKnownHosts(KNOWN_HOST_PATH);
             session = ssh.getSession(username,host,portNum);
-            ssh.addIdentity(privateKeyPath);
+            ssh.addIdentity(PRIVATE_KEY_PATH);
             session.setConfig("StrictHostKeyChecking", "no");
             session.connect(TIMEOUT);
             System.out.println("Connected to " + username + "@" + host + ":" + portNum);
@@ -140,10 +142,9 @@ public class ServerManager {
     }
 
     private ServerNode updateHashMapElement(String id, BigInteger[] newRange){
-
         ServerNode node = null;
-        for (String key : hashMap.keySet()) {
-            node = (ServerNode) hashMap.get(key);
+        for (Map.Entry<String, IECSNode> entry : hashMap.entrySet()) {
+            node = (ServerNode) entry.getValue();
             String nodeID = node.getNodeHost() + ":" + node.getNodePort();
             if(nodeID.equals(id)){
                 node.setRange(newRange[0],newRange[1]);
@@ -155,7 +156,6 @@ public class ServerManager {
     }
 
     private boolean updateSuccessor(String serverNodeID, ServerNode n){
-
         BigInteger[] range = metadataManager.findHashRange(serverNodeID);
         if(range != null) {
             n.setRange(range[0], range[1]);
@@ -165,7 +165,7 @@ public class ServerManager {
                 if (successorID != null) {
                     ServerNode updatedNode = updateHashMapElement(successorID, successorRange);
                     try {
-                        zookeeperManager.updateRangeKVServer(updatedNode);
+                        zookeeperECSManager.updateRangeKVServer(updatedNode);
                     }catch (KeeperException | InterruptedException e){
                         e.printStackTrace();
                         return false;
@@ -178,7 +178,6 @@ public class ServerManager {
     }
 
     private boolean addServer(ServerNode n, String cacheStrategy, int cacheSize) throws KeeperException, InterruptedException { // change to throw?
-
         String id = n.getNodeName();
         if (hashMap.containsKey(id)) {
             return false;
@@ -186,20 +185,16 @@ public class ServerManager {
         hashMap.put(id,n);
         String serverNodeID = n.getNodeHost() + ":" + Integer.toString(n.getNodePort());
         metadataManager.addServer(serverNodeID);
-        zookeeperManager.addKVServer(n);
+        zookeeperECSManager.addKVServer(n);
         return updateSuccessor(serverNodeID, n);
-
     }
 
     public void updateMetaDataZNode(){
-
         //TODO: need API
        //zookeeperManager.addMetaData();
-
     }
 
     public IECSNode getServerName(String Key){
-
         String[] temp = metadataManager.findServer(Key).split(":");
         Iterator i = hashMap.entrySet().iterator();
 
@@ -214,11 +209,10 @@ public class ServerManager {
     }
 
     public boolean start(){
-
         for (String key : hashMap.keySet()) {
             ServerNode node = (ServerNode) hashMap.get(key);
             try {
-                zookeeperManager.startKVServer(node);
+                zookeeperECSManager.startKVServer(node);
             }catch (KeeperException | InterruptedException e) {
                 e.printStackTrace();
                 return false;
@@ -228,10 +222,10 @@ public class ServerManager {
     }
 
     public boolean stop(){
-        for (String key : hashMap.keySet()) {
-            ServerNode node = (ServerNode) hashMap.get(key);
+        for (Map.Entry<String, IECSNode> entry : hashMap.entrySet()) {
+            ServerNode node = (ServerNode) entry.getValue();
             try {
-                zookeeperManager.stopKVServer(node);
+                zookeeperECSManager.stopKVServer(node);
             }catch (KeeperException | InterruptedException e) {
                 e.printStackTrace();
                 return false;
@@ -241,10 +235,10 @@ public class ServerManager {
     }
 
     public boolean shutdown(){
-        for (String key : hashMap.keySet()) {
-            ServerNode node = (ServerNode) hashMap.get(key);
+        for (Map.Entry<String, IECSNode> entry : hashMap.entrySet()) {
+            ServerNode node = (ServerNode) entry.getValue();
             try {
-                zookeeperManager.shutdownKVServer(node);
+                zookeeperECSManager.shutdownKVServer(node);
             }catch (KeeperException | InterruptedException e) {
                 e.printStackTrace();
                 return false;
@@ -255,7 +249,6 @@ public class ServerManager {
 
     //ServerIndex: NodeName
     public boolean removeNode(String ServerIndex)throws KeeperException, InterruptedException{
-
         IECSNode node = hashMap.get(ServerIndex);
         //if remove node, add the node back to entity list for next launch
         ConfigEntity entity = new ConfigEntity(node.getNodeHost(), node.getNodeHost(), node.getNodePort());
@@ -266,7 +259,7 @@ public class ServerManager {
 
             String serverNodeID = node.getNodeHost() + ":" + Integer.toString(node.getNodePort());
             if(updateSuccessor(serverNodeID, (ServerNode) node)){
-                zookeeperManager.removeKVServer(ServerIndex);
+                zookeeperECSManager.removeKVServer(ServerIndex);
                 return true;
             }
             else
@@ -307,34 +300,33 @@ public class ServerManager {
         }
     }
 
+    // test
     public static void main(String[] args) throws IOException, InterruptedException, KeeperException {
-        ServerManager serverManager = new ServerManager();
-
-
-        for (int i = 12; i<17; i++){
-            String name = "SERVER_" + Integer.toString(i);
-            int port = 1111+i;
-            ServerNode n = new ServerNode(name,"localhost",port);
-           // boolean success = serverManager.addNode(n,"something", 100);
-           // System.out.println(success);
-        }
-        System.in.read();
-
-//        for (int i = 0; i<5; i++){
-//            String name = "TEST_SERVER_" + Integer.toString(i);
+//        ServerManager serverManager = new ServerManager();
+//
+//        for (int i = 12; i<17; i++){
+//            String name = "SERVER_" + Integer.toString(i);
 //            int port = 1111+i;
 //            ServerNode n = new ServerNode(name,"localhost",port);
-//            System.out.println("Servernode: " + n.getNodeName());
-//            boolean success = serverManager.addKVServer(n,"something", 100);
-//            System.out.println(success);
+//           // boolean success = serverManager.addNode(n,"something", 100);
+//           // System.out.println(success);
 //        }
 //        System.in.read();
-
-        String name = "TEST_SERVER_" + Integer.toString(0);
-        ServerNode n = new ServerNode(name,"localhost",1111+0);
-        n.setRange(new BigInteger(String.valueOf(1111233)), new BigInteger(String.valueOf(11111111)));
-        serverManager.zookeeperManager.addKVServer(n);
-
+//
+////        for (int i = 0; i<5; i++){
+////            String name = "TEST_SERVER_" + Integer.toString(i);
+////            int port = 1111+i;
+////            ServerNode n = new ServerNode(name,"localhost",port);
+////            System.out.println("Servernode: " + n.getNodeName());
+////            boolean success = serverManager.addKVServer(n,"something", 100);
+////            System.out.println(success);
+////        }
+////        System.in.read();
+//
+//        String name = "TEST_SERVER_" + Integer.toString(0);
+//        ServerNode n = new ServerNode(name,"localhost",1111+0);
+//        n.setRange(new BigInteger(String.valueOf(1111233)), new BigInteger(String.valueOf(11111111)));
+//        serverManager.zookeeperECSManager.addKVServer(n);
     }
 
 }
