@@ -7,45 +7,52 @@ import java.util.*;
 
 public class Metadata {
     // bst
-    private static TreeSet<Node> servers_bst;
-    private static HashMap<BigInteger, String> HashToServer;
+    private transient static TreeSet<Node> servers_bst = new TreeSet<Node>(); // Node class has custom compareTo fct
+    // BigInteger: hash, String: unique identifier for a Server
+    private static LinkedHashMap<BigInteger, String> HashToServer;
     private Node first_node = null;
     private Node last_node = null;
 
     public Metadata(){
-        servers_bst = new TreeSet<Node>();
-        HashToServer = new HashMap<BigInteger, String>();
+        HashToServer = new LinkedHashMap<BigInteger, String>();
     }
 
-    public Metadata(Node first_node, HashMap<BigInteger, String> HashToServer){
+    public Metadata(Node first_node, LinkedHashMap<BigInteger, String> HashToServer){
         this.first_node = first_node;
         this.HashToServer = HashToServer;
     }
 
     //primarily for KVClient to search correct server
+    /**
+     * Purpose: Upon receiving a new Metadata object, by the KVClient
+     * it builds a new bst (as the bst is not converted to JSON and thus not sent in the message)
+     */
     public void build_bst(){
         System.out.println("building bst...");
-        removeAll();
+        this.removeAll();
 
-        Iterator i = HashToServer.entrySet().iterator();
-
-        while(i.hasNext()){
-            Map.Entry pair = (Map.Entry)i.next();
-            String server = (String)pair.getValue();
-            System.out.println("build: " + server);
-            addServer(server);
+        for (Map.Entry<BigInteger,String> entry : HashToServer.entrySet()){
+            String serverNodeName = entry.getValue();
+            System.out.println("build: " + serverNodeName);
+            addToBst(entry.getValue(),entry.getKey());
         }
         first_node = servers_bst.first();
         last_node = servers_bst.last();
     }
 
-    /*
-
-    findServer( ): this function is called on KVClient side.
-
+    /**
+     * helper function for build_bst()
+     */
+    private void addToBst(String serverNodeName, BigInteger hashValue){
+        Node s = new Node(serverNodeName,hashValue);
+        if(!servers_bst.contains(s))
+            servers_bst.add(s);
+    }
+    
+    /**
+     * findServer( ): this function is called on KVClient side.
      */
     public String findServer(String Key){
-
         if(servers_bst.isEmpty())
             return null;
 
@@ -64,7 +71,6 @@ public class Metadata {
             return server_node.id;
         }
     }
-
 
     /*        ECS only                    */
 
@@ -96,6 +102,9 @@ public class Metadata {
         }
     }
 
+    /**
+     * Purpose: to add a new Server
+     */
     public void addServer(String serverID){
         try {
             Node s = new Node(serverID, getMD5(serverID));
@@ -118,14 +127,10 @@ public class Metadata {
     }
 
     public boolean isEmpty(){
-        if(!servers_bst.isEmpty())
-            return false;
-        else
-            return true;
+        return servers_bst.isEmpty();
     }
 
     private BigInteger getMD5(String input) throws Exception{
-
         MessageDigest md=MessageDigest.getInstance("MD5");
         md.update(input.getBytes(),0,input.length());
         String hash_temp = new BigInteger(1,md.digest()).toString(16);
@@ -134,6 +139,7 @@ public class Metadata {
     }
 
 
+    // debugging fct
     public void printData(String s){
         if(s.equals("bst")) {
             Iterator i = servers_bst.iterator();
@@ -156,12 +162,9 @@ public class Metadata {
         }
     }
 
-    /*
-
-    findNode( ): use id(i.e. ip:port) to find the corresponding node stored in BST.
-
+    /**
+     * findNode( ): use unique identifier to find the corresponding node stored in BST.
      */
-
     private Node findNode(String id) {
         Iterator<Node> iterator = servers_bst.iterator();
         while(iterator.hasNext()) {
@@ -173,7 +176,6 @@ public class Metadata {
     }
 
     public String getSuccessor(String id){
-
         Node n = findNode(id);
         if(n == null){
             return null;
@@ -186,36 +188,38 @@ public class Metadata {
             return successor.id;
         }
     }
-    /*
-
-   updateSuccessor( ) works for both adding nodes and removing nodes.
-   lower doesn't change, the higher will change for all cases.
-
-     */
-    public BigInteger[] getNewSuccessorRange(String id){
-
-        BigInteger[] successorRange;
-        Node n = findNode(id);
-        if(n == null){
-            return null;
-        }
-        Node successor = servers_bst.higher(n);
-        if(successor == null){
-            return null;
-        }
-        else {
-            successorRange = findHashRange(successor.id);
-        }
-        return successorRange;
-    }
+//    /*
+//   updateSuccessor( ) works for both adding nodes and removing nodes.
+//   lower doesn't change, the higher will change for all cases.
+//     */
+//    public BigInteger[] getSuccessorRange(String id){
+//        BigInteger[] successorRange;
+//        Node n = findNode(id);
+//        if(n == null){
+//            return null;
+//        }
+//
+//        Node successor = servers_bst.higher(n);
+//        if(successor == null){
+//            return null;
+//        }
+//        else {
+//            successorRange = getHashRange(successor.id);
+//        }
+//        return successorRange;
+//    }
+    // got rid of this cuz it's redundant:
+    // really just:
+    // getSuccessor(..)
+    // then
+    // getHashRange(...)
 
     /*
     findHashRange(): use id(i.e. ip:port) to find the corresponding hash range.
     If only one node in BST, we return low range = high range = server's hash. And this needs to be interpreted
     in KVServer side.
-
      */
-    public BigInteger[] findHashRange(String id){
+    public BigInteger[] getHashRange(String id){
 
         if(!servers_bst.contains(id))
             return null;
