@@ -1,13 +1,11 @@
 package app_kvECS;
 
-import java.util.Map;
 import java.util.Collection;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import ecs.IECSNode;
 import ecs.ServerManager;
-import ecs.ConfigEntity;
 import ecs.ServerNode;
 import logger.LogSetup;
 import org.apache.log4j.Level;
@@ -15,7 +13,6 @@ import org.apache.log4j.Logger;
 import org.apache.zookeeper.KeeperException;
 
 import java.util.*;
-import java.io.*;
 
 public class ECSClient implements IECSClient {
 
@@ -25,13 +22,15 @@ public class ECSClient implements IECSClient {
     }
 
     private static final Logger LOGGER = Logger.getLogger(ServerManager.class);
-
-    private final ServerManager serverManager = new ServerManager();
     private static final String PROMPT = "ECSCLIENT> ";
-    private int timeout = 5000;
-    private final BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in)); //Buffered Reader pointed at STDIN
+    private static final int timeout = 5000;
+
+    //Buffered Reader pointed at STDIN
+    private final BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in));
+    private final ServerManager serverManager = new ServerManager();
+
     private boolean stop = false;
-    private SYSTEM_STATE system_state;
+    private SYSTEM_STATE system_state = SYSTEM_STATE.INIT;
 
     static {
         try {
@@ -88,7 +87,6 @@ public class ECSClient implements IECSClient {
      */
     @Override
     public Collection<IECSNode> addNodes(int count, String cacheStrategy, int cacheSize) {
-
         Collection<IECSNode>list = setupNodes(count,cacheStrategy,cacheSize);
         boolean flag;
         try {
@@ -97,7 +95,7 @@ public class ECSClient implements IECSClient {
             e.printStackTrace();
             return null;
         }
-        return (flag == true) ? list : null;
+        return (flag ? list : null); // if(flag == true) is same as if(flag)
     }
 
     /**
@@ -107,29 +105,29 @@ public class ECSClient implements IECSClient {
     @Override
     public Collection<IECSNode> setupNodes(int count, String cacheStrategy, int cacheSize) { // this function is redundant.
         LinkedList<IECSNode>list = new LinkedList<IECSNode>();
-
-        if(system_state == SYSTEM_STATE.INIT) {
-
-            for (int i = 0; i < count; ++i) {
-
-                ServerNode node = serverManager.addNode(cacheSize, cacheStrategy);
-                list.add(node);
-            }
-            serverManager.updateMetaDataZNode();
-
-            for(int i = 0; i < count; ++i){
-                serverManager.remoteLaunchServer(list.get(i).getNodePort());
-            }
-            system_state = SYSTEM_STATE.RUNNING;
-        }
-        else{
-            for(int i = 0; i < count; ++i){
-
-                ServerNode node = serverManager.addNode(cacheSize, cacheStrategy);
-                list.add(node);
+        try {
+            if(system_state == SYSTEM_STATE.INIT) {
+                for (int i = 0; i < count; ++i) {
+                    ServerNode node = serverManager.addNode(cacheSize, cacheStrategy);
+                    list.add(node);
+                }
                 serverManager.updateMetaDataZNode();
-                serverManager.remoteLaunchServer(list.get(i).getNodePort());
+                for(int i = 0; i < count; ++i){
+                    serverManager.remoteLaunchServer(list.get(i).getNodePort());
+                }
+                system_state = SYSTEM_STATE.RUNNING;
             }
+            else{
+                for(int i = 0; i < count; ++i){
+                    ServerNode node = serverManager.addNode(cacheSize, cacheStrategy);
+                    list.add(node);
+                    serverManager.updateMetaDataZNode();
+                    serverManager.remoteLaunchServer(list.get(i).getNodePort());
+                }
+            }
+        } catch (KeeperException | InterruptedException e) {
+            LOGGER.error("Failed to update metadata");
+            e.printStackTrace();
         }
         return list;
     }
@@ -228,7 +226,7 @@ public class ECSClient implements IECSClient {
                     for(int i = 1; i < num_args; i++){
                         nodes.add(tokens[i]);
                     }
-                    if(removeNodes(nodes) == false){
+                    if(!removeNodes(nodes)){
                         printError("failed to remove " + Integer.toString(num_args - 1) +" nodes");
                     }
                     else{

@@ -13,10 +13,10 @@ import java.io.*;
 import com.jcraft.jsch.*;
 
 public class ServerManager {
-    private static Logger LOGGER = Logger.getLogger(ServerManager.class);
-    private static Metadata metadataManager = new Metadata();
-
+    private static final Logger LOGGER = Logger.getLogger(ServerManager.class);
     private static final String RELATIVE_CONFIG_FILE_PATH = "/src/app_kvECS/ecs.config"; // SHOULD BE an argument passed in at start-up
+    private static final int TIMEOUT = 5000;
+    private static Metadata metadata = new Metadata();
 
     // TODO:
     // @Aaron, go on piazza, there's alot of questions about this, something about doing ssh without supplying a password. see if you can figure
@@ -24,21 +24,18 @@ public class ServerManager {
     private static final String PRIVATE_KEY_PATH = "/nfs/ug/homes-5/x/xushuran/Desktop/java_test_files/id_rsa";
     private static final String KNOWN_HOST_PATH = "~/.ssh/known_hosts";
 
-    //    // hash values (start) -> serverNode
-//    private TreeMap<String,ServerNode> tree = new TreeMap<String,ServerNode>();
+    // hash values (start) -> serverNode
+    // private TreeMap<String,ServerNode> tree = new TreeMap<String,ServerNode>();
     // name: (serverName ip) -> serverNode
     // linked hash map has better performance when iterating
     private LinkedHashMap<String,IECSNode> hashMap = new LinkedHashMap<String,IECSNode>(); // stores the active running nodes
-    private LinkedList<ConfigEntity> entityList = new LinkedList<ConfigEntity>();
+    private LinkedList<ConfigEntity> entityList = new LinkedList<ConfigEntity>(); // stores provided nodes from Config file
     private ZookeeperECSManager zookeeperECSManager;
-    private int TIMEOUT = 5000;
-
 
     public ServerManager(){
         try {
             zookeeperECSManager = new ZookeeperECSManager("localhost:2181",10000); // session timeout ms
-            System.out.println("Working Directory = " +
-                    System.getProperty("user.dir"));
+            System.out.println("Working Directory = " + System.getProperty("user.dir"));
             // start parseConfigFile with path to file
             String filePath = System.getProperty("user.dir") + RELATIVE_CONFIG_FILE_PATH;
             parseConfigFile(filePath);
@@ -53,7 +50,6 @@ public class ServerManager {
     }
 
     public int getNumOfServerConnected(){
-
         //TODO: need to finish the accept( ) first.
         return 0;
     }
@@ -130,7 +126,6 @@ public class ServerManager {
     }
 
     public ServerNode addNode(int cacheSize, String cacheStrategy){
-
         ServerNode node = new ServerNode(entityList.removeFirst(), cacheSize, cacheStrategy);
         try {
             addServer(node, cacheStrategy, cacheSize);
@@ -156,12 +151,12 @@ public class ServerManager {
     }
 
     private boolean updateSuccessor(String serverNodeID, ServerNode n){
-        BigInteger[] range = metadataManager.findHashRange(serverNodeID);
+        BigInteger[] range = metadata.findHashRange(serverNodeID);
         if(range != null) {
             n.setRange(range[0], range[1]);
-            BigInteger[] successorRange = metadataManager.getNewSuccessorRange(serverNodeID);
+            BigInteger[] successorRange = metadata.getNewSuccessorRange(serverNodeID);
             if (successorRange != null) {
-                String successorID = metadataManager.getSuccessor(serverNodeID);
+                String successorID = metadata.getSuccessor(serverNodeID);
                 if (successorID != null) {
                     ServerNode updatedNode = updateHashMapElement(successorID, successorRange);
                     try {
@@ -184,18 +179,17 @@ public class ServerManager {
         }
         hashMap.put(id,n);
         String serverNodeID = n.getNodeHost() + ":" + Integer.toString(n.getNodePort());
-        metadataManager.addServer(serverNodeID);
-        zookeeperECSManager.addKVServer(n);
+        metadata.addServer(serverNodeID);
+        zookeeperECSManager.addKVServer(n); // update znode
         return updateSuccessor(serverNodeID, n);
     }
 
-    public void updateMetaDataZNode(){
-        //TODO: need API
-       //zookeeperManager.addMetaData();
+    public void updateMetaDataZNode() throws KeeperException, InterruptedException {
+        zookeeperECSManager.updateMetadataZNode(metadata);
     }
 
     public IECSNode getServerName(String Key){
-        String[] temp = metadataManager.findServer(Key).split(":");
+        String[] temp = metadata.findServer(Key).split(":");
         Iterator i = hashMap.entrySet().iterator();
 
         while(i.hasNext()){
@@ -254,7 +248,7 @@ public class ServerManager {
         ConfigEntity entity = new ConfigEntity(node.getNodeHost(), node.getNodeHost(), node.getNodePort());
         entityList.add(entity);
         if (hashMap.containsKey(ServerIndex)){
-            metadataManager.removeServer(node.getNodeHost() + " : " + Integer.toString(node.getNodePort()));
+            metadata.removeServer(node.getNodeHost() + " : " + Integer.toString(node.getNodePort()));
             hashMap.remove(ServerIndex);
 
             String serverNodeID = node.getNodeHost() + ":" + Integer.toString(node.getNodePort());
