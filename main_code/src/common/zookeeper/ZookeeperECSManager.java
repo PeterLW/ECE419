@@ -8,11 +8,10 @@ import org.apache.zookeeper.data.Stat;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.List;
-
-public class ZookeeperECSManager extends ZookeeperManager{
     /*
         class for managing zookeeper for the ECSClient
      */
+public class ZookeeperECSManager extends ZookeeperManager{
     private static Logger LOGGER = Logger.getLogger(ZookeeperECSManager.class);
 
     /**
@@ -60,6 +59,7 @@ public class ZookeeperECSManager extends ZookeeperManager{
 
     /**
      * @return false if a zNode with the same name as ServerNode does not exists
+     * TODO: depreciate
      */
     public boolean updateRangeKVServer(ServerNode n) throws KeeperException, InterruptedException {
         ZNodeMessage message = new ZNodeMessage(n, ZNodeMessageStatus.HASH_RANGE_UPDATE);
@@ -67,6 +67,23 @@ public class ZookeeperECSManager extends ZookeeperManager{
         System.out.println(jsonServerData); // debug
         return this.updateZNode(ZNODE_HEAD,n.getNodeName(),toByteArray(jsonServerData));
     }
+
+
+    public void lockWriteKVServer(ServerNode n) throws KeeperException, InterruptedException {
+        ZNodeMessage message = new ZNodeMessage(n, ZNodeMessageStatus.LOCK_WRITE);
+        String jsonServerData = gson.toJson(message);
+        System.out.println(jsonServerData); // debug
+        this.addZNode(ZNODE_HEAD,n.getNodeName(),toByteArray(jsonServerData));
+    }
+
+    public void unlockWriteKVServer(ServerNode n) throws KeeperException, InterruptedException {
+        ZNodeMessage message = new ZNodeMessage(n, ZNodeMessageStatus.UNLOCK_WRITE);
+        String jsonServerData = gson.toJson(message);
+        System.out.println(jsonServerData); // debug
+        this.addZNode(ZNODE_HEAD,n.getNodeName(),toByteArray(jsonServerData));
+    }
+
+
 
     /**
      * @return false if a zNode with the same name as ServerNode does not exists

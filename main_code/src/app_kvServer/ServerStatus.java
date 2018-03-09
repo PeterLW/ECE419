@@ -1,20 +1,28 @@
 package app_kvServer;
+import common.zookeeper.ZNodeMessageStatus;
+
 import java.math.BigInteger;
 
 public class ServerStatus {
-    private ServerStatusType status;
+    private ZNodeMessageStatus transition = null;
+    private ServerStatusType status = null;
     private BigInteger[] moveRange = null;
     private String targetName = null;
+    private boolean isReady = false;
 
-    public ServerStatus(ServerStatusType newStatus, BigInteger[] moveRange, String targetName){
+    public ServerStatus(ZNodeMessageStatus transition, BigInteger[] moveRange, String targetName){
         this.moveRange = moveRange;
         this.targetName = targetName;
-        this.status = newStatus;
+        this.transition = transition;
     }
+
+    public ServerStatus(ZNodeMessageStatus transition){this.transition = transition;}
 
     public ServerStatus(ServerStatusType newStatus){
         this.status = newStatus;
     }
+
+    public boolean isReady(){ return isReady;}
 
     public ServerStatusType getStatus(){
         return this.status;
@@ -25,10 +33,14 @@ public class ServerStatus {
     public BigInteger[] getMoveRange(){
         return this.moveRange;
     }
-//
-//    public void updateKVServerStatus(BigInteger[] moveRange, String newTargetName, ServerStatusType newStatus){
-//        this.moveRange = moveRange;
-//        this.targetName = newTargetName;
-//        this.status = newStatus;
-//    }
+
+    public ZNodeMessageStatus getTransition() { return transition; }
+
+    public void setServerStatus(ServerStatusType type){ this.status = status;}
+
+    public void setMoveRangeStatus(ServerStatusType newStatus, BigInteger[] moveRange, String newTargetName){
+        this.moveRange = moveRange;
+        this.targetName = newTargetName;
+        this.status = newStatus;
+    }
 }

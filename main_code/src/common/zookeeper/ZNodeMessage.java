@@ -34,4 +34,12 @@ public class ZNodeMessage {
 
         this.targetName = targetName;
     }
+
+    public BigInteger[] getMoveDataRange(){
+        return moveDataRange;
+    }
+
+    public String getTargetName(){
+        return targetName;
+    }
 }
