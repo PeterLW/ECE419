@@ -48,7 +48,7 @@ public class Metadata {
         if(!servers_bst.contains(s))
             servers_bst.add(s);
     }
-    
+
     /**
      * findServer( ): this function is called on KVClient side.
      */
@@ -188,31 +188,32 @@ public class Metadata {
             return successor.id;
         }
     }
-//    /*
-//   updateSuccessor( ) works for both adding nodes and removing nodes.
-//   lower doesn't change, the higher will change for all cases.
-//     */
-//    public BigInteger[] getSuccessorRange(String id){
-//        BigInteger[] successorRange;
-//        Node n = findNode(id);
-//        if(n == null){
-//            return null;
-//        }
-//
-//        Node successor = servers_bst.higher(n);
-//        if(successor == null){
-//            return null;
-//        }
-//        else {
-//            successorRange = getHashRange(successor.id);
-//        }
-//        return successorRange;
-//    }
-    // got rid of this cuz it's redundant:
-    // really just:
-    // getSuccessor(..)
-    // then
-    // getHashRange(...)
+    /*
+   updateSuccessor( ) works for both adding nodes and removing nodes.
+   lower doesn't change, the higher will change for all cases.
+     */
+    public BigInteger[] getSuccessorRange(String id){
+        BigInteger[] successorRange;
+        Node n = findNode(id);
+        if(n == null){
+            return null;
+        }
+
+        Node successor = servers_bst.higher(n);
+        if(successor == null){
+            return null;
+        }
+        else {
+            successorRange = getHashRange(successor.id);
+        }
+        return successorRange;
+    }
+    // TODO: note getting rid of this after I make changes in ServerManager & ECSClient because:
+    // repeated code
+//     really just:
+//     getSuccessor(..)
+//     then
+//     getHashRange(...)
 
     /*
     findHashRange(): use id(i.e. ip:port) to find the corresponding hash range.
