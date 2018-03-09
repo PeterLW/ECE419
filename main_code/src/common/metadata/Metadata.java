@@ -7,10 +7,10 @@ import java.util.*;
 
 public class Metadata {
     // bst
-    private transient static TreeSet<Node> servers_bst;
+    private static TreeSet<Node> servers_bst;
     private static HashMap<BigInteger, String> HashToServer;
-    private transient Node first_node = null;
-    private transient Node last_node = null;
+    private Node first_node = null;
+    private Node last_node = null;
 
     public Metadata(){
         servers_bst = new TreeSet<Node>();
@@ -23,7 +23,7 @@ public class Metadata {
     }
 
     //primarily for KVClient to search correct server
-    private void build_bst(){
+    public void build_bst(){
         System.out.println("building bst...");
         removeAll();
 
@@ -45,6 +45,10 @@ public class Metadata {
 
      */
     public String findServer(String Key){
+
+        if(servers_bst.isEmpty())
+            return null;
+
         BigInteger keyhash = null;
         try {
             keyhash = getMD5(Key);
