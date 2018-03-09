@@ -16,7 +16,7 @@ public class Message implements KVMessage {
     @Setter private int clientId = -1;
     @Setter private String key;
     @Setter private String value;
-    private String metadata = "abc";
+    private String metadata = null;
 
 
     public Message(StatusType status, int clientId, int seq, String key,String value) {
