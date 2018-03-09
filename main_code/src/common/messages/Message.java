@@ -1,20 +1,22 @@
 package common.messages;
 
+import com.google.gson.Gson;
 import common.metadata.Metadata;
 import lombok.Setter;
 
 import java.math.BigInteger;
 import java.util.HashMap;
+import java.util.HashSet;
 
 public class Message implements KVMessage {
 
     private StatusType status;
-
+    private transient final Gson gson = new Gson();
     @Setter private int seq = -1;
     @Setter private int clientId = -1;
     @Setter private String key;
     @Setter private String value;
-    private Metadata metadata = null;
+    private String metadata = "abc";
 
 
     public Message(StatusType status, int clientId, int seq, String key,String value) {
@@ -24,6 +26,7 @@ public class Message implements KVMessage {
         this.seq = seq;
         this.key = key;
         this.value = value;
+
     }
 
     public Message(StatusType status,int clientId, int seq, String key) {
@@ -31,16 +34,19 @@ public class Message implements KVMessage {
         this.clientId = clientId;
         this.seq = seq;
         this.key = key;
+
     }
 
     public Message(){}
 
-    public void setMetaData(Metadata metadata){
+    public void setMetaData(String metadata){
+
         this.metadata = metadata;
     }
-    public Metadata getMetaData(){
+    public String getMetaData(){
         return this.metadata;
     }
+
 
     /* checks to make sure valid variables are not null, for StatusType
      */

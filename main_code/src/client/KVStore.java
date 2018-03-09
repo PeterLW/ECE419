@@ -35,6 +35,8 @@ public class KVStore implements KVCommInterface {
 
 	private Message message = null;
 	private Transmission transmit;
+    private Metadata metaData;
+
 
 	Metadata metadata = null;
 
@@ -93,10 +95,11 @@ public class KVStore implements KVCommInterface {
 	}
 
 
-
 	public void updateMetadataAndResend(Message msg, String key, String value) throws IOException{
 		if(msg.getStatus() == StatusType.SERVER_NOT_RESPONSIBLE){
-			metadata = msg.getMetaData();
+			//metadata = gson.toJson(msg.getMetaData());
+            Metadata newMetaData = gson.fromJson(msg.getMetaData(), Metadata.class);
+            metadata = newMetaData;
 			put(key,value);
 		}
 	}
@@ -174,9 +177,14 @@ public class KVStore implements KVCommInterface {
 
 	@Override
 	public Message get(String key) throws Exception {
-		// TODO Auto-generated method stub
-		Message received_stat=null;
-		boolean isTimeOut = false;
+
+        if(!checkValidServer(key)) {
+            clientSocket.close();
+            connect();
+        }
+
+        Message received_stat=null;
+        boolean isTimeOut = false;
 
 		if(isRunning()) {
 			message = new Message(StatusType.GET, clientId, seqNum, key,null);

@@ -34,6 +34,7 @@ public class Transmission {
             return false;
         }
         //LOGGER.debug("Send message:\t '" + new String(msg) + "' ");
+        System.out.println("Send message:\t '" + new String(msg) + "' ");
         return true;
     }
 

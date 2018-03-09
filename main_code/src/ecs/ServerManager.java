@@ -150,27 +150,6 @@ public class ServerManager {
         return node;
     }
 
-    private boolean updateSuccessor(String serverNodeID, ServerNode n){
-        BigInteger[] range = metadata.findHashRange(serverNodeID);
-        if(range != null) {
-            n.setRange(range[0], range[1]);
-            BigInteger[] successorRange = metadata.getNewSuccessorRange(serverNodeID);
-            if (successorRange != null) {
-                String successorID = metadata.getSuccessor(serverNodeID);
-                if (successorID != null) {
-                    ServerNode updatedNode = updateHashMapElement(successorID, successorRange);
-                    try {
-                        zookeeperECSManager.updateRangeKVServer(updatedNode);
-                    }catch (KeeperException | InterruptedException e){
-                        e.printStackTrace();
-                        return false;
-                    }
-                }
-            }
-            return true;
-        }
-        return false;
-    }
 
     private boolean addServer(ServerNode n, String cacheStrategy, int cacheSize) throws KeeperException, InterruptedException { // change to throw?
         String id = n.getNodeName();
@@ -262,6 +241,29 @@ public class ServerManager {
         return false;
     }
 
+
+    private boolean updateSuccessor(String serverNodeID, ServerNode n){
+        BigInteger[] range = metadata.findHashRange(serverNodeID);
+        if(range != null) {
+            n.setRange(range[0], range[1]);
+            BigInteger[] successorRange = metadata.getSuccessorRange(serverNodeID);
+            if (successorRange != null) {
+                String successorID = metadata.getSuccessor(serverNodeID);
+                if (successorID != null) {
+                    ServerNode updatedNode = updateHashMapElement(successorID, successorRange);
+                    try {
+                        zookeeperECSManager.updateRangeKVServer(updatedNode);
+                    }catch (KeeperException | InterruptedException e){
+                        e.printStackTrace();
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+
     /**
      * parse the ecs.config file to get a list of IPs
      * @return a string array containing info regarding one machine
@@ -293,8 +295,7 @@ public class ServerManager {
             e.printStackTrace();
         }
     }
-
-    // test
+    
     public static void main(String[] args) throws IOException, InterruptedException, KeeperException {
 //        ServerManager serverManager = new ServerManager();
 //
