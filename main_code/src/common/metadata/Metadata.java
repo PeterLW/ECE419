@@ -1,6 +1,5 @@
 package common.metadata;
 
-import com.sun.security.ntlm.Server;
 import ecs.ServerNode;
 
 import java.security.*;
@@ -202,8 +201,7 @@ public class Metadata {
         Node successor = servers_bst.higher(n);
         if(successor == null){
             return null;
-        }
-        else {
+        } else {
             return successor.id;
         }
     }
@@ -228,7 +226,7 @@ public class Metadata {
             return null;
         }
         else {
-            successorRange = getHashRange(successor.id);
+            successorRange = findHashRange(successor.id);
         }
         return successorRange;
     }
@@ -244,11 +242,11 @@ public class Metadata {
     If only one node in BST, we return low range = high range = server's hash. And this needs to be interpreted
     in KVServer side.
      */
-    public BigInteger[] getHashRange(ServerNode n) {
-        return getHashRange(n.getNodeHostPort());
+    public BigInteger[] findHashRange(ServerNode n) {
+        return findHashRange(n.getNodeHostPort());
     }
 
-    public BigInteger[] getHashRange(String id){
+    public BigInteger[] findHashRange(String id){
 
         if(!servers_bst.contains(id))
             return null;
