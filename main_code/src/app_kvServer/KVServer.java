@@ -111,34 +111,29 @@ public class KVServer implements IKVServer {
 
 	@Override
 	public int getPort(){
-		// TODO Auto-generated method stub
 //		LOGGER.info(">Server port: " + this.port);
 		return port;
 	}
 
 	@Override
     public String getHostname(){
-		// TODO Auto-generated method stubc
 //		LOGGER.info("Server hostname: " + hostname);
 		return hostname;
 	}
 
 	@Override
     public CacheStrategy getCacheStrategy(){
-		// TODO Auto-generated method stub
         //LOGGER.info("Server ("+hostname+","+port+") : CacheManager Strategy is "+ cacheStrategy);
 		return string_to_enum_cache_strategy(serverNode.getCacheStrategy());
 	}
 
 	@Override
     public int getCacheSize(){
-		// TODO Auto-generated method stub
 		return serverNode.getCacheSize();
 	}
 
     @Override
     public boolean inStorage(String key){
-		// TODO Auto-generated method stub
         if(key != null && !(key.isEmpty()) && !(key.equals("")) && !(key.contains(" ")) && !(key.length() > 20)) {
             return storage.inDatabase(key);
         }
@@ -149,19 +144,16 @@ public class KVServer implements IKVServer {
 
 	@Override
     public boolean inCache(String key){
-		// TODO Auto-generated method stub
 		return storage.inCache(key);
 	}
 
 	@Override
     public String getKV(String key) throws Exception{
-		// TODO Auto-generated method stub
         return storage.getKV(key);
 	}
 
 	@Override
     public void putKV(String key, String value) throws Exception{
-		// TODO Auto-generated method stub
         if(storage.putKV(key, value)){
             LOGGER.info("Server ("+hostname+","+port+") : Success in putKV");
         }
@@ -172,14 +164,12 @@ public class KVServer implements IKVServer {
 
 	@Override
     public void clearCache(){
-		// TODO Auto-generated method stub
 		storage.clearCache();
 		return;
 	}
 
 	@Override
     public void clearStorage(){
-		// TODO Auto-generated method stub
 		storage.clearAll();
 	}
 
