@@ -1,7 +1,6 @@
 package common.zookeeper;
 
 import app_kvServer.ServerStatus;
-import app_kvServer.ServerStatusType;
 import app_kvServer.UpcomingStatusQueue;
 import ecs.ServerNode;
 import org.apache.log4j.Logger;

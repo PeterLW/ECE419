@@ -62,7 +62,6 @@ public class ClientConnection implements Runnable {
 	}
 
     private BigInteger getMD5(String input) throws Exception{
-
         MessageDigest md=MessageDigest.getInstance("MD5");
         md.update(input.getBytes(),0,input.length());
         String hash_temp = new BigInteger(1,md.digest()).toString(16);
@@ -71,7 +70,6 @@ public class ClientConnection implements Runnable {
     }
 
     private boolean isKeyInValidRange(String key){
-
         BigInteger[] range = serverNode.getRange();
         BigInteger hashValue = null;
         try {
@@ -161,53 +159,34 @@ public class ClientConnection implements Runnable {
 	 * Initializes and starts the client connection.
 	 * Loops until the connection is closed or aborted by the client.
 	 */
+	@Override
 	public void run() {
 		Message latestMsg;
         System.out.printf("server that accepts the client connection starts running...");
 		while (isOpen) {
-
 			try {
-
 				latestMsg = transmission.receiveMessage(clientSocket);
-				if(serverNode.getServerStatus().getStatus() == ServerStatusType.INITIALIZE ||
-						serverNode.getServerStatus().getStatus() == ServerStatusType.IDLE){
-
-                    serverNode.getServerStatus().resetReady();
+				if (serverNode.getServerStatus().getStatus() == ServerStatusType.INITIALIZE ||
+						serverNode.getServerStatus().getStatus() == ServerStatusType.IDLE) {
 					RespondMsg(latestMsg, StatusType.SERVER_STOPPED, null);
-                    serverNode.getServerStatus().setReady();
-				}
-				else if(serverNode.getServerStatus().getStatus() == ServerStatusType.RUNNING){
-                    serverNode.getServerStatus().resetReady();
-                    HandleRequest(latestMsg);
-                    serverNode.getServerStatus().setReady();
-				}
-				else if(serverNode.getServerStatus().getStatus() == ServerStatusType.MOVE_DATA_SENDER ||
-						serverNode.getServerStatus().getStatus() == ServerStatusType.MOVE_DATA_RECEIVER){
-
-                    serverNode.getServerStatus().resetReady();
-					if(latestMsg.getStatus() == KVMessage.StatusType.PUT){
+				} else if (serverNode.getServerStatus().getStatus() == ServerStatusType.RUNNING) {
+					HandleRequest(latestMsg);
+				} else if (serverNode.getServerStatus().getStatus() == ServerStatusType.MOVE_DATA_SENDER ||
+						serverNode.getServerStatus().getStatus() == ServerStatusType.MOVE_DATA_RECEIVER) {
+					if (latestMsg.getStatus() == KVMessage.StatusType.PUT) {
 						RespondMsg(latestMsg, StatusType.SERVER_WRITE_LOCK, null);
+					} else {
+						HandleRequest(latestMsg);
 					}
-					else{
-                        HandleRequest(latestMsg);
-					}
-                    serverNode.getServerStatus().setReady();
-				}
-				else if(serverNode.getServerStatus().getStatus() == ServerStatusType.CLOSE){
-                    serverNode.getServerStatus().resetReady();
+				} else if (serverNode.getServerStatus().getStatus() == ServerStatusType.CLOSE) {
 					clientSocket.close();
 					isOpen = false;
-                    serverNode.getServerStatus().setReady();
 				}
-				else{
-                    serverNode.getServerStatus().setReady();
-				}
-
 				Thread.sleep(1);
-
 				/* connection either terminated by the client or lost due to
 				 * network problems*/
-			} catch (IOException ioe) {
+			}
+			catch (IOException ioe) {
 				LOGGER.error("Error! Connection lost with client " + this.clientId);
 				ioe.printStackTrace();
 				try {
@@ -267,7 +246,6 @@ public class ClientConnection implements Runnable {
 
 	private boolean checkValidkey(String key) {
 		if (key != null && !(key.isEmpty()) && !(key.equals("")) && !(key.contains(" ")) && !(key.length() > 20)){
-           
 			return true;
 		}
 
