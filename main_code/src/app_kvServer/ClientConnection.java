@@ -167,31 +167,40 @@ public class ClientConnection implements Runnable {
 		while (isOpen) {
 
 			try {
+
 				latestMsg = transmission.receiveMessage(clientSocket);
 				if(serverNode.getServerStatus().getStatus() == ServerStatusType.INITIALIZE ||
 						serverNode.getServerStatus().getStatus() == ServerStatusType.IDLE){
 
+                    serverNode.getServerStatus().resetReady();
 					RespondMsg(latestMsg, StatusType.SERVER_STOPPED, null);
+                    serverNode.getServerStatus().setReady();
 				}
 				else if(serverNode.getServerStatus().getStatus() == ServerStatusType.RUNNING){
+                    serverNode.getServerStatus().resetReady();
                     HandleRequest(latestMsg);
+                    serverNode.getServerStatus().setReady();
 				}
 				else if(serverNode.getServerStatus().getStatus() == ServerStatusType.MOVE_DATA_SENDER ||
 						serverNode.getServerStatus().getStatus() == ServerStatusType.MOVE_DATA_RECEIVER){
 
+                    serverNode.getServerStatus().resetReady();
 					if(latestMsg.getStatus() == KVMessage.StatusType.PUT){
 						RespondMsg(latestMsg, StatusType.SERVER_WRITE_LOCK, null);
 					}
 					else{
                         HandleRequest(latestMsg);
 					}
+                    serverNode.getServerStatus().setReady();
 				}
 				else if(serverNode.getServerStatus().getStatus() == ServerStatusType.CLOSE){
+                    serverNode.getServerStatus().resetReady();
 					clientSocket.close();
 					isOpen = false;
+                    serverNode.getServerStatus().setReady();
 				}
 				else{
-                    //Do Nothing here for M2 ....
+                    serverNode.getServerStatus().setReady();
 				}
 
 				/* connection either terminated by the client or lost due to

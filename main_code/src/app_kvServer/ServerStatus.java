@@ -40,6 +40,8 @@ public class ServerStatus {
 
     public void setReady(){isReady = true;}
 
+    public void resetReady(){isReady = false;}
+
     public void setMoveRangeStatus(ServerStatusType newStatus, BigInteger[] moveRange, String newTargetName){
         this.moveRange = moveRange;
         this.targetName = newTargetName;

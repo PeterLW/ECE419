@@ -52,8 +52,15 @@ public class KVServerDataMigration implements Runnable {
         while(true){
             ServerStatusType statusType = serverNode.getServerStatus().getStatus();
             if (statusType == ServerStatusType.MOVE_DATA_RECEIVER || statusType == ServerStatusType.MOVE_DATA_SENDER){
+                serverNode.getServerStatus().resetReady();
                 update();
                 start();
+                serverNode.getServerStatus().setReady();
+                try {
+                    Thread.sleep(10);
+                }catch (InterruptedException e){
+                    e.printStackTrace();
+                }
             }
             else {
                 try {
@@ -103,7 +110,7 @@ public class KVServerDataMigration implements Runnable {
             }
         }
 
-        serverNode.getServerStatus().setReady();
+
 
     }
 

@@ -87,7 +87,6 @@ public class ServerManager {
         }
     }
 
-
     public void remoteLaunchServer(int portNum){
 
         JSch ssh = new JSch();
@@ -199,6 +198,7 @@ public class ServerManager {
 //        }
 
         return updatedNode;
+
     }
 
     private ServerNode updateSuccessorNode(String id, BigInteger[] newRange){ // renamed fct didn't change code
@@ -218,6 +218,7 @@ public class ServerManager {
     /**
      * add server into correct data structures
      */
+
     private boolean addServer(ServerNode n, String cacheStrategy, int cacheSize) throws KeeperException, InterruptedException { // change to throw?
 
         String id = n.getNodeHostPort();
@@ -326,6 +327,7 @@ public class ServerManager {
 
             }catch (KeeperException | InterruptedException e){
                 e.printStackTrace();
+
                 return false;
             }
             return true;
