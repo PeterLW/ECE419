@@ -75,6 +75,7 @@ public class KVServer implements IKVServer {
 			serverNode = znodeMessage.serverNode;
 			zookeeperWatcher.setServerNode(serverNode); // zookeeperWatcher may change this when receive data updates
 
+			//Peter: better still in INITIALIZE state and put the MOVE_DATA_RECEIVER into queue, more consistent
 			ServerStatus ss;
 			if (znodeMessage.zNodeMessageStatus == ZNodeMessageStatus.NEW_ZNODE_RECEIVE_DATA) {
 				ss = new ServerStatus(ServerStatusType.MOVE_DATA_RECEIVER); // move data auto transits to Running when isReady = true
@@ -173,6 +174,8 @@ public class KVServer implements IKVServer {
 		storage.clearAll();
 	}
 
+	//Peter: need to check, use isReady for all state transition, so we can make sure the program is finished in each state and then pop
+	//the next state, in this case, proceed variable is not needed
 	public void run(){ // status
         while (true) {
             if (upcomingStatusQueue.peakQueue() != null) {
@@ -180,6 +183,7 @@ public class KVServer implements IKVServer {
                 ServerStatus curr = serverNode.getServerStatus();
 
                 boolean proceed = true;
+
                 switch (curr.getStatus()) {
                     case INITIALIZE:
 					case IDLE:

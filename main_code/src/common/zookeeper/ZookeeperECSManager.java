@@ -92,6 +92,7 @@ public class ZookeeperECSManager extends ZookeeperManager{
     }
 
     /**
+     * targetName: ip:port
      * @return false if a zNode with the same name as ServerNode does not exists
      */
     public boolean moveDataSenderKVServer(ServerNode n, BigInteger[] moveDataRange, String targetName) throws KeeperException, InterruptedException {

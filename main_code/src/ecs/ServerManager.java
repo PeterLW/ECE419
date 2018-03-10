@@ -27,7 +27,7 @@ public class ServerManager {
     // hash values (start) -> serverNode
     // private TreeMap<String,ServerNode> tree = new TreeMap<String,ServerNode>();
     // name: (serverName ip) -> serverNode
-    // linked hash map has better performance when iterating
+    // linked hash map has better performance when iterating, key: ip:port, value: ServerNode
     private LinkedHashMap<String,IECSNode> hashMap = new LinkedHashMap<String,IECSNode>(); // stores the active running nodes
     private LinkedList<ConfigEntity> entityList = new LinkedList<ConfigEntity>(); // stores provided nodes from Config file
     private ZookeeperECSManager zookeeperECSManager;
@@ -154,10 +154,11 @@ public class ServerManager {
                     node.setRange(metadata.findHashRange(node.getNodeHostPort()));
                     list.add(node);
 
-                    ServerNode targetNode = this.updateSuccessor(node);
+                    //update the hashmap in ServerManager
+//                    ServerNode targetNode = this.updateSuccessor(node);
                     zookeeperECSManager.updateMetadataZNode(metadata); // update metadata node
-
-                    zookeeperECSManager.addAndMoveDataKVServer(node,node.getRange(),targetNode.getNodeHostPort());
+//                    zookeeperECSManager.addAndMoveDataKVServer(node,node.getRange(),targetNode.getNodeHostPort());
+                    this.addServer(node, cacheStrategy, cacheSize);
                     this.remoteLaunchServer(list.get(i).getNodePort());
                 }
             }
@@ -170,6 +171,8 @@ public class ServerManager {
 
     }
 
+
+    //update the hashmap in ServerManager
     private ServerNode updateSuccessor(ServerNode node){
         BigInteger[] range = metadata.findHashRange(node.getNodeHostPort());
         if(range == null) {
@@ -216,19 +219,27 @@ public class ServerManager {
      * add server into correct data structures
      */
     private boolean addServer(ServerNode n, String cacheStrategy, int cacheSize) throws KeeperException, InterruptedException { // change to throw?
+
         String id = n.getNodeHostPort();
         if (hashMap.containsKey(id)) {
             return false;
         }
+
+        BigInteger[] newRange = metadata.findHashRange(id);
+        n.setRange(newRange);
         hashMap.put(id,n);
-        BigInteger[] newrange = metadata.findHashRange(n.getNodeHostPort());
-        n.setRange(newrange);
-        ServerNode successor = updateSuccessor(n);
+
         try {
             if(!is_init) {
-                zookeeperECSManager.addAndMoveDataKVServer(n, newrange, successor.getNodeHostPort());
-                Thread.sleep(1);
-                zookeeperECSManager.moveDataSenderKVServer(successor,newrange,n.getNodeHostPort());
+                ServerNode successor = updateSuccessor(n);
+                if(successor != null) {
+                    zookeeperECSManager.addAndMoveDataKVServer(n, newRange, successor.getNodeHostPort());
+                    Thread.sleep(1);
+                    zookeeperECSManager.moveDataSenderKVServer(successor, newRange, n.getNodeHostPort());
+                }
+                else{
+                    LOGGER.error("Failed to find successor!");
+                }
             }
             else{
                 zookeeperECSManager.addKVServer(n); // add new Znode
@@ -293,20 +304,21 @@ public class ServerManager {
         return true;
     }
 
-    //ServerIndex: NodeName
+    //ServerIndex: ip:port
     public boolean removeNode(String ServerIndex)throws KeeperException, InterruptedException{
-        IECSNode node = hashMap.get(ServerIndex);
-        //if remove node, add the node back to entity list for next launch
-        ConfigEntity entity = new ConfigEntity(node.getNodeHost(), node.getNodeHost(), node.getNodePort());
-        entityList.add(entity);
-        if (hashMap.containsKey(ServerIndex)){
-            BigInteger[] range = new BigInteger[2];
-            range = metadata.findHashRange(ServerIndex);
 
-            metadata.removeServer(node.getNodeHost() + " : " + Integer.toString(node.getNodePort()));
+        if (hashMap.containsKey(ServerIndex)){
+            IECSNode node = hashMap.get(ServerIndex);
+            //if remove node, add the node back to entity list for next launch
+            ConfigEntity entity = new ConfigEntity(node.getNodeHost(), node.getNodeHost(), node.getNodePort());
+            entityList.add(entity);
+
+            BigInteger[] range = metadata.findHashRange(ServerIndex);
+            ServerNode successor = updateSuccessor((ServerNode) node);
+
+            metadata.removeServer(((ServerNode) node).getNodeHostPort());
             hashMap.remove(ServerIndex);
 
-            ServerNode successor = updateSuccessor((ServerNode) node);
             try {
                 zookeeperECSManager.moveDataReceiverKVServer(successor, range, ((ServerNode)node).getNodeHostPort());
                 Thread.sleep(1);
@@ -318,8 +330,10 @@ public class ServerManager {
             }
             return true;
         }
-        else
+        else {
+            LOGGER.error("Cannot remove non-existing node!");
             return false;
+        }
     }
 
 
