@@ -283,8 +283,7 @@ public class KVServer implements IKVServer {
                     case CLOSE:
                         System.exit(0);
                 }
-
-                    upcomingStatusQueue.popQueue();
+                
             }
         }
     }
