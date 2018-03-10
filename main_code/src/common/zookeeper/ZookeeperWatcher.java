@@ -26,6 +26,8 @@ public class ZookeeperWatcher extends ZookeeperMetaData implements Runnable {
         upcomingStatusQueue = _upcomingStatusQueue;
     }
 
+    // TODO: delete Znode
+
     public ZNodeMessage getZnodeMessage() throws KeeperException, InterruptedException {
         byte[] data = zooKeeper.getData(fullPath,false,null);
         String dataString = new String(data);
@@ -74,8 +76,6 @@ public class ZookeeperWatcher extends ZookeeperMetaData implements Runnable {
                 ss = new ServerStatus(temp.zNodeMessageStatus);
                 upcomingStatusQueue.addQueue(ss);
         }
-
-
     }
 
     @Override

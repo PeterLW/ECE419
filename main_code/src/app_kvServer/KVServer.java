@@ -1,8 +1,6 @@
 package app_kvServer;
 
-import com.sun.security.ntlm.Server;
 import common.cache.StorageManager;
-import common.metadata.Metadata;
 import common.zookeeper.ZNodeMessage;
 import common.zookeeper.ZNodeMessageStatus;
 import common.zookeeper.ZookeeperWatcher;
@@ -79,7 +77,7 @@ public class KVServer implements IKVServer {
 			zookeeperWatcher.setServerNode(serverNode); // zookeeperWatcher may change this when receive data updates
 
 			ServerStatus ss;
-			if (znodeMessage.zNodeMessageStatus == ZNodeMessageStatus.NEW_ZNODE_RECIEVE_DATA) {
+			if (znodeMessage.zNodeMessageStatus == ZNodeMessageStatus.NEW_ZNODE_RECEIVE_DATA) {
 				ss = new ServerStatus(ServerStatusType.MOVE_DATA_RECEIVER); // move data auto transits to Running when isReady = true
 			} else {
 				ss = new ServerStatus(ServerStatusType.INITIALIZE);

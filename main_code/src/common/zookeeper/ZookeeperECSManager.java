@@ -57,28 +57,31 @@ public class ZookeeperECSManager extends ZookeeperManager{
         this.addZNode(ZNODE_HEAD,n.getNodeHostPort(),toByteArray(jsonServerData));
     }
 
-    public void addAndMoveDataKVServer(ServerNode n) throws KeeperException, InterruptedException {
-        ZNodeMessage message = new ZNodeMessage(n, ZNodeMessageStatus.NEW_ZNODE_RECIEVE_DATA);
+    public void addAndMoveDataKVServer(ServerNode n, BigInteger[] moveDataRange, String targetName) throws KeeperException, InterruptedException {
+        if (moveDataRange.length != 2){
+            throw new IllegalArgumentException("moveDataRange must be of length 2");
+        }
+        
+        ZNodeMessage message = new ZNodeMessage(n, ZNodeMessageStatus.NEW_ZNODE_RECEIVE_DATA);
+        message.setMoveDataParameters(moveDataRange,targetName);
+
         String jsonServerData = gson.toJson(message);
         System.out.println(jsonServerData); // debug
         this.addZNode(ZNODE_HEAD,n.getNodeHostPort(),toByteArray(jsonServerData));
     }
 
-//    public void lockWriteKVServer(ServerNode n) throws KeeperException, InterruptedException {
-//        ZNodeMessage message = new ZNodeMessage(n, ZNodeMessageStatus.LOCK_WRITE);
-//        String jsonServerData = gson.toJson(message);
-//        System.out.println(jsonServerData); // debug
-//        this.updateZNode(ZNODE_HEAD,n.getNodeHostPort(),toByteArray(jsonServerData));
-//    }
-//
-//    public void unlockWriteKVServer(ServerNode n) throws KeeperException, InterruptedException {
-//        ZNodeMessage message = new ZNodeMessage(n, ZNodeMessageStatus.UNLOCK_WRITE);
-//        String jsonServerData = gson.toJson(message);
-//        System.out.println(jsonServerData); // debug
-//        this.updateZNode(ZNODE_HEAD,n.getNodeHostPort(),toByteArray(jsonServerData));
-//    }
-//
+    public void removeAndMoveDataKVServer(ServerNode n, BigInteger[] moveDataRange, String targetName) throws KeeperException, InterruptedException {
+        if (moveDataRange.length != 2){
+            throw new IllegalArgumentException("moveDataRange must be of length 2");
+        }
 
+        ZNodeMessage message = new ZNodeMessage(n, ZNodeMessageStatus.REMOVE_ZNODE_SEND_DATA);
+        message.setMoveDataParameters(moveDataRange,targetName);
+
+        String jsonServerData = gson.toJson(message);
+        System.out.println(jsonServerData); // debug
+        this.updateZNode(ZNODE_HEAD,n.getNodeHostPort(),toByteArray(jsonServerData));
+    }
 
     /**
      * @return false if a zNode with the same name as ServerNode does not exists
