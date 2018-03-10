@@ -1,11 +1,9 @@
 package app_kvServer;
 
-import java.util.*;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.net.Socket;
 import com.google.gson.Gson;
-import com.sun.tools.doclets.formats.html.SourceToHTMLConverter;
 import common.metadata.Metadata;
 import common.cache.StorageManager;
 import common.messages.KVMessage;
@@ -178,8 +176,7 @@ public class ClientConnection implements Runnable {
 				else if(serverNode.getServerStatus().getStatus() == ServerStatusType.RUNNING){
                     HandleRequest(latestMsg);
 				}
-				else if(serverNode.getServerStatus().getStatus() == ServerStatusType.READ_ONLY ||
-						serverNode.getServerStatus().getStatus() == ServerStatusType.MOVE_DATA_SENDER ||
+				else if(serverNode.getServerStatus().getStatus() == ServerStatusType.MOVE_DATA_SENDER ||
 						serverNode.getServerStatus().getStatus() == ServerStatusType.MOVE_DATA_RECEIVER){
 
 					if(latestMsg.getStatus() == KVMessage.StatusType.PUT){

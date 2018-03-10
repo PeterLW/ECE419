@@ -14,10 +14,8 @@ import org.apache.log4j.Logger;
 import org.apache.zookeeper.KeeperException;
 
 import java.io.IOException;
-import java.math.BigInteger;
 import java.net.ServerSocket;
 
-// IN PROGRESS
 public class KVServer implements IKVServer {
     //log info
     private static final String PROMPT = "KVSERVER>";
@@ -29,8 +27,6 @@ public class KVServer implements IKVServer {
     private ServerSocket serverSocket;
     private boolean running = false;
     private boolean stop = false;
-
-    private static int numConnectedClients = 0; // this variable should be in KVClientConnection
 
 	private static StorageManager storage;
 
@@ -191,8 +187,7 @@ public class KVServer implements IKVServer {
 		storage.clearAll();
 	}
 
-	public void run(){
-		// TODO Auto-generated method stub
+	public void run(){ // status
         while (true) {
             if (upcomingStatusQueue.peakQueue() != null) {
                 ServerStatus next = upcomingStatusQueue.peakQueue();
@@ -210,10 +205,13 @@ public class KVServer implements IKVServer {
                         if (next.getTransition() == ZNodeMessageStatus.STOP_SERVER) {
                             next.setServerStatus(ServerStatusType.IDLE);
                             serverNode.setServerStatus(next);
-                        } else if (next.getTransition() == ZNodeMessageStatus.LOCK_WRITE) {
-                            next.setServerStatus(ServerStatusType.READ_ONLY);
+                        } else if (next.getTransition() == ZNodeMessageStatus.MOVE_DATA_RECEIVER) {
+                            next.setServerStatus(ServerStatusType.MOVE_DATA_RECEIVER);
                             serverNode.setServerStatus(next);
-                        }
+                        } else if (next.getTransition() == ZNodeMessageStatus.MOVE_DATA_SENDER) {
+							next.setServerStatus(ServerStatusType.MOVE_DATA_SENDER);
+							serverNode.setServerStatus(next);
+						}
                         break;
                     case IDLE:
                         if (next.getTransition() == ZNodeMessageStatus.START_SERVER) {
@@ -221,18 +219,6 @@ public class KVServer implements IKVServer {
                             serverNode.setServerStatus(next);
                         }
                         break;
-//                    case READ_ONLY:
-//                        if (next.getTransition() == ZNodeMessageStatus.UNLOCK_WRITE) {
-//                            next.setServerStatus(ServerStatusType.RUNNING);
-//                            serverNode.setServerStatus(next);
-//                        } else if (next.getTransition() == ZNodeMessageStatus.MOVE_DATA_RECEIVER) {
-//                            next.setMoveRangeStatus(ServerStatusType.MOVE_DATA_RECEIVER, next.getMoveRange(), next.getTargetName());
-//                            serverNode.setServerStatus(next);
-//                        } else if (next.getTransition() == ZNodeMessageStatus.MOVE_DATA_SENDER) {
-//                            next.setMoveRangeStatus(ServerStatusType.MOVE_DATA_SENDER, next.getMoveRange(), next.getTargetName());
-//                            serverNode.setServerStatus(next);
-//                        }
-//                        break;
                     case MOVE_DATA_RECEIVER:
                     case MOVE_DATA_SENDER:
                         if (curr.isReady()) {
@@ -251,24 +237,6 @@ public class KVServer implements IKVServer {
             }
         }
 	}
-//
-//	private boolean initializeServer() {
-//		LOGGER.info("Initialize server ...");
-//		try {
-//			this.serverSocket = new ServerSocket(this.port);
-//          this.hostname = serverSocket.getInetAddress().getHostName();
-//			this.port = this.serverSocket.getLocalPort();
-//			LOGGER.info("Server listening on port: " + this.serverSocket.getLocalPort());
-//			this.serverSocket.setSoTimeout(1000); // 1 s
-//			return true;
-//		} catch (IOException e) {
-//			LOGGER.error("Error! Cannot open server socket:");
-//			if(e instanceof BindException){
-//				LOGGER.error("Port " + port + " is already bound!");
-//			}
-//			return false;
-//		}
-//	}
 
 	@Override
     public void kill(){ //here kill( ) will be same as close( ) as we are using write-through cache. For now, leave it as the same as close()

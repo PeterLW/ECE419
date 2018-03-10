@@ -238,8 +238,8 @@ public class ServerManager {
     }
 
     public boolean start(){
-        for (String key : hashMap.keySet()) {
-            ServerNode node = (ServerNode) hashMap.get(key);
+        for (Map.Entry<String, IECSNode> entry : hashMap.entrySet()) {
+            ServerNode node = (ServerNode) entry.getValue();
             try {
                 zookeeperECSManager.startKVServer(node);
             }catch (KeeperException | InterruptedException e) {
