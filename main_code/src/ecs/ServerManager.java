@@ -148,13 +148,14 @@ public class ServerManager {
             else{
                 for(int i = 0; i < count; ++i){
                     ServerNode node = new ServerNode(entityList.removeFirst(), cacheSize, cacheStrategy);
-                    metadata.addServer(node.getNodeName()); // add and set
-                    node.setRange(metadata.findHashRange(node.getNodeName()));
+                    metadata.addServer(node.getNodeHostPort()); // add and set
+                    node.setRange(metadata.findHashRange(node.getNodeHostPort()));
                     list.add(node);
 
                     this.updateSuccessor(node);
-
                     zookeeperECSManager.updateMetadataZNode(metadata); // update metadata node
+
+                    zookeeperECSManager.addAndMoveDataKVServer(node);
                     this.remoteLaunchServer(list.get(i).getNodePort());
                 }
             }
@@ -167,24 +168,25 @@ public class ServerManager {
     }
 
     private boolean updateSuccessor(ServerNode node){
-        BigInteger[] range = metadata.findHashRange(node.getNodeName());
+        BigInteger[] range = metadata.findHashRange(node.getNodeHostPort());
         if(range == null) {
             return false;
         }
 
-        String successorID = metadata.getSuccessor(node.getNodeName());
+        String successorID = metadata.getSuccessor(node.getNodeHostPort());
         if (successorID == null){
             return false;
         }
 
-        BigInteger[] successorRange = metadata.findHashRange(node.getNodeName());
+        BigInteger[] successorRange = metadata.findHashRange(successorID);
         if (successorRange == null){
             return false;
         }
 
         ServerNode updatedNode = updateSuccessorNode(successorID, successorRange);
+
         try {
-            zookeeperECSManager.updateRangeKVServer(updatedNode);
+            zookeeperECSManager.moveDataSenderKVServer(updatedNode,range,node.getNodeHostPort()); // TODO: more arguments
         }catch (KeeperException | InterruptedException e){
             e.printStackTrace();
             return false;
@@ -197,8 +199,7 @@ public class ServerManager {
         ServerNode node = null;
         for (Map.Entry<String, IECSNode> entry : hashMap.entrySet()) {
             node = (ServerNode) entry.getValue();
-            String nodeID = node.getNodeHost() + ":" + node.getNodePort();
-            if(nodeID.equals(id)){
+            if(node.getNodeHostPort().equals(id)){
                 node.setRange(newRange[0],newRange[1]); // this line change the node instance in hash map,
                 // don't need to put it back
                 // hashMap.put(id, node);
@@ -212,7 +213,7 @@ public class ServerManager {
      * add server into correct data structures
      */
     private boolean addServer(ServerNode n, String cacheStrategy, int cacheSize) throws KeeperException, InterruptedException { // change to throw?
-        String id = n.getNodeName();
+        String id = n.getNodeHostPort();
         if (hashMap.containsKey(id)) {
             return false;
         }
@@ -286,7 +287,7 @@ public class ServerManager {
             hashMap.remove(ServerIndex);
 
             String serverNodeID = node.getNodeHost() + ":" + Integer.toString(node.getNodePort());
-            if(updateSuccessor(serverNodeID, (ServerNode) node)){
+            if(updateSuccessor((ServerNode) node)){
                 zookeeperECSManager.removeKVServer(ServerIndex);
                 return true;
             }
@@ -327,8 +328,7 @@ public class ServerManager {
             e.printStackTrace();
         }
     }
-
-    // test
+    
     public static void main(String[] args) throws IOException, InterruptedException, KeeperException {
 //        ServerManager serverManager = new ServerManager();
 //
@@ -345,7 +345,7 @@ public class ServerManager {
 ////            String name = "TEST_SERVER_" + Integer.toString(i);
 ////            int port = 1111+i;
 ////            ServerNode n = new ServerNode(name,"localhost",port);
-////            System.out.println("Servernode: " + n.getNodeName());
+////            System.out.println("Servernode: " + n.getNodeHostPort());
 ////            boolean success = serverManager.addKVServer(n,"something", 100);
 ////            System.out.println(success);
 ////        }

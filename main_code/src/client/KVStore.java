@@ -2,8 +2,11 @@ package client;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.math.BigInteger;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import com.google.gson.Gson;
 import com.jcraft.jsch.IO;
@@ -36,7 +39,7 @@ public class KVStore implements KVCommInterface {
 	private Message message = null;
 	private Transmission transmit;
 
-	Metadata metadata = null;
+	private Metadata metadata = null;
 
 	/**
 	 * Initialize KVStore with address and port of KVServer
@@ -92,11 +95,21 @@ public class KVStore implements KVCommInterface {
 		return false;
 	}
 
-
+	public void printmetadata(){
+		System.out.println("printing metadata");
+		LinkedHashMap<BigInteger, String> md = metadata.getMetadata();
+		for (Map.Entry<BigInteger,String> entry : md.entrySet()){
+			String serverNodeName = entry.getValue();
+			System.out.println(serverNodeName);
+		}
+	}
 
 	public void updateMetadataAndResend(Message msg, String key, String value) throws IOException{
 		if(msg.getStatus() == StatusType.SERVER_NOT_RESPONSIBLE){
-			metadata = msg.getMetaData();
+            metadata = gson.fromJson(msg.getMetaData(), Metadata.class);
+            //update bst, so checkValidServer will pass
+            metadata.build_bst();
+           // printmetadata();
 			put(key,value);
 		}
 	}
@@ -116,12 +129,8 @@ public class KVStore implements KVCommInterface {
 		}
 	}
 
-
 	@Override
 	public Message put(String key, String value) throws IOException {
-		// when the value == null somewhere down the line gets a NullPointerException .__.
-		// should we just set value to empty string here?
-		// TODO Auto-generated method stub
 
 		if(!checkValidServer(key)) {
 			clientSocket.close();
@@ -139,6 +148,7 @@ public class KVStore implements KVCommInterface {
 			// the SoTTimeout is already set in constructor
 			try {
 				received_stat = transmit.receiveMessage(clientSocket); // receive reply, note receiveMessage( ) is a blocking function
+				System.out.println(gson.toJson(received_stat));
 			} catch (java.net.SocketTimeoutException e) {// read timed out - you may throw an exception of your choice
 				isTimeOut = true;
 			}
@@ -174,9 +184,14 @@ public class KVStore implements KVCommInterface {
 
 	@Override
 	public Message get(String key) throws Exception {
-		// TODO Auto-generated method stub
-		Message received_stat=null;
-		boolean isTimeOut = false;
+
+        if(!checkValidServer(key)) {
+            clientSocket.close();
+            connect();
+        }
+
+        Message received_stat=null;
+        boolean isTimeOut = false;
 
 		if(isRunning()) {
 			message = new Message(StatusType.GET, clientId, seqNum, key,null);
@@ -189,7 +204,6 @@ public class KVStore implements KVCommInterface {
 				// read timed out - you may throw an exception of your choice
 				LOGGER.debug("timeout");
 				isTimeOut = true;
-
 			}
 
 			if (isTimeOut) { // try again once

@@ -1,9 +1,11 @@
 package app_kvServer;
 
+import java.util.*;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.net.Socket;
 import com.google.gson.Gson;
+import com.sun.tools.doclets.formats.html.SourceToHTMLConverter;
 import common.metadata.Metadata;
 import common.cache.StorageManager;
 import common.messages.KVMessage;
@@ -101,12 +103,45 @@ public class ClientConnection implements Runnable {
     private void RespondMsg(Message received_msg, KVMessage.StatusType responseType, Metadata metaData){
 
         Message return_msg = new Message(responseType, clientId, received_msg.getSeq(), received_msg.getKey(), received_msg.getValue());
-        received_msg.setMetaData(metaData);
+        String metadata = gson.toJson(metaData);
+        return_msg.setMetaData(metadata);
+
+        System.out.println(gson.toJson(return_msg));
         boolean success = transmission.sendMessage(toByteArray(gson.toJson(return_msg)), clientSocket);
 	    if (!success) {
 	        LOGGER.error("Send message failed to client " + this.clientId);
+            //System.out.println("Send message failed to client " + this.clientId);
 	    }
     }
+
+
+//    private void HandleRequest(Message msg){
+//        if(isKeyInValidRange(msg.getKey())) {
+//            processMessage(msg);
+//        }
+//        else{
+//            Metadata metadata = null;
+////            try {
+////                metadata = zookeeperMetaData.getMetadata();
+////            }catch (KeeperException | InterruptedException e){
+////                e.printStackTrace();
+////            }
+//            metadata = new Metadata();
+//            String serverIpPort = "100.64.193.243:60000";
+//            metadata.addServer(serverIpPort);
+//            BigInteger[] range = new BigInteger[2];
+//            try {
+//                range[0] = getMD5("a");
+//                range[1] = getMD5("z");
+//            }catch (Exception e){
+//                e.printStackTrace();
+//            }
+//
+//            serverNode.setRange(range);
+//            RespondMsg(msg, StatusType.SERVER_NOT_RESPONSIBLE, metadata);
+//            System.out.println("SERVER_NOT_RESPONSIBLE sent\n");
+//        }
+//    }
 
     private void HandleRequest(Message msg){
         if(isKeyInValidRange(msg.getKey())) {
@@ -120,6 +155,7 @@ public class ClientConnection implements Runnable {
                 e.printStackTrace();
             }
             RespondMsg(msg, StatusType.SERVER_NOT_RESPONSIBLE, metadata);
+            System.out.println("SERVER_NOT_RESPONSIBLE sent\n");
         }
     }
 
@@ -129,6 +165,7 @@ public class ClientConnection implements Runnable {
 	 */
 	public void run() {
 		Message latestMsg;
+        System.out.printf("server that accepts the client connection starts running...");
 		while (isOpen) {
 
 			try {
@@ -297,6 +334,8 @@ public class ClientConnection implements Runnable {
 
 		return tmp;
 	}
+
+
 
 
 }

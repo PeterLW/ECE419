@@ -5,7 +5,7 @@ public enum ZNodeMessageStatus {
         When data in a znode is updated by the ECS Client, the following changes are possible:
      */
     NEW_ZNODE,
-    HASH_RANGE_UPDATE, // depreciate
+    NEW_ZNODE_RECIEVE_DATA,
     LOCK_WRITE,
     UNLOCK_WRITE,
     MOVE_DATA_SENDER,

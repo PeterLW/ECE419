@@ -9,12 +9,13 @@ import ecs.ServerNode;
 import logger.LogSetup;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-
+import java.math.*;
 import java.io.IOException;
 import java.net.BindException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
+import java.security.MessageDigest;
 
 // IN PROGRESS
 public class KVClientConnection implements Runnable {
@@ -30,10 +31,11 @@ public class KVClientConnection implements Runnable {
     private static ServerNode serverNode;
     private String zookeeperHost;
     private int sessionTimeout;
+    private Metadata metadata;
 
     static {
         try {
-            new LogSetup("logs/kvclientConncection.log", Level.DEBUG);
+            new LogSetup("logs/kvclientConncection.log", Level.ERROR);
         } catch (IOException e) {
             System.out.println("Error! Unable to initialize logger!");
             e.printStackTrace();
@@ -47,7 +49,14 @@ public class KVClientConnection implements Runnable {
         this.serverNode = node;
         this.zookeeperHost = zookeeperHost;
         this.sessionTimeout = sessionTimeout;
+        this.metadata = new Metadata();
     }
+/* The following setter and getter are used for debugging purpose */
+
+    public Metadata getMetadata(){
+        return metadata;
+    }
+
 
     public void run() {
         initializeServer();
@@ -59,7 +68,8 @@ public class KVClientConnection implements Runnable {
                     client = serverSocket.accept(); // blocking call
                     numConnectedClients++;
                     ClientConnection connection = new ClientConnection(client, serverNode, storage, numConnectedClients, zookeeperHost, sessionTimeout);
-                    LOGGER.info("Connected to " + client.getInetAddress().getHostName() + " on port " + client.getPort());
+                   // LOGGER.info("Connected to " + client.getInetAddress().getHostName() + " on port " + client.getPort());
+                    System.out.println("Connected to " + client.getInetAddress().getHostName() + " on port " + client.getPort());
                     new Thread(connection).start();
 
                 } catch (SocketTimeoutException e) {
@@ -74,7 +84,8 @@ public class KVClientConnection implements Runnable {
     }
 
     private boolean initializeServer() {
-        LOGGER.info("Initialize server ...");
+//        LOGGER.info("Initialize server ...");
+        System.out.println("Initialize server ...");
         try {
             this.serverSocket = new ServerSocket(this.serverNode.getNodePort());
             LOGGER.info("Server listening on port: " + this.serverNode.getNodePort());
@@ -111,5 +122,32 @@ public class KVClientConnection implements Runnable {
 
     public static void main(String[] args){
         //TODO read from cmdline the arguments needed to start KVServer
+        StorageManager storageManager = new StorageManager(1000, "FIFO");
+        String zookeeperHost = "localhost";
+        int sessionTimeout=5000;
+
+        ServerNode node = new ServerNode("test_server", "0.0.0.0", 50000);
+        node.setServerStatus(new ServerStatus(ServerStatusType.RUNNING));
+        BigInteger[] range = new BigInteger[2];
+        try {
+            range[0] = getMD5("a");
+            range[1] = getMD5("d");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        node.setRange(range);
+
+        KVClientConnection kc = new KVClientConnection(storageManager,  node, zookeeperHost,  sessionTimeout);
+
+       // kc.getMetadata().addServer(hostname);
+        kc.run();
+    }
+
+    private static BigInteger getMD5(String input) throws Exception{
+        MessageDigest md=MessageDigest.getInstance("MD5");
+        md.update(input.getBytes(),0,input.length());
+        String hash_temp = new BigInteger(1,md.digest()).toString(16);
+        BigInteger hash = new BigInteger(hash_temp, 16);
+        return hash;
     }
 }

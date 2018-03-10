@@ -11,9 +11,10 @@ public class Metadata {
     // bst
     private transient static TreeSet<Node> servers_bst = new TreeSet<Node>(); // Node class has custom compareTo fct
     // BigInteger: hash, String: unique identifier for a Server
-    private static LinkedHashMap<BigInteger, String> HashToServer;
-    private Node first_node = null;
-    private Node last_node = null;
+    private LinkedHashMap<BigInteger, String> HashToServer;
+    private transient Node first_node = null;
+    private transient Node last_node = null;
+
 
     public Metadata(){
         HashToServer = new LinkedHashMap<BigInteger, String>();
@@ -40,6 +41,10 @@ public class Metadata {
         }
         first_node = servers_bst.first();
         last_node = servers_bst.last();
+    }
+
+    public LinkedHashMap<BigInteger, String> getMetadata(){
+        return HashToServer;
     }
 
     /**
@@ -116,6 +121,10 @@ public class Metadata {
         addServer(node.getNodeHostPort());
     }
 
+    public LinkedHashMap<BigInteger, String> getHashToServer() {
+        return HashToServer;
+    }
+
     /**
      * Purpose: to add a new Server
      */
@@ -151,7 +160,6 @@ public class Metadata {
         BigInteger hash = new BigInteger(hash_temp, 16);
         return hash;
     }
-
 
     // debugging fct
     public void printData(String s){
@@ -230,13 +238,6 @@ public class Metadata {
         }
         return successorRange;
     }
-    // TODO: note getting rid of this after I make changes in ServerManager & ECSClient because:
-    // repeated code
-//     really just:
-//     getSuccessor(..)
-//     then
-//     getHashRange(...)
-
     /*
     findHashRange(): use id(i.e. ip:port) to find the corresponding hash range.
     If only one node in BST, we return low range = high range = server's hash. And this needs to be interpreted

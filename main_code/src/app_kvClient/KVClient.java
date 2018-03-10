@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.SocketException;
 import common.messages.Message;
+import common.metadata.Metadata;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import logger.LogSetup;
@@ -14,11 +15,9 @@ import client.KVStore;
 
 public class KVClient implements IKVClient {
 
-
     private static final Logger LOGGER = Logger.getLogger(KVClient.class);
     private static final String PROMPT = "KVCLIENT> ";
     private BufferedReader stdin;
-
     private KVStore kvStore;
     private boolean stop = false;
 
@@ -31,6 +30,7 @@ public class KVClient implements IKVClient {
             System.exit(1);
         }
     }
+
 
     @Override
     public void newConnection(String hostname, int port) {
@@ -179,6 +179,7 @@ public class KVClient implements IKVClient {
 
                         if(checkValidKeyValue(tokens[1],"dump")) {
                             Message msg = kvStore.get(tokens[1]); // blocking call
+                            kvStore.updateMetadataAndResend(msg, tokens[1], null);
                             if (msg == null) {
                                 printError("Communication for GET failed");
                             }

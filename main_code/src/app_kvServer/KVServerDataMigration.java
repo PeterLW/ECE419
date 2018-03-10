@@ -39,44 +39,72 @@ public class KVServerDataMigration implements Runnable {
         this.storageManager = storageManager;
     }
 
+    public KVServerDataMigration(ServerNode node, StorageManager storageManager){
+        this.serverNode = node;
+        this.storageManager = storageManager;
+    }
+
     //Q: where is the kill handler ? (i.e. what if the main thread sends a kill signal here , does
     //cathy use this class as an object or run this thread at startup ? Need a mechanism to kill and close this thread.
+    @Override
     public void run() {
-
         System.out.println("system starts ....\n");
-
-        while(true) {
-            if (serverNode.getServerStatus().getStatus() == ServerStatusType.MOVE_DATA_SENDER) {
-                try {
-                    Socket senderSocket = new Socket(address, port);
-                    System.out.println("connecting to receiver...");
-                    send_data(senderSocket);
-                    senderSocket.close();
-                } catch (IOException e) {
-                    LOGGER.error("Failed to connect data migration receiver");
-                }
-                break;
-            } else if (serverNode.getServerStatus().getStatus() == ServerStatusType.MOVE_DATA_RECEIVER) {
-                try {
-                    ServerSocket receiverSocket = new ServerSocket(port);
-                    Socket socket = receiverSocket.accept();
-                    System.out.println("Connected to the sender, start receiving packets\n");
-                    receive_data(socket);
-                    socket.close();
-                    receiverSocket.close();
-                    System.out.println("Socket closed\n");
-                } catch (IOException e) {
-                    LOGGER.error("Failed to connect data migration sender");
-                }
-            } else {
+        while(true){
+            ServerStatusType statusType = serverNode.getServerStatus().getStatus();
+            if (statusType == ServerStatusType.MOVE_DATA_RECEIVER || statusType == ServerStatusType.MOVE_DATA_SENDER){
+                update();
+                start();
+            }
+            else {
                 try {
                     Thread.sleep(1);
 
-                }catch (InterruptedException e){
+                } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
         }
+    }
+
+    private void update(){
+        String targetName = serverNode.getServerStatus().getTargetName();
+        String[] temp = targetName.split(":");
+        this.address = temp[0];
+        this.port = Integer.parseInt(temp[1]);
+
+        this.hashRange = serverNode.getServerStatus().getMoveRange();
+        this.transmission = new Transmission();
+    }
+
+    private void start() {
+
+        if (serverNode.getServerStatus().getStatus() == ServerStatusType.MOVE_DATA_SENDER) {
+            try {
+                Socket senderSocket = new Socket(address, port);
+                System.out.println("connecting to receiver...");
+                send_data(senderSocket);
+                senderSocket.close();
+            } catch (IOException e) {
+                LOGGER.error("Failed to connect data migration receiver");
+                return;
+            }
+        } else if (serverNode.getServerStatus().getStatus() == ServerStatusType.MOVE_DATA_RECEIVER) {
+            try {
+                ServerSocket receiverSocket = new ServerSocket(port);
+                Socket socket = receiverSocket.accept();
+                System.out.println("Connected to the sender, start receiving packets\n");
+                receive_data(socket);
+                socket.close();
+                receiverSocket.close();
+                System.out.println("Socket closed\n");
+            } catch (IOException e) {
+                LOGGER.error("Failed to connect data migration sender");
+                return;
+            }
+        }
+
+        serverNode.getServerStatus().setReady();
+
     }
 
     public void send_data(Socket senderSocket) throws IOException {

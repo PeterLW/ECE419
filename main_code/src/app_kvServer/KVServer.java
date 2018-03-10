@@ -1,7 +1,10 @@
 package app_kvServer;
 
+import com.sun.security.ntlm.Server;
 import common.cache.StorageManager;
 import common.metadata.Metadata;
+import common.zookeeper.ZNodeMessage;
+import common.zookeeper.ZNodeMessageStatus;
 import common.zookeeper.ZookeeperWatcher;
 import ecs.ServerNode;
 import logger.LogSetup;
@@ -11,6 +14,7 @@ import org.apache.log4j.Logger;
 import org.apache.zookeeper.KeeperException;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.net.ServerSocket;
 
 // IN PROGRESS
@@ -72,10 +76,18 @@ public class KVServer implements IKVServer {
 			System.exit(-1);
 		}
 
+
 		try { // get serverNode
-			serverNode = zookeeperWatcher.initServerNode();
+			ZNodeMessage znodeMessage = zookeeperWatcher.getZnodeMessage();
+			serverNode = znodeMessage.serverNode;
 			zookeeperWatcher.setServerNode(serverNode); // zookeeperWatcher may change this when receive data updates
-			ServerStatus ss = new ServerStatus(ServerStatusType.INITIALIZE);
+
+			ServerStatus ss;
+			if (znodeMessage.zNodeMessageStatus == ZNodeMessageStatus.NEW_ZNODE_RECIEVE_DATA) {
+				ss = new ServerStatus(ServerStatusType.MOVE_DATA_RECEIVER); // move data auto transits to Running when isReady = true
+			} else {
+				ss = new ServerStatus(ServerStatusType.INITIALIZE);
+			}
 			serverNode.setServerStatus(ss);
 		} catch (KeeperException | InterruptedException e){
 			LOGGER.error("Failed to get data from zNode ",e);
@@ -86,11 +98,11 @@ public class KVServer implements IKVServer {
 
 		KVClientConnection kvClientConnection = new KVClientConnection(storage,serverNode,zookeeperHost,10000);
 		kvClientConnection.run();
-	}
 
-//    public boolean isRunning() {
-//        return this.running;
-//    }
+        KVServerDataMigration dataMigration = new KVServerDataMigration(serverNode, storage);
+        dataMigration.run();
+
+	}
 
 	private CacheStrategy string_to_enum_cache_strategy(String str) {
 		switch (str.toLowerCase()){
@@ -104,19 +116,6 @@ public class KVServer implements IKVServer {
 				return CacheStrategy.None;
 		}
 	}
-
-	/*
-		For update & initKVServer, confirm argument type & return type when the
-		following question is answered:
-		https://piazza.com/class/jc6l5ut99r35yl?cid=270
-	 */
-//	public void initKVServer(byte[] metadata, int cacheSize, String replacementStrategy) {
-//
-//	}
-//
-//	public void update(byte[] metadata) {
-//
-//	}
 
 	@Override
 	public int getPort(){
@@ -194,12 +193,63 @@ public class KVServer implements IKVServer {
 
 	public void run(){
 		// TODO Auto-generated method stub
-		while(true){
-			ServerStatusType statusType = serverNode.getServerStatus().getStatus();
-			if (statusType == ServerStatusType.MOVE_DATA_RECEIVER || statusType == ServerStatusType.MOVE_DATA_SENDER){
-				// TODO: START YOUR MOVEDATA THREAD THINGY
-			}
-		}
+        while (true) {
+            if (upcomingStatusQueue.peakQueue() != null) {
+                ServerStatus next = upcomingStatusQueue.peakQueue();
+                ServerStatus curr = serverNode.getServerStatus();
+
+                boolean proceed = true;
+                switch (curr.getStatus()) {
+                    case INITIALIZE:
+                        if (next.getTransition() == ZNodeMessageStatus.START_SERVER) {
+                            next.setServerStatus(ServerStatusType.RUNNING);
+                            serverNode.setServerStatus(next);
+                        }
+                        break;
+                    case RUNNING:
+                        if (next.getTransition() == ZNodeMessageStatus.STOP_SERVER) {
+                            next.setServerStatus(ServerStatusType.IDLE);
+                            serverNode.setServerStatus(next);
+                        } else if (next.getTransition() == ZNodeMessageStatus.LOCK_WRITE) {
+                            next.setServerStatus(ServerStatusType.READ_ONLY);
+                            serverNode.setServerStatus(next);
+                        }
+                        break;
+                    case IDLE:
+                        if (next.getTransition() == ZNodeMessageStatus.START_SERVER) {
+                            next.setServerStatus(ServerStatusType.RUNNING);
+                            serverNode.setServerStatus(next);
+                        }
+                        break;
+//                    case READ_ONLY:
+//                        if (next.getTransition() == ZNodeMessageStatus.UNLOCK_WRITE) {
+//                            next.setServerStatus(ServerStatusType.RUNNING);
+//                            serverNode.setServerStatus(next);
+//                        } else if (next.getTransition() == ZNodeMessageStatus.MOVE_DATA_RECEIVER) {
+//                            next.setMoveRangeStatus(ServerStatusType.MOVE_DATA_RECEIVER, next.getMoveRange(), next.getTargetName());
+//                            serverNode.setServerStatus(next);
+//                        } else if (next.getTransition() == ZNodeMessageStatus.MOVE_DATA_SENDER) {
+//                            next.setMoveRangeStatus(ServerStatusType.MOVE_DATA_SENDER, next.getMoveRange(), next.getTargetName());
+//                            serverNode.setServerStatus(next);
+//                        }
+//                        break;
+                    case MOVE_DATA_RECEIVER:
+                    case MOVE_DATA_SENDER:
+                        if (curr.isReady()) {
+                            next.setServerStatus(ServerStatusType.RUNNING);
+                            serverNode.setServerStatus(next);
+                            proceed = false;
+                        }
+                        break;
+                    case CLOSE:
+                        proceed = false;
+                }
+
+                if (proceed) {
+                    upcomingStatusQueue.popQueue();
+                }
+            }
+        }
 	}
 //
 //	private boolean initializeServer() {
@@ -270,14 +320,22 @@ public class KVServer implements IKVServer {
 		return false;
 	}
 
+
+	/**
+	 * java m2-server.jar -name ServerID -zkhost HOST -zkport PORT
+	 *
+	 * ServerID: name used in zookeeper
+	 * getHostIpPort
+	 *
+	 */
 	public static void main(String[] args){
 		//TODO read from cmdline the arguments needed to start KVServer
 		Options options = new Options();
 
-		options.addOption("name",true,"The serverName as what's returned from getNodeName()");
+		options.addOption("name",true,"The serverID, getHostIpPort()");
 		options.getOption("name").setRequired(true);
 		options.addOption("zkhost",true,"Zookeeper Host (IP Address)");
-		options.addOption("zkport",true,"Zookeeper port");
+		options.addOption("zkport",true,"Zookeeper port #");
 		options.getOption("zkport").setType(Integer.class);
 
 		CommandLineParser cmdLineParser = new DefaultParser();
