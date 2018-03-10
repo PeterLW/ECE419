@@ -6,5 +6,5 @@ public enum ServerStatusType {
     IDLE,
     MOVE_DATA_SENDER,
     MOVE_DATA_RECEIVER,
-    CLOSE // TODO: only used by KVServer to shut down other running threads
+    CLOSE // only used by KVServer to shut down other running threads
 }

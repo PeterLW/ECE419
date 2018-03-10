@@ -183,9 +183,12 @@ public class KVServer implements IKVServer {
                 switch (curr.getStatus()) {
                     case INITIALIZE:
                         if (next.getTransition() == ZNodeMessageStatus.START_SERVER) {
-                            next.setServerStatus(ServerStatusType.RUNNING);
-                            serverNode.setServerStatus(next);
-                        }
+							next.setServerStatus(ServerStatusType.RUNNING);
+							serverNode.setServerStatus(next);
+						} else if (next.getTransition() == ZNodeMessageStatus.REMOVE_ZNODE_SEND_DATA){
+							next.setServerStatus(ServerStatusType.CLOSE);
+							serverNode.setServerStatus(next);
+						}
                         break;
                     case RUNNING:
                         if (next.getTransition() == ZNodeMessageStatus.STOP_SERVER) {
@@ -194,8 +197,11 @@ public class KVServer implements IKVServer {
                         } else if (next.getTransition() == ZNodeMessageStatus.MOVE_DATA_RECEIVER) {
                             next.setServerStatus(ServerStatusType.MOVE_DATA_RECEIVER);
                             serverNode.setServerStatus(next);
-                        } else if (next.getTransition() == ZNodeMessageStatus.MOVE_DATA_SENDER) {
-							next.setServerStatus(ServerStatusType.MOVE_DATA_SENDER);
+                        } else if (next.getTransition() == ZNodeMessageStatus.MOVE_DATA_SENDER ||
+								next.getTransition() == ZNodeMessageStatus.REMOVE_ZNODE_SEND_DATA) {
+
+
+                        	next.setServerStatus(ServerStatusType.MOVE_DATA_SENDER);
 							serverNode.setServerStatus(next);
 						}
                         break;
@@ -203,7 +209,10 @@ public class KVServer implements IKVServer {
                         if (next.getTransition() == ZNodeMessageStatus.START_SERVER) {
                             next.setServerStatus(ServerStatusType.RUNNING);
                             serverNode.setServerStatus(next);
-                        }
+                        } else if (next.getTransition() == ZNodeMessageStatus.REMOVE_ZNODE_SEND_DATA){
+							next.setServerStatus(ServerStatusType.MOVE_DATA_SENDER);
+							serverNode.setServerStatus(next);
+						}
                         break;
                     case MOVE_DATA_RECEIVER:
                     case MOVE_DATA_SENDER:
@@ -214,7 +223,7 @@ public class KVServer implements IKVServer {
                         }
                         break;
                     case CLOSE:
-                        proceed = false;
+                    	System.exit(0);
                 }
 
                 if (proceed) {
