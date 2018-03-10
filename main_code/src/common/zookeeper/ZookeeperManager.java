@@ -41,4 +41,9 @@ public class ZookeeperManager {
     protected void close() throws InterruptedException {
         zooKeeper.close();
     }
+
+    protected void shutdown() throws InterruptedException {
+        this.close();
+        System.exit(0);
+    }
 }

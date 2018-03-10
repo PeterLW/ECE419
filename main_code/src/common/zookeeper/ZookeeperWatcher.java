@@ -56,6 +56,10 @@ public class ZookeeperWatcher extends ZookeeperMetaData implements Runnable {
             }
         }, null);
 
+        if (serverNode.getServerStatus().getStatus() == ServerStatusType.CLOSE){
+            this.shutdown();
+        }
+
         ZNodeMessage temp = gson.fromJson(new String(data),ZNodeMessage.class);
         ServerStatus ss = null;
 
