@@ -15,12 +15,6 @@ import org.apache.zookeeper.KeeperException;
 import java.util.*;
 
 public class ECSClient implements IECSClient {
-
-    public enum SYSTEM_STATE{
-        INIT,
-        RUNNING
-    }
-
     private static final Logger LOGGER = Logger.getLogger(ServerManager.class);
     private static final String PROMPT = "ECSCLIENT> ";
     private static final int timeout = 5000;
@@ -30,7 +24,6 @@ public class ECSClient implements IECSClient {
     private final ServerManager serverManager = new ServerManager();
 
     private boolean stop = false;
-    private SYSTEM_STATE system_state = SYSTEM_STATE.INIT;
 
     static {
         try {
@@ -42,7 +35,7 @@ public class ECSClient implements IECSClient {
         }
     }
 
-    public ECSClient(){system_state = SYSTEM_STATE.INIT;}
+    public ECSClient(){}
 
     @Override
     public boolean start() {
@@ -65,7 +58,6 @@ public class ECSClient implements IECSClient {
      */
     @Override
     public IECSNode addNode(String cacheStrategy, int cacheSize) {
-
         Collection<IECSNode>list = setupNodes(1,cacheStrategy,cacheSize);
         boolean flag;
         try {
@@ -74,7 +66,7 @@ public class ECSClient implements IECSClient {
             e.printStackTrace();
             return null;
         }
-       return (flag == true) ? list.iterator().next():null;
+       return ((flag) ? list.iterator().next() : null) ; // if(flag == true) is same as if(flag)
 
     }
 
@@ -104,32 +96,7 @@ public class ECSClient implements IECSClient {
      */
     @Override
     public Collection<IECSNode> setupNodes(int count, String cacheStrategy, int cacheSize) { // this function is redundant.
-        LinkedList<IECSNode>list = new LinkedList<IECSNode>();
-        try {
-            if(system_state == SYSTEM_STATE.INIT) {
-                for (int i = 0; i < count; ++i) {
-                    ServerNode node = serverManager.addNode(cacheSize, cacheStrategy);
-                    list.add(node);
-                }
-                serverManager.updateMetaDataZNode();
-                for(int i = 0; i < count; ++i){
-                    serverManager.remoteLaunchServer(list.get(i).getNodePort());
-                }
-                system_state = SYSTEM_STATE.RUNNING;
-            }
-            else{
-                for(int i = 0; i < count; ++i){
-                    ServerNode node = serverManager.addNode(cacheSize, cacheStrategy);
-                    list.add(node);
-                    serverManager.updateMetaDataZNode();
-                    serverManager.remoteLaunchServer(list.get(i).getNodePort());
-                }
-            }
-        } catch (KeeperException | InterruptedException e) {
-            LOGGER.error("Failed to update metadata");
-            e.printStackTrace();
-        }
-        return list;
+        return serverManager.setupNodes(count,cacheStrategy,cacheSize);
     }
 
     @Override

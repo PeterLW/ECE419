@@ -118,74 +118,108 @@ public class ServerManager {
             channel.disconnect();
             session.disconnect();
 
-        }catch(JSchException e){
-            e.printStackTrace();
-        }catch(IOException e){
+        }catch(JSchException | IOException e) {
             e.printStackTrace();
         }
     }
 
-    public ServerNode addNode(int cacheSize, String cacheStrategy){
-        ServerNode node = new ServerNode(entityList.removeFirst(), cacheSize, cacheStrategy);
+    public Collection<IECSNode> setupNodes(int count, String cacheStrategy, int cacheSize){
+        LinkedList<IECSNode>list = new LinkedList<IECSNode>();
         try {
-            addServer(node, cacheStrategy, cacheSize);
-            return node;
+            if(hashMap.isEmpty()) { // init stage
+
+                for (int i = 0; i < count; ++i) { // step 1: completely initialize metadata
+                    ServerNode node = new ServerNode(entityList.removeFirst(), cacheSize, cacheStrategy);
+                    list.add(node);
+                    metadata.addServer(node.getNodeHostPort());
+                }
+                zookeeperECSManager.updateMetadataZNode(metadata); // step 2
+
+                for(int i = 0; i < count; ++i){ // step 3: launch
+                    ServerNode node = (ServerNode) list.get(i);
+
+                    // now when I add zNode they have their range given a -full- hash ring.
+                    this.addServer(node, cacheStrategy, cacheSize);
+                    this.remoteLaunchServer(list.get(i).getNodePort());
+                    // TODO: ^ this should take ip & port because we are constructing this under assumption that
+                        // KVserver can be run on different computers.
+                }
+            }
+            else{
+                for(int i = 0; i < count; ++i){
+                    ServerNode node = new ServerNode(entityList.removeFirst(), cacheSize, cacheStrategy);
+                    metadata.addServer(node.getNodeName()); // add and set
+                    node.setRange(metadata.findHashRange(node.getNodeName()));
+                    list.add(node);
+
+                    this.updateSuccessor(node);
+
+                    zookeeperECSManager.updateMetadataZNode(metadata); // update metadata node
+                    this.remoteLaunchServer(list.get(i).getNodePort());
+                }
+            }
+        } catch (KeeperException | InterruptedException e) {
+            LOGGER.error("Failed to update metadata");
+            e.printStackTrace();
+        }
+        return list;
+
+    }
+
+    private boolean updateSuccessor(ServerNode node){
+        BigInteger[] range = metadata.findHashRange(node.getNodeName());
+        if(range == null) {
+            return false;
+        }
+
+        String successorID = metadata.getSuccessor(node.getNodeName());
+        if (successorID == null){
+            return false;
+        }
+
+        BigInteger[] successorRange = metadata.findHashRange(node.getNodeName());
+        if (successorRange == null){
+            return false;
+        }
+
+        ServerNode updatedNode = updateSuccessorNode(successorID, successorRange);
+        try {
+            zookeeperECSManager.updateRangeKVServer(updatedNode);
         }catch (KeeperException | InterruptedException e){
             e.printStackTrace();
-            return null;
+            return false;
         }
+
+        return true;
     }
 
-    private ServerNode updateHashMapElement(String id, BigInteger[] newRange){
+    private ServerNode updateSuccessorNode(String id, BigInteger[] newRange){ // renamed fct didn't change code
         ServerNode node = null;
         for (Map.Entry<String, IECSNode> entry : hashMap.entrySet()) {
             node = (ServerNode) entry.getValue();
             String nodeID = node.getNodeHost() + ":" + node.getNodePort();
             if(nodeID.equals(id)){
-                node.setRange(newRange[0],newRange[1]);
-                hashMap.put(id, node);
+                node.setRange(newRange[0],newRange[1]); // this line change the node instance in hash map,
+                // don't need to put it back
+                // hashMap.put(id, node);
                 break;
             }
         }
         return node;
     }
 
-    private boolean updateSuccessor(String serverNodeID, ServerNode n){
-        BigInteger[] range = metadata.findHashRange(serverNodeID);
-        if(range != null) {
-            n.setRange(range[0], range[1]);
-            BigInteger[] successorRange = metadata.getNewSuccessorRange(serverNodeID);
-            if (successorRange != null) {
-                String successorID = metadata.getSuccessor(serverNodeID);
-                if (successorID != null) {
-                    ServerNode updatedNode = updateHashMapElement(successorID, successorRange);
-                    try {
-                        zookeeperECSManager.updateRangeKVServer(updatedNode);
-                    }catch (KeeperException | InterruptedException e){
-                        e.printStackTrace();
-                        return false;
-                    }
-                }
-            }
-            return true;
-        }
-        return false;
-    }
-
+    /**
+     * add server into correct data structures
+     */
     private boolean addServer(ServerNode n, String cacheStrategy, int cacheSize) throws KeeperException, InterruptedException { // change to throw?
         String id = n.getNodeName();
         if (hashMap.containsKey(id)) {
             return false;
         }
         hashMap.put(id,n);
-        String serverNodeID = n.getNodeHost() + ":" + Integer.toString(n.getNodePort());
-        metadata.addServer(serverNodeID);
-        zookeeperECSManager.addKVServer(n); // update znode
-        return updateSuccessor(serverNodeID, n);
-    }
-
-    public void updateMetaDataZNode() throws KeeperException, InterruptedException {
-        zookeeperECSManager.updateMetadataZNode(metadata);
+        n.setRange(metadata.findHashRange(n.getNodeHostPort()));
+        zookeeperECSManager.addKVServer(n); // add new Znode
+        return true;
     }
 
     public IECSNode getServerName(String Key){
