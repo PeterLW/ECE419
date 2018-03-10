@@ -243,7 +243,6 @@ public class KVServer implements IKVServer {
                 else{
                     continue;
                 }
-
                 ServerStatus curr = serverNode.getServerStatus(); //curr is the current node status
 
                 switch (curr.getStatus()) {
@@ -283,7 +282,6 @@ public class KVServer implements IKVServer {
                     case CLOSE:
                         System.exit(0);
                 }
-                
             }
         }
     }
