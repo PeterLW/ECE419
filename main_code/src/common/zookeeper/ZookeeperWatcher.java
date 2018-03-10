@@ -68,67 +68,6 @@ public class ZookeeperWatcher extends ZookeeperMetaData implements Runnable {
                 upcomingStatusQueue.addQueue(ss);
         }
 
-        boolean exitLoop = false;
-        while(upcomingStatusQueue.peakQueue() != null && !exitLoop){ // TODO: this actually needs to be in main... ><
-            // TODO: this part doesn't really work.. I'll explain why tomorrow.. but I think this loop needs to be in
-            // another thread, so I might move this in main KVServer.java & that means we may make a small change...
-            // we'll discuss tmr. I guess.
-            ServerStatus next = upcomingStatusQueue.peakQueue();
-            ServerStatus curr = serverNode.getServerStatus();
-
-            boolean proceed = true;
-
-            switch (curr.getStatus()){
-                case INITIALIZE:
-                    if (next.getTransition() == ZNodeMessageStatus.START_SERVER){
-                        next.setServerStatus(ServerStatusType.RUNNING);
-                        serverNode.setServerStatus(next);
-                    }
-                    break;
-                case RUNNING:
-                    if (next.getTransition() == ZNodeMessageStatus.STOP_SERVER){
-                        next.setServerStatus(ServerStatusType.IDLE);
-                        serverNode.setServerStatus(next);
-                    } else if (next.getTransition() == ZNodeMessageStatus.LOCK_WRITE){
-                        next.setServerStatus(ServerStatusType.READ_ONLY);
-                        serverNode.setServerStatus(next);
-                    }
-                    break;
-                case IDLE:
-                    if (next.getTransition() == ZNodeMessageStatus.START_SERVER){
-                        next.setServerStatus(ServerStatusType.RUNNING);
-                        serverNode.setServerStatus(next);
-                    }
-                    break;
-                case READ_ONLY:
-                    if (next.getTransition() == ZNodeMessageStatus.UNLOCK_WRITE){
-                        next.setServerStatus(ServerStatusType.RUNNING);
-                        serverNode.setServerStatus(next);
-                    } else if (next.getTransition() == ZNodeMessageStatus.MOVE_DATA_RECEIVER){
-                        next.setMoveRangeStatus(ServerStatusType.MOVE_DATA_RECEIVER,temp.getMoveDataRange(),temp.getTargetName());
-                        serverNode.setServerStatus(next);
-                    } else if (next.getTransition() == ZNodeMessageStatus.MOVE_DATA_SENDER){
-                        next.setMoveRangeStatus(ServerStatusType.MOVE_DATA_SENDER,temp.getMoveDataRange(),temp.getTargetName());
-                        serverNode.setServerStatus(next);
-                    }
-                    break;
-                case MOVE_DATA_RECEIVER:
-                case MOVE_DATA_SENDER:
-                    if (curr.isReady()){
-                        next.setServerStatus(ServerStatusType.READ_ONLY);
-                        serverNode.setServerStatus(next);
-                        proceed = false;
-                    }
-                    break;
-                case CLOSE:
-                    proceed = false;
-                    exitLoop = true;
-            }
-
-            if (proceed){
-                upcomingStatusQueue.popQueue();
-            }
-        }
 
     }
 
