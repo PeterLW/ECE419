@@ -207,7 +207,11 @@ public class KVServer implements IKVServer {
                     case MOVE_DATA_RECEIVER:
                     case MOVE_DATA_SENDER:
                         if (curr.isReady()) {
-                            next.setServerStatus(ServerStatusType.RUNNING);
+                        	if (next.getTransition()== ZNodeMessageStatus.SHUTDOWN_SERVER){
+								next.setServerStatus(ServerStatusType.CLOSE);
+							} else {
+								next.setServerStatus(ServerStatusType.RUNNING);
+							}
                             serverNode.setServerStatus(next);
                             proceed = false;
                         }

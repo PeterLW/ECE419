@@ -196,23 +196,6 @@ public class ZookeeperECSManager extends ZookeeperManager{
         }
     }
 
-    private void deleteZNode(String path, String groupName) throws KeeperException, InterruptedException {
-        String fullPath = path + "/" + groupName;
-        try {
-            Stat stat = zooKeeper.exists(fullPath, false);
-            if (stat == null) {
-                LOGGER.debug("Attempting to delete znode: " + fullPath + " but znode does not exist");
-                return;
-            }
-            List<String> children = zooKeeper.getChildren(fullPath, false);
-            for (String child : children) {
-                zooKeeper.delete(fullPath + "/" + child, -1);
-            }
-            zooKeeper.delete(fullPath, -1);
-        } catch (KeeperException.NoNodeException e) {
-            LOGGER.error("Trying to delete: " + fullPath + " but Znode does not exist\n", e);
-        }
-    }
 
     private void clearZNodes(){ // zookeeper only has one layer, no need recursion
         try {

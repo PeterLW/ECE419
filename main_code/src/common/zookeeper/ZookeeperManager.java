@@ -1,14 +1,19 @@
 package common.zookeeper;
 
 import com.google.gson.Gson;
+import org.apache.log4j.Logger;
+import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
 import org.apache.zookeeper.ZooKeeper;
+import org.apache.zookeeper.data.Stat;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
 public class ZookeeperManager {
+    private static Logger LOGGER = Logger.getLogger(ZookeeperECSManager.class);
     protected static final String HEAD_NAME = "ZNODES_HEAD";
     protected static final String ZNODE_HEAD = "/"+HEAD_NAME;
     protected static final String ZNODE_METADATA_NODE = "METADATA_NODE";
@@ -36,6 +41,28 @@ public class ZookeeperManager {
             return true;
         }
         return false;
+    }
+
+    protected void deleteZNode(String path, String groupName) throws KeeperException, InterruptedException {
+        String fullPath = path + "/" + groupName;
+        deleteZNode(fullPath);
+    }
+
+    protected void deleteZNode (String fullPath) throws KeeperException, InterruptedException {
+        try {
+            Stat stat = zooKeeper.exists(fullPath, false);
+            if (stat == null) {
+                LOGGER.debug("Attempting to delete znode: " + fullPath + " but znode does not exist");
+                return;
+            }
+            List<String> children = zooKeeper.getChildren(fullPath, false);
+            for (String child : children) {
+                zooKeeper.delete(fullPath + "/" + child, -1);
+            }
+            zooKeeper.delete(fullPath, -1);
+        } catch (KeeperException.NoNodeException e) {
+            LOGGER.error("Trying to delete: " + fullPath + " but Znode does not exist\n", e);
+        }
     }
 
     protected void close() throws InterruptedException {

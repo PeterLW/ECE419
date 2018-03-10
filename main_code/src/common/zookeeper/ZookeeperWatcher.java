@@ -43,7 +43,12 @@ public class ZookeeperWatcher extends ZookeeperMetaData implements Runnable {
     }
 
     public void setServerNode(ServerNode n){
-        this.serverNode = n;
+        serverNode = n;
+    }
+
+    public void handleDelete() throws InterruptedException, KeeperException {
+        this.deleteZNode(fullPath);
+        super.close();
     }
 
     private void getNewData() throws KeeperException, InterruptedException {
@@ -56,10 +61,6 @@ public class ZookeeperWatcher extends ZookeeperMetaData implements Runnable {
             }
         }, null);
 
-        if (serverNode.getServerStatus().getStatus() == ServerStatusType.CLOSE){
-            this.shutdown();
-        }
-
         ZNodeMessage newMessage = gson.fromJson(new String(data),ZNodeMessage.class);
         ServerStatus ss = null;
 
@@ -67,7 +68,6 @@ public class ZookeeperWatcher extends ZookeeperMetaData implements Runnable {
         switch(newMessage.zNodeMessageStatus){
             case MOVE_DATA_RECEIVER:
             case MOVE_DATA_SENDER:
-            case REMOVE_ZNODE_SEND_DATA:
                 // debug
                 System.out.println("Data has changed");
                 System.out.println(new String(data));
@@ -75,6 +75,15 @@ public class ZookeeperWatcher extends ZookeeperMetaData implements Runnable {
                 ss = new ServerStatus(newMessage.zNodeMessageStatus,newMessage.getMoveDataRange(),newMessage.getTargetName());
                 upcomingStatusQueue.addQueue(ss);
                 break;
+            case REMOVE_ZNODE_SEND_DATA:
+                System.out.println("Data has changed");
+                System.out.println(new String(data));
+
+                ss = new ServerStatus(newMessage.zNodeMessageStatus,newMessage.getMoveDataRange(),newMessage.getTargetName());
+                upcomingStatusQueue.addQueue(ss);
+
+                this.handleDelete();
+            break;
             default:
                 System.out.println("Data has changed");
                 System.out.println(new String(data));
