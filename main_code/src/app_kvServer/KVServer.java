@@ -182,12 +182,12 @@ public class KVServer implements IKVServer {
                 boolean proceed = true;
                 switch (curr.getStatus()) {
                     case INITIALIZE:
+					case IDLE:
                         if (next.getTransition() == ZNodeMessageStatus.START_SERVER) {
 							next.setServerStatus(ServerStatusType.RUNNING);
 							serverNode.setServerStatus(next);
 						} else if (next.getTransition() == ZNodeMessageStatus.REMOVE_ZNODE_SEND_DATA){
-							next.setServerStatus(ServerStatusType.CLOSE);
-							serverNode.setServerStatus(next);
+							handleDeleteNodeTransition(next);
 						}
                         break;
                     case RUNNING:
@@ -197,21 +197,11 @@ public class KVServer implements IKVServer {
                         } else if (next.getTransition() == ZNodeMessageStatus.MOVE_DATA_RECEIVER) {
                             next.setServerStatus(ServerStatusType.MOVE_DATA_RECEIVER);
                             serverNode.setServerStatus(next);
-                        } else if (next.getTransition() == ZNodeMessageStatus.MOVE_DATA_SENDER ||
-								next.getTransition() == ZNodeMessageStatus.REMOVE_ZNODE_SEND_DATA) {
-
-
+                        } else if (next.getTransition() == ZNodeMessageStatus.MOVE_DATA_SENDER) {
                         	next.setServerStatus(ServerStatusType.MOVE_DATA_SENDER);
 							serverNode.setServerStatus(next);
-						}
-                        break;
-                    case IDLE:
-                        if (next.getTransition() == ZNodeMessageStatus.START_SERVER) {
-                            next.setServerStatus(ServerStatusType.RUNNING);
-                            serverNode.setServerStatus(next);
-                        } else if (next.getTransition() == ZNodeMessageStatus.REMOVE_ZNODE_SEND_DATA){
-							next.setServerStatus(ServerStatusType.MOVE_DATA_SENDER);
-							serverNode.setServerStatus(next);
+						} else if (next.getTransition() == ZNodeMessageStatus.REMOVE_ZNODE_SEND_DATA) {
+							handleDeleteNodeTransition(next);
 						}
                         break;
                     case MOVE_DATA_RECEIVER:
@@ -231,6 +221,13 @@ public class KVServer implements IKVServer {
                 }
             }
         }
+	}
+
+	private void handleDeleteNodeTransition(ServerStatus next){
+		ServerStatus closeStatus = new ServerStatus(ZNodeMessageStatus.SHUTDOWN_SERVER);
+		upcomingStatusQueue.addQueue(closeStatus);
+		next.setServerStatus(ServerStatusType.MOVE_DATA_SENDER);
+		serverNode.setServerStatus(next);
 	}
 
 	@Override
