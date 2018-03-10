@@ -18,7 +18,11 @@ public class ServerManager {
     private static final int TIMEOUT = 5000;
     private static Metadata metadata = new Metadata();
 
-    // TODO:
+    /* It was stated we can assume zookeeper running on same machine, default port*/
+    private static final String ZOOKEEPER_HOST_NAME = "localhost";
+    private static final int ZOOKEEPER_PORT = 2181;
+
+    // TODO: Passwordless ssh
     // @Aaron, go on piazza, there's alot of questions about this, something about doing ssh without supplying a password. see if you can figure
     // this out, for when demoing on not our account (though I guess this is a lower priority item... )
     private static final String PRIVATE_KEY_PATH = "/nfs/ug/homes-5/x/xushuran/ECE419/ssh_key_set/id_rsa";
@@ -148,7 +152,7 @@ public class ServerManager {
 
                     // now when I add zNode they have their range given a -full- hash ring.
                     this.addServer(node, cacheStrategy, cacheSize);
-                    this.remoteLaunchServer(list.get(i).getNodePort());
+                    this.remoteLaunchServer(node.getNodePort(),node.getNodeHostPort(),ZOOKEEPER_HOST_NAME,Integer.toString(ZOOKEEPER_PORT));
                     // TODO: ^ this should take ip & port because we are constructing this under assumption that
                         // KVserver can be run on different computers.
                 }
@@ -166,7 +170,7 @@ public class ServerManager {
                     zookeeperECSManager.updateMetadataZNode(metadata); // update metadata node
 //                    zookeeperECSManager.addAndMoveDataKVServer(node,node.getRange(),targetNode.getNodeHostPort());
                     this.addServer(node, cacheStrategy, cacheSize);
-                    this.remoteLaunchServer(list.get(i).getNodePort());
+                    this.remoteLaunchServer(node.getNodePort(),node.getNodeHostPort(),ZOOKEEPER_HOST_NAME,Integer.toString(ZOOKEEPER_PORT));
                 }
             }
         } catch (KeeperException | InterruptedException e) {
@@ -332,7 +336,6 @@ public class ServerManager {
                 zookeeperECSManager.moveDataReceiverKVServer(successor, range, ((ServerNode)node).getNodeHostPort());
                 Thread.sleep(1);
                 zookeeperECSManager.removeAndMoveDataKVServer((ServerNode)node,range,successor.getNodeHostPort());
-
             }catch (KeeperException | InterruptedException e){
                 e.printStackTrace();
 
