@@ -61,7 +61,7 @@ public class ZookeeperECSManager extends ZookeeperManager{
         if (moveDataRange.length != 2){
             throw new IllegalArgumentException("moveDataRange must be of length 2");
         }
-        
+
         ZNodeMessage message = new ZNodeMessage(n, ZNodeMessageStatus.NEW_ZNODE_RECEIVE_DATA);
         message.setMoveDataParameters(moveDataRange,targetName);
 

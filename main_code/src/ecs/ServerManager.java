@@ -155,7 +155,7 @@ public class ServerManager {
                     this.updateSuccessor(node);
                     zookeeperECSManager.updateMetadataZNode(metadata); // update metadata node
 
-                    zookeeperECSManager.addAndMoveDataKVServer(node);
+//                    zookeeperECSManager.addAndMoveDataKVServer(node,);
                     this.remoteLaunchServer(list.get(i).getNodePort());
                 }
             }
