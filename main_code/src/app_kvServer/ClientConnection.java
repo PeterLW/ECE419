@@ -203,6 +203,8 @@ public class ClientConnection implements Runnable {
                     serverNode.getServerStatus().setReady();
 				}
 
+				Thread.sleep(1);
+
 				/* connection either terminated by the client or lost due to
 				 * network problems*/
 			} catch (IOException ioe) {
@@ -216,6 +218,8 @@ public class ClientConnection implements Runnable {
 				} catch (IOException ie) {
 					LOGGER.error("Error! Unable to tear down connection for client: " + this.clientId, ioe);
 				}
+			} catch (InterruptedException e) {
+				e.printStackTrace();
 			}
 
 		}
