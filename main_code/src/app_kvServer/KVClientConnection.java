@@ -61,6 +61,7 @@ public class KVClientConnection implements Runnable {
     public void run() {
         initializeServer();
         while (!this.stop) {
+
             // waits for connection
             if (this.serverSocket != null) {
                 Socket client = null;
@@ -78,6 +79,15 @@ public class KVClientConnection implements Runnable {
 						*/
                 } catch (IOException e) {
                     LOGGER.error("Error! " + "Unable to establish connection. \n");
+                }
+                if(serverNode.getServerStatus().getStatus() == ServerStatusType.CLOSE){
+                    try {
+                        serverSocket.close();
+                       // System.exit(0);
+                        break;
+                    }catch (IOException e){
+                        LOGGER.error("Error! " + "Unable to close connection. \n");
+                    }
                 }
             }
         }

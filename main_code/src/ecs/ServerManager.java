@@ -31,6 +31,7 @@ public class ServerManager {
     private LinkedHashMap<String,IECSNode> hashMap = new LinkedHashMap<String,IECSNode>(); // stores the active running nodes
     private LinkedList<ConfigEntity> entityList = new LinkedList<ConfigEntity>(); // stores provided nodes from Config file
     private ZookeeperECSManager zookeeperECSManager;
+    private boolean is_init;
 
     public ServerManager(){
         try {
@@ -127,7 +128,7 @@ public class ServerManager {
         LinkedList<IECSNode>list = new LinkedList<IECSNode>();
         try {
             if(hashMap.isEmpty()) { // init stage
-
+                this.is_init = true;
                 for (int i = 0; i < count; ++i) { // step 1: completely initialize metadata
                     ServerNode node = new ServerNode(entityList.removeFirst(), cacheSize, cacheStrategy);
                     list.add(node);
@@ -146,6 +147,7 @@ public class ServerManager {
                 }
             }
             else{
+                is_init = false;
                 for(int i = 0; i < count; ++i){
                     ServerNode node = new ServerNode(entityList.removeFirst(), cacheSize, cacheStrategy);
                     metadata.addServer(node.getNodeHostPort()); // add and set
@@ -186,12 +188,12 @@ public class ServerManager {
 
         ServerNode updatedNode = updateSuccessorNode(successorID, successorRange);
 
-        try {
-            zookeeperECSManager.moveDataSenderKVServer(updatedNode,range,node.getNodeHostPort()); // TODO: more arguments
-        }catch (KeeperException | InterruptedException e){
-            e.printStackTrace();
-            return null;
-        }
+//        try {
+//            zookeeperECSManager.moveDataSenderKVServer(updatedNode,range,node.getNodeHostPort()); // TODO: more arguments
+//        }catch (KeeperException | InterruptedException e){
+//            e.printStackTrace();
+//            return null;
+//        }
 
         return updatedNode;
     }
@@ -219,8 +221,22 @@ public class ServerManager {
             return false;
         }
         hashMap.put(id,n);
-        n.setRange(metadata.findHashRange(n.getNodeHostPort()));
-        zookeeperECSManager.addKVServer(n); // add new Znode
+        BigInteger[] newrange = metadata.findHashRange(n.getNodeHostPort());
+        n.setRange(newrange);
+        ServerNode successor = updateSuccessor(n);
+        try {
+            if(!is_init) {
+                zookeeperECSManager.addAndMoveDataKVServer(n, newrange, successor.getNodeHostPort());
+                Thread.sleep(1);
+                zookeeperECSManager.moveDataSenderKVServer(successor,newrange,n.getNodeHostPort());
+            }
+            else{
+                zookeeperECSManager.addKVServer(n); // add new Znode
+            }
+        }catch (KeeperException | InterruptedException e){
+            e.printStackTrace();
+            return false;
+        }
         return true;
     }
 
@@ -284,19 +300,28 @@ public class ServerManager {
         ConfigEntity entity = new ConfigEntity(node.getNodeHost(), node.getNodeHost(), node.getNodePort());
         entityList.add(entity);
         if (hashMap.containsKey(ServerIndex)){
+            BigInteger[] range = new BigInteger[2];
+            range = metadata.findHashRange(ServerIndex);
+
             metadata.removeServer(node.getNodeHost() + " : " + Integer.toString(node.getNodePort()));
             hashMap.remove(ServerIndex);
 
-            String serverNodeID = node.getNodeHost() + ":" + Integer.toString(node.getNodePort());
-            if(updateSuccessor((ServerNode) node) != null){
-                zookeeperECSManager.removeKVServer(ServerIndex);
-                return true;
-            }
-            else
+            ServerNode successor = updateSuccessor((ServerNode) node);
+            try {
+                zookeeperECSManager.moveDataReceiverKVServer(successor, range, ((ServerNode)node).getNodeHostPort());
+                Thread.sleep(1);
+                zookeeperECSManager.removeAndMoveDataKVServer((ServerNode)node,range,successor.getNodeHostPort());
+
+            }catch (KeeperException | InterruptedException e){
+                e.printStackTrace();
                 return false;
+            }
+            return true;
         }
-        return false;
+        else
+            return false;
     }
+
 
     /**
      * parse the ecs.config file to get a list of IPs

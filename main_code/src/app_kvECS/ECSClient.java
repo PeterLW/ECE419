@@ -101,7 +101,6 @@ public class ECSClient implements IECSClient {
 
     @Override
     public boolean awaitNodes(int count, int timeout) throws Exception {
-
         long endTimeMillis = System.currentTimeMillis() + timeout;
         while (true) {
             // method logic

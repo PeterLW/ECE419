@@ -186,6 +186,10 @@ public class ClientConnection implements Runnable {
                         HandleRequest(latestMsg);
 					}
 				}
+				else if(serverNode.getServerStatus().getStatus() == ServerStatusType.CLOSE){
+					clientSocket.close();
+					isOpen = false;
+				}
 				else{
                     //Do Nothing here for M2 ....
 				}
