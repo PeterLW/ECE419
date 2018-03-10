@@ -8,12 +8,13 @@ public class ServerStatus {
     private ServerStatusType status = null;
     private BigInteger[] moveRange = null;
     private String targetName = null;
-    private boolean isReady = false;
+    private boolean isReady = true;
 
     public ServerStatus(ZNodeMessageStatus transition, BigInteger[] moveRange, String targetName){
         this.moveRange = moveRange;
         this.targetName = targetName;
         this.transition = transition;
+        this.isReady = true;
     }
 
     public ServerStatus(ZNodeMessageStatus transition){this.transition = transition;}

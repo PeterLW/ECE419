@@ -10,7 +10,7 @@ public class UpcomingStatusQueue {
 
     //Peter: want to remove and return first element? Use removeFirst()
     public synchronized ServerStatus popQueue(){
-        return upcomingStatus.pop();
+        return upcomingStatus.removeFirst();
     }
 
     public synchronized void addQueue(ServerStatus statusNode){
