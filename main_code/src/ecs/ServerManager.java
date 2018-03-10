@@ -21,7 +21,7 @@ public class ServerManager {
     // TODO:
     // @Aaron, go on piazza, there's alot of questions about this, something about doing ssh without supplying a password. see if you can figure
     // this out, for when demoing on not our account (though I guess this is a lower priority item... )
-    private static final String PRIVATE_KEY_PATH = "/nfs/ug/homes-5/x/xushuran/Desktop/java_test_files/id_rsa";
+    private static final String PRIVATE_KEY_PATH = "/nfs/ug/homes-5/x/xushuran/ECE419/ssh_key_set/id_rsa";
     private static final String KNOWN_HOST_PATH = "~/.ssh/known_hosts";
 
     // hash values (start) -> serverNode
@@ -87,14 +87,22 @@ public class ServerManager {
         }
     }
 
-    public void remoteLaunchServer(int portNum){
+    public void remoteLaunchServer(int portNum, String serverName, String zookeeperHost, String zookeeperPort){
 
         JSch ssh = new JSch();
         String username;
         username = "xushuran";
         String host = "128.100.13.174";
-        //String command = "java -jar /nfs/ug/homes-5/x/xushuran/Desktop/java_test_files/HelloWorld.jar";
-        String command = "echo Yo";
+        String jarFilePath = "/nfs/ug/homes-5/x/xushuran/ECE419/m2.jar";
+        StringBuilder sb=new StringBuilder("java -jar ");
+        sb.append(jarFilePath);
+        sb.append(serverName);
+        sb.append(" ");
+        sb.append(zookeeperHost);
+        sb.append(" ");
+        sb.append(zookeeperPort);
+        String command = sb.toString();
+       // String command = "java -jar /nfs/ug/homes-5/x/xushuran/ECE419/m2.jar ";
         Session session;
 
         try{
