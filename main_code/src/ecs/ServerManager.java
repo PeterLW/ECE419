@@ -152,35 +152,36 @@ public class ServerManager {
                     node.setRange(metadata.findHashRange(node.getNodeHostPort()));
                     list.add(node);
 
-                    this.updateSuccessor(node);
+                    ServerNode targetNode = this.updateSuccessor(node);
                     zookeeperECSManager.updateMetadataZNode(metadata); // update metadata node
 
-//                    zookeeperECSManager.addAndMoveDataKVServer(node,);
+                    zookeeperECSManager.addAndMoveDataKVServer(node,node.getRange(),targetNode.getNodeHostPort());
                     this.remoteLaunchServer(list.get(i).getNodePort());
                 }
             }
         } catch (KeeperException | InterruptedException e) {
             LOGGER.error("Failed to update metadata");
             e.printStackTrace();
+            return null;
         }
         return list;
 
     }
 
-    private boolean updateSuccessor(ServerNode node){
+    private ServerNode updateSuccessor(ServerNode node){
         BigInteger[] range = metadata.findHashRange(node.getNodeHostPort());
         if(range == null) {
-            return false;
+            return null;
         }
 
         String successorID = metadata.getSuccessor(node.getNodeHostPort());
         if (successorID == null){
-            return false;
+            return null;
         }
 
         BigInteger[] successorRange = metadata.findHashRange(successorID);
         if (successorRange == null){
-            return false;
+            return null;
         }
 
         ServerNode updatedNode = updateSuccessorNode(successorID, successorRange);
@@ -189,10 +190,10 @@ public class ServerManager {
             zookeeperECSManager.moveDataSenderKVServer(updatedNode,range,node.getNodeHostPort()); // TODO: more arguments
         }catch (KeeperException | InterruptedException e){
             e.printStackTrace();
-            return false;
+            return null;
         }
 
-        return true;
+        return updatedNode;
     }
 
     private ServerNode updateSuccessorNode(String id, BigInteger[] newRange){ // renamed fct didn't change code
@@ -287,7 +288,7 @@ public class ServerManager {
             hashMap.remove(ServerIndex);
 
             String serverNodeID = node.getNodeHost() + ":" + Integer.toString(node.getNodePort());
-            if(updateSuccessor((ServerNode) node)){
+            if(updateSuccessor((ServerNode) node) != null){
                 zookeeperECSManager.removeKVServer(ServerIndex);
                 return true;
             }

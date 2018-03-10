@@ -70,7 +70,6 @@ public class KVServer implements IKVServer {
 			System.exit(-1);
 		}
 
-
 		try { // get serverNode
 			ZNodeMessage znodeMessage = zookeeperWatcher.getZnodeMessage();
 			serverNode = znodeMessage.serverNode;
@@ -95,7 +94,6 @@ public class KVServer implements IKVServer {
 
         KVServerDataMigration dataMigration = new KVServerDataMigration(serverNode, storage);
         dataMigration.run();
-
 	}
 
 	private CacheStrategy string_to_enum_cache_strategy(String str) {
