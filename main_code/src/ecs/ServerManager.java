@@ -153,8 +153,7 @@ public class ServerManager {
                     // now when I add zNode they have their range given a -full- hash ring.
                     this.addServer(node, cacheStrategy, cacheSize);
                     this.remoteLaunchServer(node.getNodePort(),node.getNodeHostPort(),ZOOKEEPER_HOST_NAME,Integer.toString(ZOOKEEPER_PORT));
-                    // TODO: ^ this should take ip & port because we are constructing this under assumption that
-                        // KVserver can be run on different computers.
+                    // TODO: ^ this should take ip & port because we are constructing this under assumption that KVserver can be run on different computers.
                 }
             }
             else{
@@ -165,10 +164,7 @@ public class ServerManager {
                     node.setRange(metadata.findHashRange(node.getNodeHostPort()));
                     list.add(node);
 
-                    //update the hashmap in ServerManager
-//                    ServerNode targetNode = this.updateSuccessor(node);
                     zookeeperECSManager.updateMetadataZNode(metadata); // update metadata node
-//                    zookeeperECSManager.addAndMoveDataKVServer(node,node.getRange(),targetNode.getNodeHostPort());
                     this.addServer(node, cacheStrategy, cacheSize);
                     this.remoteLaunchServer(node.getNodePort(),node.getNodeHostPort(),ZOOKEEPER_HOST_NAME,Integer.toString(ZOOKEEPER_PORT));
                 }
@@ -201,14 +197,6 @@ public class ServerManager {
         }
 
         ServerNode updatedNode = updateSuccessorNode(successorID, successorRange);
-
-//        try {
-//            zookeeperECSManager.moveDataSenderKVServer(updatedNode,range,node.getNodeHostPort()); // TODO: more arguments
-//        }catch (KeeperException | InterruptedException e){
-//            e.printStackTrace();
-//            return null;
-//        }
-
         return updatedNode;
 
     }

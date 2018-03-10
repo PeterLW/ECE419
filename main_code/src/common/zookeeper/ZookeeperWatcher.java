@@ -71,14 +71,14 @@ public class ZookeeperWatcher extends ZookeeperMetaData implements Runnable {
                 System.out.println("Data has changed");
                 System.out.println(new String(data));
 
-                ss = new ServerStatus(newMessage.zNodeMessageStatus,newMessage.getMoveDataRange(),newMessage.getTargetName());
+                ss = new ServerStatus(newMessage.zNodeMessageStatus,newMessage.getMoveDataRange(),newMessage.getTargetName(),serverNode.getRange());
                 upcomingStatusQueue.addQueue(ss);
                 break;
             case REMOVE_ZNODE_SEND_DATA:
                 System.out.println("Data has changed");
                 System.out.println(new String(data));
 
-                ss = new ServerStatus(newMessage.zNodeMessageStatus,newMessage.getMoveDataRange(),newMessage.getTargetName());
+                ss = new ServerStatus(newMessage.zNodeMessageStatus,newMessage.getMoveDataRange(),newMessage.getTargetName(),null);
                 upcomingStatusQueue.addQueue(ss);
 
                 this.handleDelete();
