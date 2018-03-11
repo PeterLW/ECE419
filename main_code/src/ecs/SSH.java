@@ -25,8 +25,8 @@ public class SSH implements Runnable {
 	private String zookeeperHost;
 	private String zookeeperPort;
 
-    private static final String USER = "xushuran"; // so you only need to change this to run on another person's computer
-    private static final String PRIVATE_KEY_PATH = "/nfs/ug/homes-5/x/"+USER+"/ECE419/ssh_key_set/id_rsa";
+    private static final String USER = "fucathy1"; // so you only need to change this to run on another person's computer
+    private static final String PRIVATE_KEY_PATH = "/nfs/ug/homes-5/x/"+USER+"/m2files/code/main_code/";
     private static final String KNOWN_HOST_PATH = "~/.ssh/known_hosts";
     private static final int TIMEOUT = 5000;
 
