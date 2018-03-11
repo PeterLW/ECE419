@@ -21,11 +21,12 @@ import java.security.MessageDigest;
 public class KVClientConnection implements Runnable {
     //log info
     private static final Logger LOGGER = Logger.getLogger(app_kvServer.KVClientConnection.class);
+    private static int numConnectedClients = 0;
+
     //connection info
     private ServerSocket serverSocket;
     private boolean stop = false;
-    private static int numConnectedClients = 0;
-    //cache info - stored in ServerNode now
+
     private static StorageManager storage;
     /* This needs to be passed into ClientConnections & ZookeeperWatcher thread */
     private static ServerNode serverNode;
@@ -52,31 +53,29 @@ public class KVClientConnection implements Runnable {
         this.metadata = new Metadata();
     }
 /* The following setter and getter are used for debugging purpose */
-
     public Metadata getMetadata(){
         return metadata;
     }
 
-
     public void run() {
         initializeServer();
         while (!this.stop) {
-
             // waits for connection
             if (this.serverSocket != null) {
                 Socket client = null;
                 try {
                     client = serverSocket.accept(); // blocking call
                     numConnectedClients++;
+                    client.setSoTimeout(sessionTimeout);
                     ClientConnection connection = new ClientConnection(client, serverNode, storage, numConnectedClients, zookeeperHost, sessionTimeout);
                    // LOGGER.info("Connected to " + client.getInetAddress().getHostName() + " on port " + client.getPort());
                     System.out.println("Connected to " + client.getInetAddress().getHostName() + " on port " + client.getPort());
                     new Thread(connection).start();
 
                 } catch (SocketTimeoutException e) {
-						/* don't really need to do anything, the timeout is so that periodically,
-						 KVServer will check to see if the ServerStatus changed
-						*/
+                    if (serverNode.getServerStatus().getStatus() == ServerStatusType.CLOSE){
+                        close();
+                    }
                 } catch (IOException e) {
                     LOGGER.error("Error! " + "Unable to establish connection. \n");
                 }
@@ -124,6 +123,7 @@ public class KVClientConnection implements Runnable {
         // TODO Auto-generated method stub
         try {
             serverSocket.close();
+            this.stop = true;
         } catch (IOException e) {
             LOGGER.error("Error! " + "Unable to close socket on port: " + serverNode.getNodePort(), e);
         }

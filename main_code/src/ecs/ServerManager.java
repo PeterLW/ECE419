@@ -14,7 +14,8 @@ import com.jcraft.jsch.*;
 
 public class ServerManager {
     private static final Logger LOGGER = Logger.getLogger(ServerManager.class);
-    private static final String RELATIVE_CONFIG_FILE_PATH = "/src/app_kvECS/ecs.config"; // SHOULD BE an argument passed in at start-up
+
+    private static final String RELATIVE_CONFIG_FILE_PATH = "\\main_code\\src\\app_kvECS\\ecs.config"; // SHOULD BE an argument passed in at start-up
     private static final int TIMEOUT = 5000;
     private static Metadata metadata = new Metadata();
 
@@ -29,11 +30,6 @@ public class ServerManager {
     private static final String PRIVATE_KEY_PATH = "/nfs/ug/homes-5/x/xushuran/ECE419/ssh_key_set/id_rsa";
     private static final String KNOWN_HOST_PATH = "~/.ssh/known_hosts";
 
-
-    // hash values (start) -> serverNode
-    // private TreeMap<String,ServerNode> tree = new TreeMap<String,ServerNode>();
-    // name: (serverName ip) -> serverNode
-    // linked hash map has better performance when iterating, key: ip:port, value: ServerNode
     private LinkedHashMap<String,IECSNode> hashMap = new LinkedHashMap<String,IECSNode>(); // stores the active running nodes
     private LinkedList<ConfigEntity> entityList = new LinkedList<ConfigEntity>(); // stores provided nodes from Config file
     private ZookeeperECSManager zookeeperECSManager;
@@ -44,7 +40,7 @@ public class ServerManager {
             zookeeperECSManager = new ZookeeperECSManager(ZOOKEEPER_HOST_PORT,10000); // session timeout ms
             System.out.println("Working Directory = " + System.getProperty("user.dir"));
             // start parseConfigFile with path to file
-            String filePath = System.getProperty("user.dir") + RELATIVE_CONFIG_FILE_PATH;
+            String filePath =new File(".").getCanonicalPath()+RELATIVE_CONFIG_FILE_PATH;
             parseConfigFile(filePath);
         } catch (Exception e) {
             LOGGER.error("Failed to connect to zookeeper. Check that zookeeper server has started and is running on " + ZOOKEEPER_PORT );
@@ -56,10 +52,9 @@ public class ServerManager {
         return hashMap;
     }
 
-    public int getNumOfServerConnected(){
-        //TODO: need to finish the accept( ) first.
-        return 0;
-    }
+//    public int getNumOfServerConnected(){
+//        return 0;
+//    }
     private static void readChannelOutput(Channel channel){
 
         byte[] buffer = new byte[1024];
@@ -309,28 +304,39 @@ public class ServerManager {
         return true;
     }
 
+    public void close(){
+        this.shutdown();
+        try {
+            zookeeperECSManager.close();
+        } catch (InterruptedException e) {
+            LOGGER.error("Zookeeper connection shutdown failed");
+        }
+    }
+
     //ServerIndex: ip:port
     public boolean removeNode(String ServerIndex)throws KeeperException, InterruptedException{
-
         if (hashMap.containsKey(ServerIndex)){
-            IECSNode node = hashMap.get(ServerIndex);
+            ServerNode node = (ServerNode) hashMap.get(ServerIndex);
             //if remove node, add the node back to entity list for next launch
             ConfigEntity entity = new ConfigEntity(node.getNodeHost(), node.getNodeHost(), node.getNodePort());
             entityList.add(entity);
 
             BigInteger[] range = metadata.findHashRange(ServerIndex);
-            ServerNode successor = updateSuccessor((ServerNode) node);
+            ServerNode successor = updateSuccessor(node);
 
-            metadata.removeServer(((ServerNode) node).getNodeHostPort());
+            metadata.removeServer((node).getNodeHostPort());
             hashMap.remove(ServerIndex);
 
             try {
-                zookeeperECSManager.moveDataReceiverKVServer(successor, range, ((ServerNode)node).getNodeHostPort());
-                Thread.sleep(1);
-                zookeeperECSManager.removeAndMoveDataKVServer((ServerNode)node,range,successor.getNodeHostPort());
+                if (!hashMap.isEmpty()) {
+                    zookeeperECSManager.moveDataReceiverKVServer(successor, range, node.getNodeHostPort());
+                    Thread.sleep(1);
+                    zookeeperECSManager.removeAndMoveDataKVServer(node, range, successor.getNodeHostPort());
+                } else {
+                    zookeeperECSManager.shutdownKVServer(node);
+                }
             }catch (KeeperException | InterruptedException e){
                 e.printStackTrace();
-
                 return false;
             }
             return true;

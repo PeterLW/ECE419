@@ -13,6 +13,7 @@ import ecs.ServerNode;
 import org.apache.log4j.*;
 import common.transmission.Transmission;
 import java.lang.String;
+import java.net.SocketTimeoutException;
 import java.security.MessageDigest;
 import java.util.HashSet;
 import common.zookeeper.ZookeeperMetaData;
@@ -26,28 +27,28 @@ import org.apache.zookeeper.KeeperException;
  * is received it is going to be echoed back to the client.
  */
 public class ClientConnection implements Runnable {
-
 	private static final Logger LOGGER = Logger.getLogger(ClientConnection.class);
 	private final Gson gson = new Gson();
-	private boolean isOpen;
+	private Transmission transmission = new Transmission();
+	private boolean isOpen = true;
+
 	private StorageManager storageManager;
 	private Socket clientSocket;
-	private Transmission transmission;
 	private int clientId;
 	private HashSet<Integer> seqIdValues = new HashSet<Integer>();
 	private ZookeeperMetaData zookeeperMetaData;
 	private ServerNode serverNode;
 
 	/**
-	 * Constructs a new CientConnection object for a given TCP socket.
-	 *
+	 * Constructs a new ClientConnection object for a given TCP socket.
 	 * @param clientSocket the Socket object for the client connection.
 	 */
 	public ClientConnection(Socket clientSocket, ServerNode node ,StorageManager caching, int clientId, String zookeeperHost, int sessionTimeout) {
 		this.clientSocket = clientSocket;
 		this.clientId = clientId;
-		this.isOpen = true;
-		this.transmission = new Transmission();
+		// initialized when declared above
+//		this.isOpen = true;
+//		this.transmission = new Transmission();
 		this.storageManager = caching;
 
 		try {
@@ -179,14 +180,15 @@ public class ClientConnection implements Runnable {
 						HandleRequest(latestMsg);
 					}
 				} else if (serverNode.getServerStatus().getStatus() == ServerStatusType.CLOSE) {
-					clientSocket.close();
-					isOpen = false;
+					close();
 				}
 				Thread.sleep(1);
 				/* connection either terminated by the client or lost due to
 				 * network problems*/
 			}
-			catch (IOException ioe) {
+			catch(SocketTimeoutException e){
+				close();
+			} catch (IOException ioe) {
 				LOGGER.error("Error! Connection lost with client " + this.clientId);
 				ioe.printStackTrace();
 				try {
@@ -202,6 +204,15 @@ public class ClientConnection implements Runnable {
 			}
 
 		}
+	}
+
+	private void close(){
+		try {
+			clientSocket.close();
+		} catch (IOException e) {
+			LOGGER.error("Cannot close socket in Client Connection ");
+		}
+		isOpen = false;
 	}
 
 	private void processMessage(Message msg) {
