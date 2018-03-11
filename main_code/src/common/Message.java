@@ -1,4 +1,4 @@
-package common.messages;
+package common;
 
 import com.google.gson.Gson;
 import common.metadata.Metadata;
