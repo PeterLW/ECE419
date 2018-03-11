@@ -1,12 +1,7 @@
-package common.messages;
+package common;
 
 import com.google.gson.Gson;
-import common.metadata.Metadata;
 import lombok.Setter;
-
-import java.math.BigInteger;
-import java.util.HashMap;
-import java.util.HashSet;
 
 public class Message implements KVMessage {
 

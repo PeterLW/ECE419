@@ -4,20 +4,17 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.math.BigInteger;
 import java.net.Socket;
-import java.net.SocketException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 import com.google.gson.Gson;
-import com.jcraft.jsch.IO;
-import common.messages.Message;
+import common.Message;
+import common.KVMessage.StatusType;
 import common.metadata.Metadata;
-import logger.LogSetup;
-import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import common.transmission.Transmission;
-import common.messages.KVMessage.StatusType;
+
 
 
 public class KVStore implements KVCommInterface {

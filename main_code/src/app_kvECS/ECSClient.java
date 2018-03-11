@@ -35,6 +35,10 @@ public class ECSClient implements IECSClient {
         }
     }
 
+    public ECSClient(String zkName, String zkPort){ // for autotester
+        serverManager.setZkParams(zkName,zkPort);
+    }
+
     public ECSClient(){}
 
     @Override
@@ -101,16 +105,6 @@ public class ECSClient implements IECSClient {
 
     @Override
     public boolean awaitNodes(int count, int timeout) throws Exception {
-//        long endTimeMillis = System.currentTimeMillis() + timeout;
-//        while (true) {
-//            // method logic
-//            if (serverManager.getNumOfServerConnected() >= count)
-//                break;
-//            if (System.currentTimeMillis() > endTimeMillis) {
-//                // do some clean-up
-//                return false;
-//            }
-//        }
         return true;
     }
 

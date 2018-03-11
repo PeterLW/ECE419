@@ -18,9 +18,9 @@ public class ServerManager {
     private static Metadata metadata = new Metadata();
 
     /* It was stated we can assume zookeeper running on same machine, default port*/
-    private static final String ZOOKEEPER_HOST_NAME = "localhost";
-    private static final String ZOOKEEPER_PORT = "2191";
-    private static final String ZOOKEEPER_HOST_PORT = ZOOKEEPER_HOST_NAME + ":" + ZOOKEEPER_PORT;
+    private static String ZOOKEEPER_HOST_NAME = "localhost";
+    private static String ZOOKEEPER_PORT = "2191";
+    private static String ZOOKEEPER_HOST_PORT = ZOOKEEPER_HOST_NAME + ":" + ZOOKEEPER_PORT;
    
     private LinkedHashMap<String,IECSNode> hashMap = new LinkedHashMap<String,IECSNode>(); // stores the active running nodes
     private LinkedList<ConfigEntity> entityList = new LinkedList<ConfigEntity>(); // stores provided nodes from Config file
@@ -38,6 +38,11 @@ public class ServerManager {
             LOGGER.error("Failed to connect to zookeeper. Check that zookeeper server has started and is running on " + ZOOKEEPER_PORT );
             throw new RuntimeException("Failed to connect to zookeeper. Check that zookeeper server has started and is running on localhost:2181", e);
         }
+    }
+
+    public void setZkParams(String host, String port){ // for autotester
+        ZOOKEEPER_PORT = port;
+        ZOOKEEPER_HOST_NAME = host;
     }
 
     public HashMap<String,IECSNode> getServerMap(){

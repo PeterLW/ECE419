@@ -38,9 +38,12 @@ public class LogSetup {
 	private void initialize(Level level) throws IOException {
 		PatternLayout layout = new PatternLayout( "%d{ISO8601} %-5p [%t] %c: %m%n" );
 		FileAppender fileAppender = new FileAppender( layout, logdir, true );
-	    
-	    ConsoleAppender consoleAppender = new ConsoleAppender(layout);
-		logger.addAppender(consoleAppender);
+
+		// There's too much output to console, should check log files in future for output..
+		// can't decipher anything on stout cuz there's too much ><
+		// & the ECSClient needs that for typing commands lol.
+//	    ConsoleAppender consoleAppender = new ConsoleAppender(layout);
+//		logger.addAppender(consoleAppender);
 		logger.addAppender(fileAppender);
 		logger.setLevel(level);
 		logger.setAdditivity(false);

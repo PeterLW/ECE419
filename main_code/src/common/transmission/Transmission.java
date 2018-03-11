@@ -5,7 +5,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 
-import common.messages.Message;
+//import common.messages.Message;
+import common.Message;
 import org.apache.log4j.Logger;
 
 public class Transmission {

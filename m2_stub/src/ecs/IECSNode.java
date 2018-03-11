@@ -5,7 +5,7 @@ public interface IECSNode {
     /**
      * @return  the name of the node (ie "Server 8.8.8.8")
      */
-    public String getNodeName();
+    public String getNodeHostPort();
 
     /**
      * @return  the hostname of the node (ie "8.8.8.8")
