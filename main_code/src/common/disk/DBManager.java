@@ -62,7 +62,7 @@ public class DBManager {
         if (rootDirectory.exists()) {
             return true;
         } else {
-            rootDirectory.mkdir();
+            rootDirectory.mkdirs();
             return true;
         }
     }
