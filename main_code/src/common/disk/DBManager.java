@@ -12,22 +12,27 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.sql.SQLOutput;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.StringJoiner;
-import org.apache.log4j.Logger;
 
 public class DBManager {
     /* writes Files in
      * UTF-8 encoding
      */
-    private static Logger LOGGER = Logger.getLogger(DBManager.class);
-    private final static String ROOT_PATH =  "DBRoot";
+    private static final Logger LOGGER = Logger.getLogger(DBManager.class);
+    private static String ROOT_PATH = "DEFAULTDB/DBRoot";
+
+    public DBManager(String prefix){
+        ROOT_PATH = prefix + "/DBRoot";
+        initializeDB();
+        System.out.println("Database located at " + ROOT_PATH);
+    }
 
     public DBManager(){
         initializeDB();
+        System.out.println("Database located at " + ROOT_PATH);
     }
 
     public synchronized boolean clearStorage() {

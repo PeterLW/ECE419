@@ -95,7 +95,7 @@ public class KVServer implements IKVServer {
 			LOGGER.error("Failed to get data from zNode ",e);
 			System.exit(-1);
 		}
-		storage = new StorageManager(serverNode.getCacheSize(), serverNode.getCacheStrategy());
+		storage = new StorageManager(serverNode.getCacheSize(), serverNode.getCacheStrategy(), serverNode.getNodeHostPort());
 
 		KVClientConnection kvClientConnection = new KVClientConnection(storage,serverNode,zookeeperHost,10000);
 		Thread kvConnThread = new Thread(kvClientConnection);

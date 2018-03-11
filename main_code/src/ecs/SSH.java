@@ -25,6 +25,8 @@ public class SSH implements Runnable {
 	private String zookeeperHost;
 	private String zookeeperPort;
 
+	private static int serverIndex = 0;
+
     private static final String USER = "fucathy1"; // so you only need to change this to run on another person's computer
     private static final String PRIVATE_KEY_PATH = "~/.ssh/id_rsa";
     private static final String KNOWN_HOST_PATH = "~/.ssh/known_hosts";
@@ -77,12 +79,12 @@ public class SSH implements Runnable {
     }
 
     public void remoteLaunchServer(String serverIpPort, String zookeeperHost, String zookeeperPort){
-
+        serverIndex++;
         JSch ssh = new JSch();
         String username;
         username = USER;
         String host = "localhost";
-        String jarFilePath = "~/m2files/m2files/main_code/m2-server.jar";
+        String jarFilePath = "~/m2files/m2files/main_code/" + serverIndex + "/m2-server.jar";
         StringBuilder sb=new StringBuilder("java -jar ");
         sb.append(jarFilePath);
         sb.append(" -name ");
