@@ -23,6 +23,9 @@ public class ServerManager {
     // this out, for when demoing on not our account (though I guess this is a lower priority item... )
     private static final String PRIVATE_KEY_PATH = "/nfs/ug/homes-5/x/xushuran/ECE419/ssh_key_set/id_rsa";
     private static final String KNOWN_HOST_PATH = "~/.ssh/known_hosts";
+    private static final String ZOOKEEPER_HOST = "100.64.3.143";
+    private static final String ZOOKEEPER_PORT = "2181";
+
 
     // hash values (start) -> serverNode
     // private TreeMap<String,ServerNode> tree = new TreeMap<String,ServerNode>();
@@ -148,7 +151,7 @@ public class ServerManager {
 
                     // now when I add zNode they have their range given a -full- hash ring.
                     this.addServer(node, cacheStrategy, cacheSize);
-                    this.remoteLaunchServer(list.get(i).getNodePort());
+                    this.remoteLaunchServer(list.get(i).getNodePort(), node.getNodeName(), ZOOKEEPER_HOST, ZOOKEEPER_PORT);
                     // TODO: ^ this should take ip & port because we are constructing this under assumption that
                         // KVserver can be run on different computers.
                 }
@@ -166,7 +169,7 @@ public class ServerManager {
                     zookeeperECSManager.updateMetadataZNode(metadata); // update metadata node
 //                    zookeeperECSManager.addAndMoveDataKVServer(node,node.getRange(),targetNode.getNodeHostPort());
                     this.addServer(node, cacheStrategy, cacheSize);
-                    this.remoteLaunchServer(list.get(i).getNodePort());
+                    this.remoteLaunchServer(list.get(i).getNodePort(), node.getNodeName(), ZOOKEEPER_HOST, ZOOKEEPER_PORT);
                 }
             }
         } catch (KeeperException | InterruptedException e) {
