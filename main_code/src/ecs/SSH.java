@@ -82,7 +82,7 @@ public class SSH implements Runnable {
         String username;
         username = USER;
         String host = "localhost";
-        String jarFilePath = "~/m2files/main_code/m2-server.jar";
+        String jarFilePath = "~/m2files/code/main_code/m2-server.jar";
         StringBuilder sb=new StringBuilder("java -jar ");
         sb.append(jarFilePath);
         sb.append(" -name ");
@@ -101,7 +101,7 @@ public class SSH implements Runnable {
             ssh.addIdentity(PRIVATE_KEY_PATH);
             session.setConfig("StrictHostKeyChecking", "no");
             session.connect(TIMEOUT);
-            System.out.println("Connected to " + username + "@" + host + ": 22");
+            System.out.println("Connected to " + username + "@" + host + ":22");
 
 
             Channel channel = session.openChannel("exec");
