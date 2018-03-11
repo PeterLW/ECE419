@@ -29,10 +29,12 @@ public class ServerNode implements IECSNode {
         this.cacheStrategy = cacheStrategy;
     }
 
-    public ServerNode(String name, String ip, int port){
+    public ServerNode(String name, String ip, int port, int cacheSize, String cacheStrategy){
         this.name = name;
         this.host = ip;
         this.port = port;
+        this.cacheSize = cacheSize;
+        this.cacheStrategy = cacheStrategy;
     }
 
     public BigInteger[] getRange(){

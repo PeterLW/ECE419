@@ -8,7 +8,7 @@ import junit.framework.TestCase;
 
 
 public class ConnectionTest extends TestCase {
-
+// need to start KVServer localhost: 50000
 	
 	public void testConnectionSuccess() {
 		

@@ -42,7 +42,6 @@ public class LFU implements CacheStructure{
         vals.put(key, value);
         this.updateStructures(key);
 
-
         return true;
     }
 

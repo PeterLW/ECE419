@@ -131,28 +131,6 @@ public class KVClientConnection implements Runnable {
         stop = true;
     }
 
-    public static void main(String[] args){
-        //TODO read from cmdline the arguments needed to start KVServer
-        StorageManager storageManager = new StorageManager(1000, "FIFO");
-        String zookeeperHost = "localhost";
-        int sessionTimeout=5000;
-
-        ServerNode node = new ServerNode("test_server", "0.0.0.0", 50000);
-        node.setServerStatus(new ServerStatus(ServerStatusType.RUNNING));
-        BigInteger[] range = new BigInteger[2];
-        try {
-            range[0] = getMD5("a");
-            range[1] = getMD5("d");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        node.setRange(range);
-
-        KVClientConnection kc = new KVClientConnection(storageManager,  node, zookeeperHost,  sessionTimeout);
-
-       // kc.getMetadata().addServer(hostname);
-        kc.run();
-    }
 
     private static BigInteger getMD5(String input) throws Exception{
         MessageDigest md=MessageDigest.getInstance("MD5");
@@ -160,5 +138,29 @@ public class KVClientConnection implements Runnable {
         String hash_temp = new BigInteger(1,md.digest()).toString(16);
         BigInteger hash = new BigInteger(hash_temp, 16);
         return hash;
+    }
+
+
+    public static void main(String[] args){
+//        //TODO read from cmdline the arguments needed to start KVServer
+//        StorageManager storageManager = new StorageManager(1000, "FIFO");
+//        String zookeeperHost = "localhost";
+//        int sessionTimeout=5000;
+//
+//        ServerNode node = new ServerNode("test_server", "0.0.0.0", 50000);
+//        node.setServerStatus(new ServerStatus(ServerStatusType.RUNNING));
+//        BigInteger[] range = new BigInteger[2];
+//        try {
+//            range[0] = getMD5("a");
+//            range[1] = getMD5("d");
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//        node.setRange(range);
+//
+//        KVClientConnection kc = new KVClientConnection(storageManager,  node, zookeeperHost,  sessionTimeout);
+//
+//        // kc.getMetadata().addServer(hostname);
+//        kc.run();
     }
 }
