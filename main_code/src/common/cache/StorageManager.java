@@ -1,5 +1,6 @@
 package common.cache;
 
+import ecs.ServerNode;
 import org.apache.log4j.Logger;
 import common.disk.DBManager;
 
@@ -12,11 +13,14 @@ public class StorageManager {
     private static int cache_size;
     private static String strategy;
     private static CacheStructure cacheStructure = null;
-    private static DBManager dbManager = new DBManager();
+    private static String uniqueServerID;
+    private static DBManager dbManager;
 
-    public StorageManager(int size, String cache_strategy) {
+    public StorageManager(int size, String cache_strategy, String uniqueServerID) {
         cache_size = size;
         strategy = cache_strategy;
+        this.uniqueServerID = uniqueServerID;
+        this.dbManager = new DBManager(uniqueServerID);
 
         if(cache_strategy.toUpperCase().equals("FIFO")) {
             cacheStructure = new FIFO(size);

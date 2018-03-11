@@ -5,9 +5,6 @@ import common.KVMessage;
 import common.Message;
 import common.cache.StorageManager;
 import common.disk.DBManager;
-//import common.messages.KVMessage;
-//import common.messages.Message;
-//import org.junit.Test;
 
 import junit.framework.TestCase;
 
@@ -15,7 +12,8 @@ import java.io.File;
 import java.nio.file.Paths;
 
 public class AdditionalTest extends TestCase {
-	
+	private static final String DEFAULT = "DEFAULTDB";
+
 	// TODO add your test cases, at least 3
 
 	//@Test
@@ -37,7 +35,7 @@ public class AdditionalTest extends TestCase {
 		/* FIFO implementation
 		 * ensures correct keys are in cache
 		 */
-		StorageManager sm = new StorageManager(5,"FIFO");
+		StorageManager sm = new StorageManager(5,"FIFO", DEFAULT);
 		sm.clearAll();
 
 		for (int i = 0; i < 10; i ++) {
@@ -56,7 +54,7 @@ public class AdditionalTest extends TestCase {
 		/* LRU implementation
 		 * ensures correct keys are in cache
 		 */
-		StorageManager sm = new StorageManager(5,"LRU");
+		StorageManager sm = new StorageManager(5,"LRU", DEFAULT);
 		sm.clearAll();
 
 		for (int i = 0; i < 10; i ++) {
@@ -80,7 +78,7 @@ public class AdditionalTest extends TestCase {
 		/* LFU implementation
 		 * ensures correct keys are in cache
 		 */
-		StorageManager sm = new StorageManager(5,"LFU");
+		StorageManager sm = new StorageManager(5,"LFU", DEFAULT);
 		sm.clearAll();
 
 		for (int i = 0; i < 10; i ++) {
@@ -123,7 +121,7 @@ public class AdditionalTest extends TestCase {
 		/*
 		 * ensures KVs are properly written to database through cache structure
 		 */
-		StorageManager sm = new StorageManager(5,"LFU");
+		StorageManager sm = new StorageManager(5,"LFU", DEFAULT);
 		sm.clearAll();
 
 		sm.putKV("a2","b");
@@ -140,7 +138,7 @@ public class AdditionalTest extends TestCase {
 		/*
 		 * Ensures that cache inserts into free slots after free slots created after deleteKV
 		 */
-		final StorageManager sm = new StorageManager(5,"LRU");
+		final StorageManager sm = new StorageManager(5,"LRU", DEFAULT);
 		sm.clearAll();
 
 		for (int i = 0; i < 8; i ++) {
@@ -180,7 +178,7 @@ public class AdditionalTest extends TestCase {
 		/* tests to ensure that KV are deleted
 		 * from database and cache
 		 */
-		StorageManager sm = new StorageManager(5,"LRU");
+		StorageManager sm = new StorageManager(5,"LRU", DEFAULT);
 		sm.clearAll();
 
 		sm.putKV("a1","b");

@@ -24,7 +24,15 @@ public class DBManager {
      * UTF-8 encoding
      */
     private static Logger LOGGER = Logger.getLogger(DBManager.class);
-    private final static String ROOT_PATH =  System.getProperty("user.dir") + "/DBRoot";
+    private static final String DEFAULT = "DEFAULTDB";
+    private static String PREFIX = DEFAULT;
+    private final static String ROOT_PATH = PREFIX + "/DBRoot";
+
+    public DBManager(String prefix){
+        this.PREFIX = prefix;
+        initializeDB();
+        System.out.println("Database located at" + ROOT_PATH);
+    }
 
     public DBManager(){
         initializeDB();

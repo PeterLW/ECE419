@@ -7,10 +7,12 @@ import junit.framework.TestCase;
 //import org.junit.Before;
 //import org.junit.Test;
 
+import javax.print.DocFlavor;
 import java.util.ArrayList;
 
 public class CacheTest extends TestCase{
     /* Unit tests for cache*/
+    private static final String DEFAULT = "DEFAULTDB";
 
     ArrayList<String> cacheStrategy = new ArrayList<String>(){{
         add("FIFO");
@@ -21,7 +23,7 @@ public class CacheTest extends TestCase{
     //@Test
     public void testInsert(){
         for (String strategy: cacheStrategy) {
-           StorageManager sm = new StorageManager(10, strategy);
+           StorageManager sm = new StorageManager(10, strategy,DEFAULT);
            sm.clearAll();
 
            for (int i = 0; i < 10; i++) {
@@ -42,7 +44,7 @@ public class CacheTest extends TestCase{
     public void testUpdate(){
         for (String strategy: cacheStrategy) {
             System.out.println(strategy);
-            StorageManager rm = new StorageManager(10, strategy);
+            StorageManager rm = new StorageManager(10, strategy,DEFAULT);
             rm.clearAll();
 
             for (int i = 0; i < 10; i++) {
@@ -69,7 +71,7 @@ public class CacheTest extends TestCase{
     //@Test
     public void testDelete(){
         for (String strategy: cacheStrategy) {
-            StorageManager sm = new StorageManager(10, strategy);
+            StorageManager sm = new StorageManager(10, strategy,DEFAULT);
             sm.clearAll();
 
             for (int i = 0; i < 10; i++) {
@@ -101,7 +103,7 @@ public class CacheTest extends TestCase{
     //@Test
     public void testGet(){
         for (String strategy: cacheStrategy) {
-            StorageManager sm = new StorageManager(10, strategy);
+            StorageManager sm = new StorageManager(10, strategy,DEFAULT);
             sm.clearAll();
 
             for (int i = 0; i < 10; i++) {
