@@ -59,7 +59,7 @@ public class ServerNode implements IECSNode {
      */
     @Override
     public String getNodeName() {
-        return (name + "_" + host + "_" + Integer.toString(port));
+        return name; // instructor endorsed a post on piazza that this just returns the server name
     }
 
     public String getNodeHostPort(){
