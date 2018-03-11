@@ -20,16 +20,14 @@ public class ServerManager {
 
     /* It was stated we can assume zookeeper running on same machine, default port*/
     private static final String ZOOKEEPER_HOST_NAME = "localhost";
-    private static final int ZOOKEEPER_PORT = 2191;
-    private static final String ZOOKEEPER_HOST_PORT = ZOOKEEPER_HOST_NAME + ":" + Integer.toString(ZOOKEEPER_PORT);
+    private static final String ZOOKEEPER_PORT = "2181";
+    //private static final String ZOOKEEPER_HOST_PORT = ZOOKEEPER_HOST_NAME + ":" + Integer.toString(ZOOKEEPER_PORT);
 
     // TODO: Passwordless ssh
     // @Aaron, go on piazza, there's alot of questions about this, something about doing ssh without supplying a password. see if you can figure
     // this out, for when demoing on not our account (though I guess this is a lower priority item... )
     private static final String PRIVATE_KEY_PATH = "/nfs/ug/homes-5/x/xushuran/ECE419/ssh_key_set/id_rsa";
     private static final String KNOWN_HOST_PATH = "~/.ssh/known_hosts";
-    private static final String ZOOKEEPER_HOST = "100.64.3.143";
-    private static final String ZOOKEEPER_PORT = "2181";
 
 
     // hash values (start) -> serverNode
@@ -43,13 +41,13 @@ public class ServerManager {
 
     public ServerManager(){
         try {
-            zookeeperECSManager = new ZookeeperECSManager(ZOOKEEPER_HOST_PORT,10000); // session timeout ms
+            zookeeperECSManager = new ZookeeperECSManager(ZOOKEEPER_PORT,10000); // session timeout ms
             System.out.println("Working Directory = " + System.getProperty("user.dir"));
             // start parseConfigFile with path to file
             String filePath = System.getProperty("user.dir") + RELATIVE_CONFIG_FILE_PATH;
             parseConfigFile(filePath);
         } catch (Exception e) {
-            LOGGER.error("Failed to connect to zookeeper. Check that zookeeper server has started and is running on " + ZOOKEEPER_HOST_PORT );
+            LOGGER.error("Failed to connect to zookeeper. Check that zookeeper server has started and is running on " + ZOOKEEPER_PORT );
             throw new RuntimeException("Failed to connect to zookeeper. Check that zookeeper server has started and is running on localhost:2181", e);
         }
     }
@@ -156,14 +154,9 @@ public class ServerManager {
 
                     // now when I add zNode they have their range given a -full- hash ring.
                     this.addServer(node, cacheStrategy, cacheSize);
-<<<<<<< HEAD
-                    this.remoteLaunchServer(list.get(i).getNodePort(), node.getNodeName(), ZOOKEEPER_HOST, ZOOKEEPER_PORT);
-                    // TODO: ^ this should take ip & port because we are constructing this under assumption that
-                        // KVserver can be run on different computers.
-=======
-                    this.remoteLaunchServer(node.getNodePort(),node.getNodeHostPort(),ZOOKEEPER_HOST_NAME,Integer.toString(ZOOKEEPER_PORT));
+
+                    this.remoteLaunchServer(node.getNodePort(),node.getNodeHostPort(),ZOOKEEPER_HOST_NAME,ZOOKEEPER_PORT);
                     // TODO: ^ this should take ip & port because we are constructing this under assumption that KVserver can be run on different computers.
->>>>>>> 01675903088309c16cb602e2f0ed1dade9546b4c
                 }
             }
             else{
@@ -176,11 +169,7 @@ public class ServerManager {
 
                     zookeeperECSManager.updateMetadataZNode(metadata); // update metadata node
                     this.addServer(node, cacheStrategy, cacheSize);
-<<<<<<< HEAD
-                    this.remoteLaunchServer(list.get(i).getNodePort(), node.getNodeName(), ZOOKEEPER_HOST, ZOOKEEPER_PORT);
-=======
-                    this.remoteLaunchServer(node.getNodePort(),node.getNodeHostPort(),ZOOKEEPER_HOST_NAME,Integer.toString(ZOOKEEPER_PORT));
->>>>>>> 01675903088309c16cb602e2f0ed1dade9546b4c
+                    this.remoteLaunchServer(node.getNodePort(),node.getNodeHostPort(),ZOOKEEPER_HOST_NAME,ZOOKEEPER_PORT);
                 }
             }
         } catch (KeeperException | InterruptedException e) {
