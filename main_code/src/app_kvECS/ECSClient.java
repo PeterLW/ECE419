@@ -27,7 +27,7 @@ public class ECSClient implements IECSClient {
 
     static {
         try {
-            new LogSetup("logs/ecsclient.log", Level.DEBUG);
+            new LogSetup("logs/ecsclient.log", Level.ERROR);
         } catch (IOException e) {
             System.out.println("Error! Unable to initialize logger!");
             e.printStackTrace();
@@ -203,8 +203,7 @@ public class ECSClient implements IECSClient {
             help();
         }
         else{
-            printError("Unknown command");
-            help();
+
         }
     }
 
