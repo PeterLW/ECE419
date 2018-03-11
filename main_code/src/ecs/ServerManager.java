@@ -14,7 +14,7 @@ import com.jcraft.jsch.*;
 
 public class ServerManager {
     private static final Logger LOGGER = Logger.getLogger(ServerManager.class);
-    private static final String RELATIVE_CONFIG_FILE_PATH = "/src/app_kvECS/ecs.config"; // SHOULD BE an argument passed in at start-up
+    private static final String RELATIVE_CONFIG_FILE_PATH = "\\main_code\\src\\app_kvECS\\ecs.config"; // SHOULD BE an argument passed in at start-up
     private static final int TIMEOUT = 5000;
     private static Metadata metadata = new Metadata();
 
@@ -28,7 +28,6 @@ public class ServerManager {
     // this out, for when demoing on not our account (though I guess this is a lower priority item... )
     private static final String PRIVATE_KEY_PATH = "/nfs/ug/homes-5/x/xushuran/ECE419/ssh_key_set/id_rsa";
     private static final String KNOWN_HOST_PATH = "~/.ssh/known_hosts";
-
 
     // hash values (start) -> serverNode
     // private TreeMap<String,ServerNode> tree = new TreeMap<String,ServerNode>();
@@ -44,7 +43,7 @@ public class ServerManager {
             zookeeperECSManager = new ZookeeperECSManager(ZOOKEEPER_HOST_PORT,10000); // session timeout ms
             System.out.println("Working Directory = " + System.getProperty("user.dir"));
             // start parseConfigFile with path to file
-            String filePath = System.getProperty("user.dir") + RELATIVE_CONFIG_FILE_PATH;
+            String filePath =new File(".").getCanonicalPath()+RELATIVE_CONFIG_FILE_PATH;
             parseConfigFile(filePath);
         } catch (Exception e) {
             LOGGER.error("Failed to connect to zookeeper. Check that zookeeper server has started and is running on " + ZOOKEEPER_PORT );
