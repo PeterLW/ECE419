@@ -11,9 +11,7 @@ public class AdditionalTests2 extends TestCase {
 
     private void fct(ServerNode n){
         System.out.println(n.getServerStatus().getTransition().name());
-
-        n.getServerStatus().transition = ZNodeMessageStatus.SHUTDOWN_SERVER;
-
+        
         ServerStatus s = new ServerStatus(ZNodeMessageStatus.NEW_ZNODE_RECEIVE_DATA);
         s.setServerStatus(ServerStatusType.MOVE_DATA_SENDER);
         n.setServerStatus(s);
