@@ -23,10 +23,10 @@ public class DBManager {
     /* writes Files in
      * UTF-8 encoding
      */
-    private static Logger LOGGER = Logger.getLogger(DBManager.class);
+    private static final Logger LOGGER = Logger.getLogger(DBManager.class);
     private static final String DEFAULT = "DEFAULTDB";
     private static String PREFIX = DEFAULT;
-    private final static String ROOT_PATH = PREFIX + "/DBRoot";
+    private static String ROOT_PATH = PREFIX + "/DBRoot";
 
     public DBManager(String prefix){
         this.PREFIX = prefix;
