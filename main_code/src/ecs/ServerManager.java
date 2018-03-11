@@ -20,7 +20,7 @@ public class ServerManager {
 
     /* It was stated we can assume zookeeper running on same machine, default port*/
     private static final String ZOOKEEPER_HOST_NAME = "localhost";
-    private static final int ZOOKEEPER_PORT = 2181;
+    private static final int ZOOKEEPER_PORT = 2191;
 
     // TODO: Passwordless ssh
     // @Aaron, go on piazza, there's alot of questions about this, something about doing ssh without supplying a password. see if you can figure
