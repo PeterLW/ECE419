@@ -7,14 +7,14 @@ public class ServerStatus {
     private ZNodeMessageStatus transition = null;
     private ServerStatusType status = null;
     private BigInteger[] moveRange = null;
+    private BigInteger[] finalRange = null; // the range the ServerNode should have at teh end of the MoveData Operation
     private String targetName = null;
-    private boolean isReady = true;
+    private boolean isReady = false;
 
-    public ServerStatus(ZNodeMessageStatus transition, BigInteger[] moveRange, String targetName){
+    public ServerStatus(ZNodeMessageStatus transition, BigInteger[] moveRange, String targetName, BigInteger[] finalRange){
         this.moveRange = moveRange;
         this.targetName = targetName;
         this.transition = transition;
-        this.isReady = true;
     }
 
     public ServerStatus(ZNodeMessageStatus transition){this.transition = transition;}
@@ -34,14 +34,13 @@ public class ServerStatus {
     public BigInteger[] getMoveRange(){
         return this.moveRange;
     }
+    public BigInteger[] getFinalRange() { return finalRange; }
 
     public ZNodeMessageStatus getTransition() { return transition; }
 
     public void setServerStatus(ServerStatusType type){ this.status = status;}
 
     public void setReady(){isReady = true;}
-
-    public void resetReady(){isReady = false;}
 
     public void setMoveRangeStatus(ServerStatusType newStatus, BigInteger[] moveRange, String newTargetName){
         this.moveRange = moveRange;

@@ -28,17 +28,6 @@ public class KVServerDataMigration implements Runnable {
     private final Gson gson = new Gson();
     private final static Logger LOGGER = Logger.getLogger(KVServerDataMigration.class);
 
-    public KVServerDataMigration(String targetName, BigInteger[] hashRange, ServerNode serverNode, StorageManager storageManager){
-        String[] temp = targetName.split(":");
-        this.address = temp[0];
-        this.port = Integer.parseInt(temp[1]);
-
-        this.hashRange = hashRange;
-        this.serverNode = serverNode;
-        this.transmission = new Transmission();
-        this.storageManager = storageManager;
-    }
-
     public KVServerDataMigration(ServerNode node, StorageManager storageManager){
         this.serverNode = node;
         this.storageManager = storageManager;
@@ -51,11 +40,10 @@ public class KVServerDataMigration implements Runnable {
         System.out.println("system starts ....\n");
         while(true){
             ServerStatusType statusType = serverNode.getServerStatus().getStatus();
-            if (statusType == ServerStatusType.MOVE_DATA_RECEIVER || statusType == ServerStatusType.MOVE_DATA_SENDER){
-                serverNode.getServerStatus().resetReady();
+            if (statusType == ServerStatusType.MOVE_DATA_RECEIVER || statusType == ServerStatusType.MOVE_DATA_SENDER){ ;
                 update();
                 start();
-                serverNode.getServerStatus().setReady();
+                finish();
                 try {
                     Thread.sleep(10);
                 }catch (InterruptedException e){
@@ -65,7 +53,6 @@ public class KVServerDataMigration implements Runnable {
             else {
                 try {
                     Thread.sleep(1);
-
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -109,9 +96,11 @@ public class KVServerDataMigration implements Runnable {
                 return;
             }
         }
+    }
 
-
-
+    private void finish() {
+        serverNode.setRange(serverNode.getServerStatus().getFinalRange());
+        serverNode.getServerStatus().setReady();
     }
 
     public void send_data(Socket senderSocket) throws IOException {
