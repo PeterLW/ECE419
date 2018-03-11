@@ -66,6 +66,7 @@ public class ZookeeperWatcher extends ZookeeperMetaData implements Runnable {
         ZNodeMessage newMessage = gson.fromJson(new String(data),ZNodeMessage.class);
         ServerStatus ss = null;
 
+        //System.out.println(newMessage.zNodeMessageStatus);
         // in progress
         switch(newMessage.zNodeMessageStatus){
             case MOVE_DATA_RECEIVER:
@@ -87,7 +88,7 @@ public class ZookeeperWatcher extends ZookeeperMetaData implements Runnable {
                 this.handleDelete();
             break;
             default:
-                System.out.println("Data has changed");
+                System.out.println("New node: Data has changed");
                 System.out.println(new String(data));
                 ss = new ServerStatus(newMessage.zNodeMessageStatus);
                 upcomingStatusQueue.addQueue(ss);

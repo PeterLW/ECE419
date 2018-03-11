@@ -58,13 +58,19 @@ public class KVServer implements IKVServer {
 	public KVServer(String name, String zkHostname, int zkPort) { // m2 interface
 		if (name == null){
 			LOGGER.error("KVServer must have name argument to start up");
+			System.out.println("KVServer must have name argument to start up");
 			System.exit(-1);
 			return;
 		}
+		System.out.println(name + "is launched\n");
+
 		ZookeeperWatcher zookeeperWatcher = null;
 		String zookeeperHost = zkHostname + ":" + Integer.toString(zkPort);
+		Thread watcherThread = null;
 		try {
 			zookeeperWatcher = new ZookeeperWatcher(zookeeperHost,100000,name, upcomingStatusQueue);
+			watcherThread = new Thread(zookeeperWatcher);
+
 		} catch (IOException | InterruptedException e) {
 			LOGGER.error("Failed to connect to zookeeper server");
 			System.exit(-1);
@@ -88,13 +94,17 @@ public class KVServer implements IKVServer {
 			System.exit(-1);
 		}
 		storage = new StorageManager(serverNode.getCacheSize(), serverNode.getCacheStrategy());
-		zookeeperWatcher.run(); // NOW IT SETS THE WATCH AND WAITS FOR DATA CHANGES
 
 		KVClientConnection kvClientConnection = new KVClientConnection(storage,serverNode,zookeeperHost,10000);
-		kvClientConnection.run();
-
+		Thread kvConnThread = new Thread(kvClientConnection);
+		
         KVServerDataMigration dataMigration = new KVServerDataMigration(serverNode, storage);
-        dataMigration.run();
+        Thread dataMigraThread = new Thread(dataMigration);
+
+        watcherThread.start();
+        kvConnThread.start();
+		dataMigraThread.start();
+
 	}
 
 	private CacheStrategy string_to_enum_cache_strategy(String str) {
@@ -317,6 +327,7 @@ public class KVServer implements IKVServer {
 		options.addOption("zkport",true,"Zookeeper port #");
 		options.getOption("zkport").setType(Integer.class);
 
+
 		CommandLineParser cmdLineParser = new DefaultParser();
 
 		// default values
@@ -341,6 +352,7 @@ public class KVServer implements IKVServer {
 			LOGGER.error("Error parsing command line arguments", e);
 			System.exit(-1);
 		}
+		System.out.println("server "+name + "starts now\n");
 		KVServer kvServer = new KVServer(name,zkhost,zkport);
 		kvServer.run();
 	}
