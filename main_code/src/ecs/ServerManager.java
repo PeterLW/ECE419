@@ -10,26 +10,18 @@ import java.math.BigInteger;
 import java.util.*;
 import java.io.*;
 
-import com.jcraft.jsch.*;
-
 public class ServerManager {
     private static final Logger LOGGER = Logger.getLogger(ServerManager.class);
 
     private static final String RELATIVE_CONFIG_FILE_PATH = "/src/app_kvECS/ecs.config"; // SHOULD BE an argument passed in at start-up
-    private static final int TIMEOUT = 5000;
+    
     private static Metadata metadata = new Metadata();
 
     /* It was stated we can assume zookeeper running on same machine, default port*/
     private static final String ZOOKEEPER_HOST_NAME = "localhost";
     private static final String ZOOKEEPER_PORT = "2181";
     private static final String ZOOKEEPER_HOST_PORT = ZOOKEEPER_HOST_NAME + ":" + ZOOKEEPER_PORT;
-
-    // TODO: Passwordless ssh
-    // @Aaron, go on piazza, there's alot of questions about this, something about doing ssh without supplying a password. see if you can figure
-    // this out, for when demoing on not our account (though I guess this is a lower priority item... )
-    private static final String PRIVATE_KEY_PATH = "/nfs/ug/homes-5/x/xushuran/ECE419/ssh_key_set/id_rsa";
-    private static final String KNOWN_HOST_PATH = "~/.ssh/known_hosts";
-
+   
     private LinkedHashMap<String,IECSNode> hashMap = new LinkedHashMap<String,IECSNode>(); // stores the active running nodes
     private LinkedList<ConfigEntity> entityList = new LinkedList<ConfigEntity>(); // stores provided nodes from Config file
     private ZookeeperECSManager zookeeperECSManager;
@@ -52,87 +44,6 @@ public class ServerManager {
         return hashMap;
     }
 
-//    public int getNumOfServerConnected(){
-//        return 0;
-//    }
-    private static void readChannelOutput(Channel channel){
-
-        byte[] buffer = new byte[1024];
-
-        try{
-            InputStream in = channel.getInputStream();
-            String line = "";
-            while (true){
-                while (in.available() > 0) {
-                    int i = in.read(buffer, 0, 1024);
-                    if (i < 0) {
-                        break;
-                    }
-                    line = new String(buffer, 0, i);
-                    System.out.println(line);
-                }
-
-                if(line.contains("logout")){
-                    break;
-                }
-
-                if (channel.isClosed()){
-                    break;
-                }
-                try {
-                    Thread.sleep(1000);
-                } catch (Exception ee){}
-            }
-        }catch(Exception e){
-            System.out.println("Error while reading channel output: "+ e);
-        }
-    }
-
-    public void remoteLaunchServer(String serverIpPort, String zookeeperHost, String zookeeperPort){
-
-        JSch ssh = new JSch();
-        String username;
-        username = "xushuran";
-        String host = "localhost";
-        String jarFilePath = "/nfs/ug/homes-5/x/xushuran/ECE419/m2v2/ECE419/main_code/m2-server.jar";
-        StringBuilder sb=new StringBuilder("java -jar ");
-        sb.append(jarFilePath);
-        sb.append(" -name ");
-        sb.append(serverIpPort);
-        sb.append(" -zkhost ");
-        sb.append(zookeeperHost);
-        sb.append(" -zkport ");
-        sb.append(zookeeperPort);
-        String command = sb.toString();
-       // String command = "java -jar /nfs/ug/homes-5/x/xushuran/ECE419/m2.jar ";
-        Session session;
-
-        try{
-            ssh.setKnownHosts(KNOWN_HOST_PATH);
-            session = ssh.getSession(username,host,22);
-            ssh.addIdentity(PRIVATE_KEY_PATH);
-            session.setConfig("StrictHostKeyChecking", "no");
-            session.connect(TIMEOUT);
-            System.out.println("Connected to " + username + "@" + host + ": 22");
-
-
-            Channel channel = session.openChannel("exec");
-            ((ChannelExec) channel).setCommand(command);
-            channel.setInputStream(null);
-            ((ChannelExec) channel).setErrStream(System.err);
-            InputStream in = channel.getInputStream();
-            channel.connect();
-
-           // readChannelOutput(channel);
-            //System.out.println("Connection is closed");
-            channel.disconnect();
-            session.disconnect();
-
-        }catch(JSchException | IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     public Collection<IECSNode> setupNodes(int count, String cacheStrategy, int cacheSize){
         LinkedList<IECSNode>list = new LinkedList<IECSNode>();
         try {
@@ -151,8 +62,10 @@ public class ServerManager {
                     // now when I add zNode they have their range given a -full- hash ring.
                     this.addServer(node, cacheStrategy, cacheSize);
                     System.out.println("node.serverName = "+node.getNodeName() + ", node.ipport = " +node.getNodeHostPort());
-                    this.remoteLaunchServer(node.getNodeHostPort(), ZOOKEEPER_HOST_NAME,ZOOKEEPER_PORT);
-                    // TODO: ^ this should take ip & port because we are constructing this under assumption that KVserver can be run on different computers.
+
+                    SSH ssh_conn = new SSH(node.getNodeHostPort(), ZOOKEEPER_HOST_NAME,ZOOKEEPER_PORT);
+                    Thread sshConnThread = new Thread(ssh_conn);
+                    sshConnThread.start();
                 }
             }
             else{
@@ -165,7 +78,11 @@ public class ServerManager {
 
                     zookeeperECSManager.updateMetadataZNode(metadata); // update metadata node
                     this.addServer(node, cacheStrategy, cacheSize);
-                    this.remoteLaunchServer(node.getNodeHostPort(),ZOOKEEPER_HOST_NAME,ZOOKEEPER_PORT);
+                    System.out.println("node.serverName = "+node.getNodeName() + ", node.ipport = " +node.getNodeHostPort());
+                
+                    SSH ssh_conn = new SSH(node.getNodeHostPort(), ZOOKEEPER_HOST_NAME,ZOOKEEPER_PORT);
+                    Thread sshConnThread = new Thread(ssh_conn);
+                    sshConnThread.start();
                 }
             }
         } catch (KeeperException | InterruptedException e) {

@@ -58,9 +58,12 @@ public class KVServer implements IKVServer {
 	public KVServer(String name, String zkHostname, int zkPort) { // m2 interface
 		if (name == null){
 			LOGGER.error("KVServer must have name argument to start up");
+			System.out.println("KVServer must have name argument to start up");
 			System.exit(-1);
 			return;
 		}
+		System.out.println(name + "is launched\n");
+
 		ZookeeperWatcher zookeeperWatcher = null;
 		String zookeeperHost = zkHostname + ":" + Integer.toString(zkPort);
 		Thread watcherThread = null;
@@ -91,8 +94,6 @@ public class KVServer implements IKVServer {
 			System.exit(-1);
 		}
 		storage = new StorageManager(serverNode.getCacheSize(), serverNode.getCacheStrategy());
-		
-		System.out.println(name + "is launched\n");
 
 		KVClientConnection kvClientConnection = new KVClientConnection(storage,serverNode,zookeeperHost,10000);
 		Thread kvConnThread = new Thread(kvClientConnection);
@@ -104,7 +105,6 @@ public class KVServer implements IKVServer {
         kvConnThread.start();
 		dataMigraThread.start();
 
-		run();
 	}
 
 	private CacheStrategy string_to_enum_cache_strategy(String str) {
@@ -352,6 +352,7 @@ public class KVServer implements IKVServer {
 			LOGGER.error("Error parsing command line arguments", e);
 			System.exit(-1);
 		}
+		System.out.println("server "+name + "starts now\n");
 		KVServer kvServer = new KVServer(name,zkhost,zkport);
 		kvServer.run();
 	}
