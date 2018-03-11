@@ -68,7 +68,7 @@ public class DBManager {
     }
 
 
-    public synchronized boolean storeKV(String key, String value) throws IOException {
+    public synchronized boolean storeKV(String key, String value) {
         File keyFile = new File(String.valueOf(Paths.get(ROOT_PATH,key)));
         LOGGER.info("Attempting to store key (" + key + ") in file: " + keyFile.getAbsolutePath());
 
