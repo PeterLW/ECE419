@@ -98,6 +98,7 @@ public class KVClientConnection implements Runnable {
         try {
             this.serverSocket = new ServerSocket(this.serverNode.getNodePort());
             LOGGER.info("Server listening on port: " + this.serverNode.getNodePort());
+            System.out.println("Server listening on port: " + this.serverNode.getNodePort());
             this.serverSocket.setSoTimeout(1000); // 1 s
             return true;
         } catch (IOException e) {

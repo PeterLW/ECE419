@@ -37,7 +37,7 @@ public class KVServerDataMigration implements Runnable {
     //cathy use this class as an object or run this thread at startup ? Need a mechanism to kill and close this thread.
     @Override
     public void run() {
-        System.out.println("system starts ....\n");
+        System.out.println("KVServerDataMigration thread starts ....\n");
         while(true){
             ServerStatusType statusType = serverNode.getServerStatus().getStatus();
             if (statusType == ServerStatusType.MOVE_DATA_RECEIVER || statusType == ServerStatusType.MOVE_DATA_SENDER){ ;

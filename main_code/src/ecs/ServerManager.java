@@ -15,7 +15,7 @@ import com.jcraft.jsch.*;
 public class ServerManager {
     private static final Logger LOGGER = Logger.getLogger(ServerManager.class);
 
-    private static final String RELATIVE_CONFIG_FILE_PATH = "\\main_code\\src\\app_kvECS\\ecs.config"; // SHOULD BE an argument passed in at start-up
+    private static final String RELATIVE_CONFIG_FILE_PATH = "/src/app_kvECS/ecs.config"; // SHOULD BE an argument passed in at start-up
     private static final int TIMEOUT = 5000;
     private static Metadata metadata = new Metadata();
 
@@ -123,8 +123,8 @@ public class ServerManager {
             InputStream in = channel.getInputStream();
             channel.connect();
 
-            readChannelOutput(channel);
-            System.out.println("Connection is closed");
+           // readChannelOutput(channel);
+            //System.out.println("Connection is closed");
             channel.disconnect();
             session.disconnect();
 
@@ -156,7 +156,7 @@ public class ServerManager {
                 }
             }
             else{
-                is_init = false;
+                this.is_init = false;
                 for(int i = 0; i < count; ++i){
                     ServerNode node = new ServerNode(entityList.removeFirst(), cacheSize, cacheStrategy);
                     metadata.addServer(node.getNodeHostPort()); // add and set
