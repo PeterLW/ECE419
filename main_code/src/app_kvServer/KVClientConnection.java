@@ -59,7 +59,7 @@ public class KVClientConnection implements Runnable {
 
     public void run() {
         initializeServer();
-        LOGGER.error(serverNode.getNodeHostPort() + " > KVClientConnection running");
+        System.out.println(serverNode.getNodeHostPort() + " > KVClientConnection running");
         while (!this.stop) {
             // waits for connection
             if (this.serverSocket != null) {

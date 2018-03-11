@@ -53,7 +53,7 @@ public class ZookeeperECSManager extends ZookeeperManager{
     public void addKVServer(ServerNode n) throws KeeperException, InterruptedException {
         ZNodeMessage message = new ZNodeMessage(n, ZNodeMessageStatus.NEW_ZNODE);
         String jsonServerData = gson.toJson(message);
-        System.out.println(jsonServerData); // debug
+//        System.out.println(jsonServerData); // debug
         this.addZNode(ZNODE_HEAD,n.getNodeHostPort(),toByteArray(jsonServerData));
     }
 
@@ -66,7 +66,7 @@ public class ZookeeperECSManager extends ZookeeperManager{
         message.setMoveDataParameters(moveDataRange,targetName);
 
         String jsonServerData = gson.toJson(message);
-        System.out.println(jsonServerData); // debug
+//        System.out.println(jsonServerData); // debug
         this.addZNode(ZNODE_HEAD,n.getNodeHostPort(),toByteArray(jsonServerData));
     }
 
@@ -79,7 +79,7 @@ public class ZookeeperECSManager extends ZookeeperManager{
         message.setMoveDataParameters(moveDataRange,targetName);
 
         String jsonServerData = gson.toJson(message);
-        System.out.println(jsonServerData); // debug
+//        System.out.println(jsonServerData); // debug
         this.updateZNode(ZNODE_HEAD,n.getNodeHostPort(),toByteArray(jsonServerData));
     }
 
@@ -103,7 +103,7 @@ public class ZookeeperECSManager extends ZookeeperManager{
         ZNodeMessage message = new ZNodeMessage(n, ZNodeMessageStatus.MOVE_DATA_SENDER);
         message.setMoveDataParameters(moveDataRange,targetName);
         String jsonServerData = gson.toJson(message);
-        System.out.println(jsonServerData); // debug
+//        System.out.println(jsonServerData); // debug
         return this.updateZNode(ZNODE_HEAD,n.getNodeHostPort(),toByteArray(jsonServerData));
     }
 
@@ -126,7 +126,7 @@ public class ZookeeperECSManager extends ZookeeperManager{
         ZNodeMessage message = new ZNodeMessage(n, ZNodeMessageStatus.MOVE_DATA_RECEIVER);
         message.setMoveDataParameters(moveDataRange,targetName);
         String jsonServerData = gson.toJson(message);
-        System.out.println(jsonServerData); // debug
+//        System.out.println(jsonServerData); // debug
         return this.updateZNode(ZNODE_HEAD,n.getNodeHostPort(),toByteArray(jsonServerData));
     }
 
@@ -136,7 +136,7 @@ public class ZookeeperECSManager extends ZookeeperManager{
     public boolean startKVServer(ServerNode n) throws KeeperException, InterruptedException {
         ZNodeMessage message = new ZNodeMessage(n, ZNodeMessageStatus.START_SERVER);
         String jsonServerData = gson.toJson(message);
-        System.out.println(jsonServerData); // debug
+//        System.out.println(jsonServerData); // debug
         return this.updateZNode(ZNODE_HEAD,n.getNodeHostPort(),toByteArray(jsonServerData));
     }
 
@@ -146,7 +146,7 @@ public class ZookeeperECSManager extends ZookeeperManager{
     public boolean stopKVServer(ServerNode n) throws KeeperException, InterruptedException {
         ZNodeMessage message = new ZNodeMessage(n, ZNodeMessageStatus.STOP_SERVER);
         String jsonServerData = gson.toJson(message);
-        System.out.println(jsonServerData); // debug
+//        System.out.println(jsonServerData); // debug
         return this.updateZNode(ZNODE_HEAD,n.getNodeHostPort(),toByteArray(jsonServerData));
     }
 
@@ -156,7 +156,7 @@ public class ZookeeperECSManager extends ZookeeperManager{
     public boolean shutdownKVServer(ServerNode n) throws KeeperException, InterruptedException {
         ZNodeMessage message = new ZNodeMessage(n, ZNodeMessageStatus.SHUTDOWN_SERVER);
         String jsonServerData = gson.toJson(message);
-        System.out.println(jsonServerData); // debug
+//        System.out.println(jsonServerData); // debug
         return this.updateZNode(ZNODE_HEAD,n.getNodeHostPort(),toByteArray(jsonServerData));
     }
 

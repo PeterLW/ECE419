@@ -15,8 +15,6 @@ import org.apache.log4j.Logger;
 
 import common.transmission.Transmission;
 
-
-
 public class KVStore implements KVCommInterface {
 
 	private final static Logger LOGGER = Logger.getLogger(KVStore.class);
@@ -103,15 +101,16 @@ public class KVStore implements KVCommInterface {
 
 	public void updateMetadataAndResend(Message msg, String key, String value) throws IOException{
 		if(msg.getStatus() == StatusType.SERVER_NOT_RESPONSIBLE){
+			LOGGER.debug("Received SERVER NOT RESPONSIBLE message, trying again");
             metadata = gson.fromJson(msg.getMetaData(), Metadata.class);
-            //update bst, so checkValidServer will pass
+            //update bst, so findValidServer will pass
             metadata.build_bst();
            // printmetadata();
 			put(key,value);
 		}
 	}
 
-	public boolean checkValidServer(String key){
+	public boolean findValidServer(String key){
 		String targetServer = metadata.findServer(key);
 		if(targetServer == null)
 			return true;
@@ -129,7 +128,7 @@ public class KVStore implements KVCommInterface {
 	@Override
 	public Message put(String key, String value) throws IOException {
 
-		if(!checkValidServer(key)) {
+		if(!findValidServer(key)) {
 			clientSocket.close();
 			connect();
 		}
@@ -182,7 +181,7 @@ public class KVStore implements KVCommInterface {
 	@Override
 	public Message get(String key) throws Exception {
 
-        if(!checkValidServer(key)) {
+        if(!findValidServer(key)) {
             clientSocket.close();
             connect();
         }

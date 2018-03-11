@@ -1,5 +1,6 @@
 package app_kvServer;
 
+import com.sun.security.ntlm.Server;
 import common.cache.StorageManager;
 import common.KVMessage;
 import common.Message;
@@ -20,7 +21,7 @@ public class KVServerDataMigration implements Runnable {
     private int port;
     private BigInteger[] hashRange;
     private ServerNode serverNode;
-    private Transmission transmission;
+    private Transmission transmission = new Transmission();
     StorageManager storageManager;
     private final Gson gson = new Gson();
     private final static Logger LOGGER = Logger.getLogger(KVServerDataMigration.class);
@@ -62,19 +63,25 @@ public class KVServerDataMigration implements Runnable {
     private void update(){
         String targetName = serverNode.getServerStatus().getTargetName();
         String[] temp = targetName.split(":");
-        this.address = temp[0];
-        this.port = Integer.parseInt(temp[1]);
+
+        ServerStatusType currStatus = serverNode.getServerStatus().getStatus();
+
+        if (currStatus == ServerStatusType.MOVE_DATA_SENDER) { // we using the receiving KVSERVER's (port + 1) by default
+            this.address = temp[0];
+            this.port = Integer.parseInt(temp[1]) + 1;
+        } else {
+            this.address = "localhost";
+            this.port = serverNode.getNodePort() + 1; // my port + 1
+        }
 
         this.hashRange = serverNode.getServerStatus().getMoveRange();
-        this.transmission = new Transmission();
     }
 
     private void start() {
-
         if (serverNode.getServerStatus().getStatus() == ServerStatusType.MOVE_DATA_SENDER) {
             try {
                 Socket senderSocket = new Socket(address, port);
-                System.out.println("connecting to receiver...");
+                System.out.println(serverNode.getNodeHostPort() + " > is connecting to receiver: " + serverNode.getServerStatus().getTargetName());
                 send_data(senderSocket);
                 senderSocket.close();
             } catch (IOException e) {
@@ -85,7 +92,8 @@ public class KVServerDataMigration implements Runnable {
             try {
                 ServerSocket receiverSocket = new ServerSocket(port);
                 Socket socket = receiverSocket.accept();
-                System.out.println("Connected to the sender, start receiving packets\n");
+                System.out.println(serverNode.getNodeHostPort() + " > is the receiver, established connection on port ("
+                        + port + ") with sender: " + serverNode.getServerStatus().getTargetName());
                 receive_data(socket);
                 socket.close();
                 receiverSocket.close();

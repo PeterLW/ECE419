@@ -42,8 +42,8 @@ public class LogSetup {
 		// There's too much output to console, should check log files in future for output..
 		// can't decipher anything on stout cuz there's too much ><
 		// & the ECSClient needs that for typing commands lol.
-//	    ConsoleAppender consoleAppender = new ConsoleAppender(layout);
-//		logger.addAppender(consoleAppender);
+	    ConsoleAppender consoleAppender = new ConsoleAppender(layout);
+		logger.addAppender(consoleAppender);
 		logger.addAppender(fileAppender);
 		logger.setLevel(level);
 		logger.setAdditivity(false);

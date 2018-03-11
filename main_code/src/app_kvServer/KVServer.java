@@ -62,7 +62,7 @@ public class KVServer implements IKVServer {
 			System.exit(-1);
 			return;
 		}
-		System.out.println(name + "is launched\n");
+		System.out.println(name + " is launched\n");
 
 		ZookeeperWatcher zookeeperWatcher = null;
 		String zookeeperHost = zkHostname + ":" + Integer.toString(zkPort);
@@ -354,7 +354,6 @@ public class KVServer implements IKVServer {
 			LOGGER.error("Error parsing command line arguments", e);
 			System.exit(-1);
 		}
-		System.out.println("server "+name + "starts now\n");
 		KVServer kvServer = new KVServer(name,zkhost,zkport);
 		kvServer.run();
 	}
