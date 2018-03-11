@@ -15,6 +15,7 @@ public class ServerStatus {
         this.moveRange = moveRange;
         this.targetName = targetName;
         this.transition = transition;
+        this.finalRange = finalRange;
     }
 
     public ServerStatus(ZNodeMessageStatus transition){this.transition = transition;}
