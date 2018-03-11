@@ -145,7 +145,6 @@ public class ECSClient implements IECSClient {
 
     private void handleCommand(String cmdLine) {
         String[] tokens = cmdLine.split("\\s+");
-
         if(tokens[0].equals("shutdown")) {
             stop = true;
             System.out.println(PROMPT + "All servers are shutdown.");
@@ -248,10 +247,8 @@ public class ECSClient implements IECSClient {
     }
 
     public static void main(String[] args) {
-
         ECSClient client = new ECSClient();
         client.run();
         System.exit(1);
-
     }
 }
