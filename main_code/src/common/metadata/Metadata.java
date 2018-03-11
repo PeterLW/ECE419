@@ -191,9 +191,11 @@ public class Metadata {
         Iterator<Node> iterator = servers_bst.iterator();
         while(iterator.hasNext()) {
             Node node = iterator.next();
-            if(node.id == id)
+            if(node.id.equals(id)){ //fixed here
                 return node;
+            }
         }
+        System.out.println("return null");
         return null;
     }
 
@@ -249,7 +251,13 @@ public class Metadata {
 
     public BigInteger[] findHashRange(String id){
 
-        if(!servers_bst.contains(id))
+        Node node = null;
+        try {
+            node = new Node(id, getMD5(id));
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+        if(!servers_bst.contains(node))
             return null;
 
         BigInteger[] range = new BigInteger[2];
@@ -260,6 +268,9 @@ public class Metadata {
         }
         try {
             Node curr = findNode(id);
+            if(curr == null){
+                System.out.println("fuckl");
+            }
             Node pre = servers_bst.lower(curr);
 
             if(pre == null){
