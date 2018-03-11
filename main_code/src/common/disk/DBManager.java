@@ -62,13 +62,13 @@ public class DBManager {
         if (rootDirectory.exists()) {
             return true;
         } else {
-            rootDirectory.mkdir();
+            rootDirectory.mkdirs();
             return true;
         }
     }
 
 
-    public synchronized boolean storeKV(String key, String value) {
+    public synchronized boolean storeKV(String key, String value) throws IOException {
         File keyFile = new File(String.valueOf(Paths.get(ROOT_PATH,key)));
         LOGGER.info("Attempting to store key (" + key + ") in file: " + keyFile.getAbsolutePath());
 
