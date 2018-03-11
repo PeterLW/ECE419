@@ -4,7 +4,7 @@ import common.zookeeper.ZNodeMessageStatus;
 import java.math.BigInteger;
 
 public class ServerStatus {
-    private ZNodeMessageStatus transition = null;
+    public ZNodeMessageStatus transition = null;
     private ServerStatusType status = null;
     private BigInteger[] moveRange = null;
     private BigInteger[] finalRange = null; // the range the ServerNode should have at teh end of the MoveData Operation
@@ -38,7 +38,15 @@ public class ServerStatus {
 
     public ZNodeMessageStatus getTransition() { return transition; }
 
-    public void setServerStatus(ServerStatusType type){ this.status = status;}
+    public void updateServerStatus(ServerStatus status){
+        this.status = status.status;
+        this.moveRange = status.moveRange;
+        this.targetName = status.targetName;
+        this.finalRange = status.finalRange;
+        this.isReady = false;
+    }
+
+    public void setServerStatus(ServerStatusType type){ this.status = type;}
 
     public void setReady(){isReady = true;}
 
