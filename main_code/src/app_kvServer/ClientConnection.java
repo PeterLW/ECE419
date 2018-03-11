@@ -164,6 +164,7 @@ public class ClientConnection implements Runnable {
 	public void run() {
 		Message latestMsg;
 		LOGGER.error(serverNode.getNodeHostPort() + " > ClientConnection running, connected");
+		System.out.println(serverNode.getNodeHostPort() + " > ClientConnection running, connected");
 		while (isOpen) {
 			try {
 				latestMsg = transmission.receiveMessage(clientSocket);
