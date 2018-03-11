@@ -25,8 +25,8 @@ public class SSH implements Runnable {
 	private String zookeeperHost;
 	private String zookeeperPort;
 
-    private static final String USER = "xushuran"; // so you only need to change this to run on another person's computer
-    private static final String PRIVATE_KEY_PATH = "/nfs/ug/homes-5/x/"+USER+"/ECE419/ssh_key_set/id_rsa";
+    private static final String USER = "fucathy1"; // so you only need to change this to run on another person's computer
+    private static final String PRIVATE_KEY_PATH = "~/.ssh/id_rsa";
     private static final String KNOWN_HOST_PATH = "~/.ssh/known_hosts";
     private static final int TIMEOUT = 5000;
 
@@ -82,7 +82,7 @@ public class SSH implements Runnable {
         String username;
         username = USER;
         String host = "localhost";
-        String jarFilePath = "/nfs/ug/homes-5/x/"+USER+"/ECE419/m2v2/ECE419/main_code/m2-server.jar";
+        String jarFilePath = "~/m2files/code/main_code/m2-server.jar";
         StringBuilder sb=new StringBuilder("java -jar ");
         sb.append(jarFilePath);
         sb.append(" -name ");
@@ -101,7 +101,7 @@ public class SSH implements Runnable {
             ssh.addIdentity(PRIVATE_KEY_PATH);
             session.setConfig("StrictHostKeyChecking", "no");
             session.connect(TIMEOUT);
-            System.out.println("Connected to " + username + "@" + host + ": 22");
+            System.out.println("Connected to " + username + "@" + host + ":22");
 
 
             Channel channel = session.openChannel("exec");
