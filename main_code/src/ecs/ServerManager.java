@@ -293,7 +293,7 @@ public class ServerManager {
             }
             bufferedReader.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.error("Error parsing config file", e);
         }
     }
     
