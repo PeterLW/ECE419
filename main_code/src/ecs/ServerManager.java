@@ -302,6 +302,15 @@ public class ServerManager {
         return true;
     }
 
+    public void close(){
+        this.shutdown();
+        try {
+            zookeeperECSManager.close();
+        } catch (InterruptedException e) {
+            LOGGER.error("Zookeeper connection shutdown failed");
+        }
+    }
+
     //ServerIndex: ip:port
     public boolean removeNode(String ServerIndex)throws KeeperException, InterruptedException{
         if (hashMap.containsKey(ServerIndex)){

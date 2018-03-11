@@ -148,6 +148,7 @@ public class ECSClient implements IECSClient {
         if(tokens[0].equals("shutdown")) {
             stop = true;
             System.out.println(PROMPT + "All servers are shutdown.");
+            serverManager.close();
         } else if (tokens[0].equals("start")){
             this.start();
         } else  if (tokens[0].equals("stop")) {

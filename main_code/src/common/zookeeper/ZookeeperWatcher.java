@@ -16,6 +16,7 @@ public class ZookeeperWatcher extends ZookeeperMetaData implements Runnable {
     private static ServerNode serverNode;
     private static UpcomingStatusQueue upcomingStatusQueue;
     private static String fullPath = null;
+    private boolean running = true;
 
     private Semaphore semaphore = new Semaphore(1);
 
@@ -47,6 +48,8 @@ public class ZookeeperWatcher extends ZookeeperMetaData implements Runnable {
 
     public void handleDelete() throws InterruptedException, KeeperException {
         this.deleteZNode(fullPath);
+        semaphore.release();
+        this.running = false;
         super.close();
     }
 
@@ -96,7 +99,7 @@ public class ZookeeperWatcher extends ZookeeperMetaData implements Runnable {
     public void run() {
         try {
             semaphore.acquire();
-            while(true){
+            while(running){
                 try {
                     getNewData();
                     semaphore.acquire();

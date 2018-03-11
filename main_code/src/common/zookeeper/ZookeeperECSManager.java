@@ -160,12 +160,20 @@ public class ZookeeperECSManager extends ZookeeperManager{
         return this.updateZNode(ZNODE_HEAD,n.getNodeHostPort(),toByteArray(jsonServerData));
     }
 
-    public void removeKVServer(String name) throws KeeperException, InterruptedException {
-        this.deleteZNode(ZNODE_HEAD,name);
+//    public void removeKVServer(String name) throws KeeperException, InterruptedException {
+//        this.deleteZNode(ZNODE_HEAD,name);
+//    }
+
+    private void deleteMetadataNode() throws KeeperException, InterruptedException {
+        this.deleteZNode(ZNODE_HEAD, ZNODE_METADATA_NODE);
     }
 
     public void close() throws InterruptedException {
-        clearZNodes();
+        try {
+            deleteMetadataNode();
+        } catch (KeeperException e) {
+            LOGGER.error("Error deleting metadata node");
+        }
         super.close();
     }
 
@@ -196,7 +204,6 @@ public class ZookeeperECSManager extends ZookeeperManager{
             zooKeeper.setData(fullPath,data,-1);
         }
     }
-
 
     private void clearZNodes(){ // zookeeper only has one layer, no need recursion
         try {
