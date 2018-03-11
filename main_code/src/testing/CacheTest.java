@@ -41,26 +41,27 @@ public class CacheTest extends TestCase{
     //@Test
     public void testUpdate(){
         for (String strategy: cacheStrategy) {
+            System.out.println(strategy);
             StorageManager rm = new StorageManager(10, strategy);
             rm.clearAll();
 
             for (int i = 0; i < 10; i++) {
                 assertTrue(rm.putKV(Integer.toString(i), "b"));
             }
-            String vals[] = new String[10];
+
+            String val;
             for (int i = 0; i < 10; i++) {
-                vals[i] = rm.getKV(Integer.toString(i));
-                assertEquals("b", vals[i]);
+                val = rm.getKV(Integer.toString(i));
+                assertEquals("b", val);
             }
 
             for (int i = 0; i < 10; i++) {
                 assertTrue(rm.putKV(Integer.toString(i), "c"));
             }
 
-            String getvals[] = new String[10];
             for (int i = 0; i < 10; i++) {
-                getvals[i] = rm.getKV(Integer.toString(i));
-                assertEquals("c", getvals[i]);
+                val = rm.getKV(Integer.toString(i));
+                assertEquals("c", val);
             }
         }
     }

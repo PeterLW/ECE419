@@ -4,9 +4,9 @@ import org.apache.log4j.Logger;
 
 public class LFU implements CacheStructure{
     private final static Logger LOGGER = Logger.getLogger(LFU.class);
-    private static HashMap<String, String> vals = new HashMap<String, String>();
-    private static HashMap<String, Integer> counts = new HashMap<String, Integer>();
-    private static HashMap<Integer, LinkedHashSet<String>> lists = new HashMap<Integer, LinkedHashSet<String>>();
+    private final static HashMap<String, String> vals = new HashMap<String, String>(); // k-v
+    private final static HashMap<String, Integer> counts = new HashMap<String, Integer>(); // key - freq
+    private final static HashMap<Integer, LinkedHashSet<String>> lists = new HashMap<Integer, LinkedHashSet<String>>(); // freq - keys
     private int capacity;
     private int min = -1;
 
@@ -33,14 +33,13 @@ public class LFU implements CacheStructure{
         if(capacity <=0)
             return false;
 
-        if (!vals.containsKey(key)){
+        if (!vals.containsKey(key)){ // not in cache
             if (vals.size() >= capacity) {
                 String evitKey = lists.get(min).iterator().next();
                 deleteKey(evitKey);
             }
-            vals.put(key, value);
         }
-
+        vals.put(key, value);
         this.updateStructures(key);
 
 
@@ -59,8 +58,11 @@ public class LFU implements CacheStructure{
         } else { // not first put (already exists in cache)
             counts.put(key, count + 1);
             lists.get(count).remove(key);
-            if (count == min && lists.get(count).size() == 0)
+
+            if (count == min && lists.get(count).size() == 0) {
                 min++;
+            }
+
             if (!lists.containsKey(count + 1))
                 lists.put(count + 1, new LinkedHashSet<String>());
             lists.get(count + 1).add(key);
