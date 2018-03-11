@@ -15,7 +15,6 @@ public class Metadata {
     private transient Node first_node = null;
     private transient Node last_node = null;
 
-
     public Metadata(){
         HashToServer = new LinkedHashMap<BigInteger, String>();
     }
@@ -70,6 +69,7 @@ public class Metadata {
         BigInteger keyhash = null;
         try {
             keyhash = getMD5(Key);
+//            System.out.println(keyhash);
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -84,7 +84,6 @@ public class Metadata {
     }
 
     /*        ECS only                    */
-
 //    public void init_hash2server(){
 //        Iterator i = servers_bst.iterator();
 //

@@ -239,7 +239,18 @@ public class ZookeeperECSManager extends ZookeeperManager{
         n.setRange(new BigInteger("0"),i);
         zm.addKVServer(n);
         System.out.println(zm.isConnected());
+        System.out.println("wee1");
+        System.out.println("wee");
+        System.in.read();
+        zm.startKVServer(n);
+        System.out.println("msg");
+
+        System.in.read();
+        zm.stopKVServer(n);
+
         new ListGroupForever(zm.zooKeeper).listForever(ZNODE_HEAD); // debugging class
+//        System.in.read();
+
     }
 
 }
