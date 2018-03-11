@@ -33,7 +33,7 @@ public class Transmission {
             e.printStackTrace();
             return false;
         }
-        //LOGGER.debug("Send message:\t '" + new String(msg) + "' ");
+        LOGGER.error("Send message:\t '" + new String(msg) + "' ");
         System.out.println("Send message:\t '" + new String(msg) + "' ");
         return true;
     }
@@ -98,6 +98,7 @@ public class Transmission {
         msgBytes = tmp;
         String msg_in_str = new String(msgBytes);
 
+        System.out.println("Received message " + msg_in_str);
         return msg_in_str;
     }
 
