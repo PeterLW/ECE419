@@ -152,7 +152,8 @@ public class ClientConnection implements Runnable {
                 e.printStackTrace();
             }
             RespondMsg(msg, StatusType.SERVER_NOT_RESPONSIBLE, metadata);
-            System.out.println("SERVER_NOT_RESPONSIBLE sent\n");
+            System.out.println("SERVER NOT RESPONSIBLE MESSAGE SENT");
+            System.out.println(serverNode.getRange());
         }
     }
 
