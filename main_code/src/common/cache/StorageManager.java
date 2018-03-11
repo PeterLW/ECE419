@@ -19,8 +19,8 @@ public class StorageManager {
     public StorageManager(int size, String cache_strategy, String uniqueServerID) {
         cache_size = size;
         strategy = cache_strategy;
-        this.uniqueServerID = uniqueServerID;
-        this.dbManager = new DBManager(uniqueServerID);
+        uniqueServerID = uniqueServerID;
+        dbManager = new DBManager(uniqueServerID);
 
         if(cache_strategy.toUpperCase().equals("FIFO")) {
             cacheStructure = new FIFO(size);
