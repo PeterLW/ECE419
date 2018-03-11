@@ -24,7 +24,7 @@ public class DBManager {
      * UTF-8 encoding
      */
     private static Logger LOGGER = Logger.getLogger(DBManager.class);
-    private final static String ROOT_PATH =  "DBRoot";
+    private final static String ROOT_PATH =  "./DBRoot";
 
     public DBManager(){
         initializeDB();
