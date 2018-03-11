@@ -187,7 +187,9 @@ public class ClientConnection implements Runnable {
 				 * network problems*/
 			}
 			catch(SocketTimeoutException e){
-				close();
+				if (serverNode.getServerStatus().getStatus() == ServerStatusType.CLOSE) {
+					close();
+				}
 			} catch (IOException ioe) {
 				LOGGER.error("Error! Connection lost with client " + this.clientId);
 				ioe.printStackTrace();
