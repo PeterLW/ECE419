@@ -82,7 +82,7 @@ public class SSH implements Runnable {
         String username;
         username = USER;
         String host = "localhost";
-        String jarFilePath = "/nfs/ug/homes-5/x/"+USER+"/ECE419/m2v2/ECE419/main_code/m2-server.jar";
+        String jarFilePath = "/nfs/ug/homes-5/x/"+USER+"/m2files/main_code/m2-server.jar";
         StringBuilder sb=new StringBuilder("java -jar ");
         sb.append(jarFilePath);
         sb.append(" -name ");
