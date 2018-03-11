@@ -16,16 +16,20 @@ public class LogSetup {
 	public static final String UNKNOWN_LEVEL = "UnknownLevel";
 	public final static Logger logger = Logger.getRootLogger();
 	private String logdir;
-	
-	/**
-	 * Initializes the logging for the echo server. Logs are appended to the 
-	 * console output and written into a separated server log file at a given 
-	 * destination.
-	 * 
-	 * @param logdir the destination (i.e. directory + filename) for the 
-	 * 		persistent logging information.
-	 * @throws IOException if the log destination could not be found.
-	 */
+
+	static {
+		logger.setLevel(Level.ERROR);
+	}
+
+		/**
+         * Initializes the logging for the echo server. Logs are appended to the
+         * console output and written into a separated server log file at a given
+         * destination.
+         *
+         * @param logdir the destination (i.e. directory + filename) for the
+         * 		persistent logging information.
+         * @throws IOException if the log destination could not be found.
+         */
 	public LogSetup(String logdir, Level level) throws IOException {
 		this.logdir = logdir;
 		initialize(level);
