@@ -187,6 +187,7 @@ public class ClientConnection implements Runnable {
 				 * network problems*/
 			}
 			catch(SocketTimeoutException e){
+				System.out.println(serverNode.getServerStatus().getStatus().name());
 				if (serverNode.getServerStatus().getStatus() == ServerStatusType.CLOSE) {
 					close();
 				}

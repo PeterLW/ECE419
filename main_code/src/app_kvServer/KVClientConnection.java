@@ -71,8 +71,8 @@ public class KVClientConnection implements Runnable {
                    // LOGGER.info("Connected to " + client.getInetAddress().getHostName() + " on port " + client.getPort());
                     System.out.println("Connected to " + client.getInetAddress().getHostName() + " on port " + client.getPort());
                     new Thread(connection).start();
-
                 } catch (SocketTimeoutException e) {
+//                    System.out.println(serverNode.getServerStatus().getStatus()); // debug
                     if (serverNode.getServerStatus().getStatus() == ServerStatusType.CLOSE){
                         close();
                     }

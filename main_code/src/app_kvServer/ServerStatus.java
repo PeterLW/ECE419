@@ -46,7 +46,9 @@ public class ServerStatus {
         this.isReady = false;
     }
 
-    public void setServerStatus(ServerStatusType type){ this.status = type;}
+    public void setServerStatus(ServerStatusType type){
+        this.status = type;
+    }
 
     public void setReady(){isReady = true;}
 
