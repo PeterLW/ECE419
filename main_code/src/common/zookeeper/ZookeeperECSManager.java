@@ -185,7 +185,7 @@ public class ZookeeperECSManager extends ZookeeperManager{
     private void addZNode(String path, String memberName, byte[] data) throws KeeperException, InterruptedException { // KeeperException can be thrown if data to large
         String fullPath = path + "/" + memberName;
         zooKeeper.sync(fullPath,null,null);
-        Stat stat =zooKeeper.exists(fullPath,false);
+        Stat stat = zooKeeper.exists(fullPath,false);
         if (stat == null) {
             zooKeeper.create(fullPath, data, ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
             LOGGER.debug("Successfully created znode: " + fullPath);
@@ -193,6 +193,7 @@ public class ZookeeperECSManager extends ZookeeperManager{
         } else {
             LOGGER.debug("Trying to add znode: " + fullPath + " ,but already exists, updating data instead");
             System.out.println("Trying to add znode: " + fullPath + " ,but already exists, updating data instead");
+            System.out.println(stat.toString());
             zooKeeper.setData(fullPath,data,-1);
         }
     }

@@ -21,7 +21,7 @@ public class ServerManager {
     /* It was stated we can assume zookeeper running on same machine, default port*/
     private static final String ZOOKEEPER_HOST_NAME = "localhost";
     private static final String ZOOKEEPER_PORT = "2181";
-    //private static final String ZOOKEEPER_HOST_PORT = ZOOKEEPER_HOST_NAME + ":" + Integer.toString(ZOOKEEPER_PORT);
+    private static final String ZOOKEEPER_HOST_PORT = ZOOKEEPER_HOST_NAME + ":" + ZOOKEEPER_PORT;
 
     // TODO: Passwordless ssh
     // @Aaron, go on piazza, there's alot of questions about this, something about doing ssh without supplying a password. see if you can figure
@@ -41,7 +41,7 @@ public class ServerManager {
 
     public ServerManager(){
         try {
-            zookeeperECSManager = new ZookeeperECSManager(ZOOKEEPER_PORT,10000); // session timeout ms
+            zookeeperECSManager = new ZookeeperECSManager(ZOOKEEPER_HOST_PORT,10000); // session timeout ms
             System.out.println("Working Directory = " + System.getProperty("user.dir"));
             // start parseConfigFile with path to file
             String filePath = System.getProperty("user.dir") + RELATIVE_CONFIG_FILE_PATH;
@@ -93,19 +93,20 @@ public class ServerManager {
         }
     }
 
-    public void remoteLaunchServer(int portNum, String serverName, String zookeeperHost, String zookeeperPort){
+    public void remoteLaunchServer(String serverIpPort, String zookeeperHost, String zookeeperPort){
 
         JSch ssh = new JSch();
         String username;
         username = "xushuran";
-        String host = "128.100.13.174";
-        String jarFilePath = "/nfs/ug/homes-5/x/xushuran/ECE419/m2.jar";
+        String host = "localhost";
+        String jarFilePath = "/nfs/ug/homes-5/x/xushuran/ECE419/m2v2/ECE419/main_code/m2-server.jar";
         StringBuilder sb=new StringBuilder("java -jar ");
         sb.append(jarFilePath);
-        sb.append(serverName);
-        sb.append(" ");
+        sb.append(" -name ");
+        sb.append(serverIpPort);
+        sb.append(" -zkhost ");
         sb.append(zookeeperHost);
-        sb.append(" ");
+        sb.append(" -zkport ");
         sb.append(zookeeperPort);
         String command = sb.toString();
        // String command = "java -jar /nfs/ug/homes-5/x/xushuran/ECE419/m2.jar ";
@@ -113,11 +114,11 @@ public class ServerManager {
 
         try{
             ssh.setKnownHosts(KNOWN_HOST_PATH);
-            session = ssh.getSession(username,host,portNum);
+            session = ssh.getSession(username,host,22);
             ssh.addIdentity(PRIVATE_KEY_PATH);
             session.setConfig("StrictHostKeyChecking", "no");
             session.connect(TIMEOUT);
-            System.out.println("Connected to " + username + "@" + host + ":" + portNum);
+            System.out.println("Connected to " + username + "@" + host + ": 22");
 
 
             Channel channel = session.openChannel("exec");
@@ -148,14 +149,14 @@ public class ServerManager {
                     metadata.addServer(node.getNodeHostPort());
                 }
                 zookeeperECSManager.updateMetadataZNode(metadata); // step 2
-
+               
                 for(int i = 0; i < count; ++i){ // step 3: launch
                     ServerNode node = (ServerNode) list.get(i);
 
                     // now when I add zNode they have their range given a -full- hash ring.
                     this.addServer(node, cacheStrategy, cacheSize);
-
-                    this.remoteLaunchServer(node.getNodePort(),node.getNodeHostPort(),ZOOKEEPER_HOST_NAME,ZOOKEEPER_PORT);
+                    System.out.println("node.serverName = "+node.getNodeName() + ", node.ipport = " +node.getNodeHostPort());
+                    this.remoteLaunchServer(node.getNodeHostPort(), ZOOKEEPER_HOST_NAME,ZOOKEEPER_PORT);
                     // TODO: ^ this should take ip & port because we are constructing this under assumption that KVserver can be run on different computers.
                 }
             }
@@ -169,7 +170,7 @@ public class ServerManager {
 
                     zookeeperECSManager.updateMetadataZNode(metadata); // update metadata node
                     this.addServer(node, cacheStrategy, cacheSize);
-                    this.remoteLaunchServer(node.getNodePort(),node.getNodeHostPort(),ZOOKEEPER_HOST_NAME,ZOOKEEPER_PORT);
+                    this.remoteLaunchServer(node.getNodeHostPort(),ZOOKEEPER_HOST_NAME,ZOOKEEPER_PORT);
                 }
             }
         } catch (KeeperException | InterruptedException e) {
