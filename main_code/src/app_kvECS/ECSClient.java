@@ -35,7 +35,11 @@ public class ECSClient implements IECSClient {
         }
     }
 
-    public ECSClient(){ }
+    public ECSClient(String zkName, String zkPort){ // for autotester
+        serverManager.setZkParams(zkName,zkPort);
+    }
+
+    public ECSClient(){}
 
     @Override
     public boolean start() {
