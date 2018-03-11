@@ -21,6 +21,7 @@ public class ServerManager {
     /* It was stated we can assume zookeeper running on same machine, default port*/
     private static final String ZOOKEEPER_HOST_NAME = "localhost";
     private static final int ZOOKEEPER_PORT = 2191;
+    private static final String ZOOKEEPER_HOST_PORT = ZOOKEEPER_HOST_NAME + ":" + Integer.toString(ZOOKEEPER_PORT);
 
     // TODO: Passwordless ssh
     // @Aaron, go on piazza, there's alot of questions about this, something about doing ssh without supplying a password. see if you can figure
@@ -39,13 +40,13 @@ public class ServerManager {
 
     public ServerManager(){
         try {
-            zookeeperECSManager = new ZookeeperECSManager("localhost:2181",10000); // session timeout ms
+            zookeeperECSManager = new ZookeeperECSManager(ZOOKEEPER_HOST_PORT,10000); // session timeout ms
             System.out.println("Working Directory = " + System.getProperty("user.dir"));
             // start parseConfigFile with path to file
             String filePath = System.getProperty("user.dir") + RELATIVE_CONFIG_FILE_PATH;
             parseConfigFile(filePath);
         } catch (Exception e) {
-            LOGGER.error("Failed to connect to zookeeper. Check that zookeeper server has started and is running on localhost:2181");
+            LOGGER.error("Failed to connect to zookeeper. Check that zookeeper server has started and is running on " + ZOOKEEPER_HOST_PORT );
             throw new RuntimeException("Failed to connect to zookeeper. Check that zookeeper server has started and is running on localhost:2181", e);
         }
     }
