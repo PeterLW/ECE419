@@ -163,7 +163,7 @@ public class ClientConnection implements Runnable {
 	@Override
 	public void run() {
 		Message latestMsg;
-		LOGGER.error(serverNode.getNodeHostPort() + " > ClientConnection running, connected");
+//		LOGGER.error(serverNode.getNodeHostPort() + " > ClientConnection running, connected");
 		System.out.println(serverNode.getNodeHostPort() + " > ClientConnection running, connected");
 		while (isOpen) {
 			try {
@@ -188,7 +188,7 @@ public class ClientConnection implements Runnable {
 				 * network problems*/
 			}
 			catch(SocketTimeoutException e){
-				System.out.println(serverNode.getServerStatus().getStatus().name());
+				LOGGER.error("Server status: " + serverNode.getServerStatus().getStatus().name());
 				if (serverNode.getServerStatus().getStatus() == ServerStatusType.CLOSE) {
 					close();
 				}
@@ -271,8 +271,8 @@ public class ClientConnection implements Runnable {
 		Message return_msg = null;
 		String key = msg.getKey();
 		String value = msg.getValue();
-		
-		if(checkValidkey(key) && (value.length() < 120)){
+
+		if(checkValidkey(key) && (value.isEmpty() || (value.length() < 120))){
 			LOGGER.info("valid key " + key);
 			if(value == null || value.isEmpty()){
 				LOGGER.info("Interpreted as a delete for key: " + key);
