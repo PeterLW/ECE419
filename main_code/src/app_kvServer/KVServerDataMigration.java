@@ -1,11 +1,9 @@
 package app_kvServer;
 
 import common.cache.StorageManager;
-import common.messages.KVMessage;
-import common.messages.Message;
+import common.KVMessage;
+import common.Message;
 import common.transmission.Transmission;
-import logger.LogSetup;
-import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import com.google.gson.Gson;
 
@@ -13,7 +11,6 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.security.MessageDigest;
 import java.util.ArrayList;
 import ecs.ServerNode;
 

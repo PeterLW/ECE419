@@ -1,10 +1,12 @@
 package testing;
 
 import com.google.gson.Gson;
+import common.KVMessage;
+import common.Message;
 import common.cache.StorageManager;
 import common.disk.DBManager;
-import common.messages.KVMessage;
-import common.messages.Message;
+//import common.messages.KVMessage;
+//import common.messages.Message;
 //import org.junit.Test;
 
 import junit.framework.TestCase;
