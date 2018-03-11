@@ -82,6 +82,8 @@ public class KVServer implements IKVServer {
 			zookeeperWatcher.setServerNode(serverNode); // zookeeperWatcher may change this when receive data updates
 
 			//Peter: better still in INITIALIZE state and put the MOVE_DATA_RECEIVER into queue, more consistent
+			// The reason I didn't do that was cuz there is not a valid transition from Initialize to Move Data and I didn't want to make
+			// that a valid transition so =/ In way I am manually making that transition
 			ServerStatus ss;
 			if (znodeMessage.zNodeMessageStatus == ZNodeMessageStatus.NEW_ZNODE_RECEIVE_DATA) {
 				ss = new ServerStatus(ServerStatusType.MOVE_DATA_RECEIVER); // move data auto transits to Running when isReady = true
