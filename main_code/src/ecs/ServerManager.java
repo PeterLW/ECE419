@@ -61,7 +61,7 @@ public class ServerManager {
 
                     // now when I add zNode they have their range given a -full- hash ring.
                     this.addServer(node, cacheStrategy, cacheSize);
-                    System.out.println("node.serverName = "+node.getNodeName() + ", node.ipport = " +node.getNodeHostPort());
+//                    System.out.println("node.serverName = "+node.getNodeName() + ", node.ipport = " +node.getNodeHostPort());
 
                     SSH ssh_conn = new SSH(node.getNodeHostPort(), ZOOKEEPER_HOST_NAME,ZOOKEEPER_PORT);
                     Thread sshConnThread = new Thread(ssh_conn);
@@ -78,7 +78,7 @@ public class ServerManager {
 
                     zookeeperECSManager.updateMetadataZNode(metadata); // update metadata node
                     this.addServer(node, cacheStrategy, cacheSize);
-                    System.out.println("node.serverName = "+node.getNodeName() + ", node.ipport = " +node.getNodeHostPort());
+//                    System.out.println("node.serverName = "+node.getNodeName() + ", node.ipport = " +node.getNodeHostPort());
                 
                     SSH ssh_conn = new SSH(node.getNodeHostPort(), ZOOKEEPER_HOST_NAME,ZOOKEEPER_PORT);
                     Thread sshConnThread = new Thread(ssh_conn);

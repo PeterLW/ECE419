@@ -164,7 +164,7 @@ public class ECSClient implements IECSClient {
                     printError("Error occurred in adding a server node");
                 }
                 else{
-                    System.out.println("new server node added to the ECS");
+//                    System.out.println("new server node added to the ECS");
                 }
             }
         }else if(tokens[0].equals("addNodes")) {
@@ -179,7 +179,7 @@ public class ECSClient implements IECSClient {
                     printError("Failed in adding "+tokens[1]+" server nodes");
                 }
                 else{
-                    System.out.println(tokens[1] + " nodes added to the ECS");
+//                    System.out.println(tokens[1] + " nodes added to the ECS");
                 }
             }
         } else if(tokens[0].equals("removeNode")) {

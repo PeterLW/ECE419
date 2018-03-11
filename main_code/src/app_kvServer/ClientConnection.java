@@ -163,7 +163,7 @@ public class ClientConnection implements Runnable {
 	@Override
 	public void run() {
 		Message latestMsg;
-        System.out.printf("server that accepts the client connection starts running...");
+		LOGGER.error(serverNode.getNodeHostPort() + " > ClientConnection running, connected");
 		while (isOpen) {
 			try {
 				latestMsg = transmission.receiveMessage(clientSocket);
