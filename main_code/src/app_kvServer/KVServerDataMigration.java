@@ -49,6 +49,8 @@ public class KVServerDataMigration implements Runnable {
                 }catch (InterruptedException e){
                     e.printStackTrace();
                 }
+            } else if (statusType == ServerStatusType.CLOSE){
+                break;
             }
             else {
                 try {

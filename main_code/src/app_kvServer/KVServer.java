@@ -219,13 +219,18 @@ public class KVServer implements IKVServer {
                         }
                         break;
                     case CLOSE:
-                    	System.exit(0);
+                    	break;
+//                    	System.exit(0);
                 }
 
                 if (proceed) {
                     upcomingStatusQueue.popQueue();
                 }
             }
+            else if (serverNode.getServerStatus().getStatus() == ServerStatusType.CLOSE){
+            	break;
+			}
+
         }
 	}
 
