@@ -118,7 +118,7 @@ public class KVServer implements IKVServer {
 			case "FIFO":
 				return CacheStrategy.FIFO;
 			default:
-				return CacheStrategy.None;
+				return CacheStrategy.FIFO;
 		}
 	}
 
