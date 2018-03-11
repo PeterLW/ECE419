@@ -189,7 +189,9 @@ public class KVServer implements IKVServer {
 							next.setServerStatus(ServerStatusType.RUNNING);
 							serverNode.setServerStatus(next);
 						} else if (next.getTransition() == ZNodeMessageStatus.REMOVE_ZNODE_SEND_DATA){
-							handleDeleteNodeTransition(next);
+							handleDeleteAndMoveDataTransition(next);
+						} else if (next.getTransition() == ZNodeMessageStatus.SHUTDOWN_SERVER){
+							handleShutdownTransition(next);
 						}
                         break;
                     case RUNNING:
@@ -203,24 +205,25 @@ public class KVServer implements IKVServer {
                         	next.setServerStatus(ServerStatusType.MOVE_DATA_SENDER);
 							serverNode.setServerStatus(next);
 						} else if (next.getTransition() == ZNodeMessageStatus.REMOVE_ZNODE_SEND_DATA) {
-							handleDeleteNodeTransition(next);
+							handleDeleteAndMoveDataTransition(next);
+						} else if (next.getTransition() == ZNodeMessageStatus.SHUTDOWN_SERVER){
+							handleShutdownTransition(next);
 						}
                         break;
                     case MOVE_DATA_RECEIVER:
                     case MOVE_DATA_SENDER:
                         if (curr.isReady()) {
                         	if (next.getTransition()== ZNodeMessageStatus.SHUTDOWN_SERVER){
-								next.setServerStatus(ServerStatusType.CLOSE);
+								handleShutdownTransition(next);
 							} else {
 								next.setServerStatus(ServerStatusType.RUNNING);
+								serverNode.setServerStatus(next);
 							}
-                            serverNode.setServerStatus(next);
-                            proceed = false;
                         }
-                        break;
+						proceed = false;
+						break;
                     case CLOSE:
                     	break;
-//                    	System.exit(0);
                 }
 
                 if (proceed) {
@@ -234,7 +237,12 @@ public class KVServer implements IKVServer {
         }
 	}
 
-	private void handleDeleteNodeTransition(ServerStatus next){
+	private void handleShutdownTransition(ServerStatus next){
+		next.setServerStatus(ServerStatusType.CLOSE);
+		serverNode.setServerStatus(next);
+	}
+
+	private void handleDeleteAndMoveDataTransition(ServerStatus next){
 		ServerStatus closeStatus = new ServerStatus(ZNodeMessageStatus.SHUTDOWN_SERVER);
 		upcomingStatusQueue.addQueue(closeStatus);
 		next.setServerStatus(ServerStatusType.MOVE_DATA_SENDER);
