@@ -88,7 +88,7 @@ public class KVServerDataMigration implements Runnable {
             } catch (IOException e) {
 //                LOGGER.error("Failed to connect data migration receiver");
                 try {
-                    Thread.sleep(2);
+                    Thread.sleep(10);
                 } catch (InterruptedException e1) {
                     LOGGER.error("Thread.sleep failed");
                 }
