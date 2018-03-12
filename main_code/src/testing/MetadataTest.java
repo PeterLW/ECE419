@@ -61,4 +61,16 @@ public class MetadataTest extends TestCase {
 
         assertEquals("b",serverName);
     }
+
+    public void testMetadataFindSuccessor(){
+        Metadata m = new Metadata();
+
+        m.addServer("a");
+        // 1695523700196324017305827155985872649
+        m.addServer("d");
+        // 195289424170611159128911017612795795343
+
+        String serverName = m.getSuccessor("a");;
+        assertEquals("d",serverName);
+    }
 }
