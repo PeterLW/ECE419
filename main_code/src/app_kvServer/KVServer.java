@@ -87,6 +87,7 @@ public class KVServer implements IKVServer {
 			ServerStatus ss;
 			if (znodeMessage.zNodeMessageStatus == ZNodeMessageStatus.NEW_ZNODE_RECEIVE_DATA) {
 				ss = new ServerStatus(ServerStatusType.MOVE_DATA_RECEIVER); // move data auto transits to Running when isReady = true
+                ss.setMoveRangeStatus(ServerStatusType.MOVE_DATA_RECEIVER,znodeMessage.getMoveDataRange(),znodeMessage.getTargetName());
 			} else {
 				ss = new ServerStatus(ServerStatusType.INITIALIZE);
 			}
