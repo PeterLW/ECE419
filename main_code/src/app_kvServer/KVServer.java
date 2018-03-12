@@ -218,12 +218,12 @@ public class KVServer implements IKVServer {
                             next.setServerStatus(ServerStatusType.MOVE_DATA_RECEIVER);
                             serverNode.setServerStatus(next);
 							Gson gson = new Gson();
-							System.out.println("Serverstatus: " + gson.toJson(next));
+							System.out.println("Serverstatus - KVServer: " + gson.toJson(next));
 						} else if (next.getTransition() == ZNodeMessageStatus.MOVE_DATA_SENDER) {
                         	next.setServerStatus(ServerStatusType.MOVE_DATA_SENDER);
 							serverNode.setServerStatus(next);
 							Gson gson = new Gson();
-							System.out.println("Serverstatus: " + gson.toJson(next));
+							System.out.println("Serverstatus - KVServer: " + gson.toJson(next));
 						} else if (next.getTransition() == ZNodeMessageStatus.REMOVE_ZNODE_SEND_DATA) {
 							handleDeleteAndMoveDataTransition(next);
 						} else if (next.getTransition() == ZNodeMessageStatus.SHUTDOWN_SERVER){
