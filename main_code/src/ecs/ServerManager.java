@@ -12,7 +12,6 @@ import java.io.*;
 
 public class ServerManager {
     private static final Logger LOGGER = Logger.getLogger(ServerManager.class);
-
     private static final String RELATIVE_CONFIG_FILE_PATH = "/src/app_kvECS/ecs.config"; // SHOULD BE an argument passed in at start-up
     
     private static Metadata metadata = new Metadata();
@@ -24,6 +23,7 @@ public class ServerManager {
    
     private LinkedHashMap<String,IECSNode> hashMap = new LinkedHashMap<String,IECSNode>(); // stores the active running nodes
     private LinkedList<ConfigEntity> entityList = new LinkedList<ConfigEntity>(); // stores provided nodes from Config file
+    private LinkedList<ConfigEntity> originalEntityList = new LinkedList<ConfigEntity>();
     private ZookeeperECSManager zookeeperECSManager;
     private boolean is_init;
 
@@ -236,18 +236,21 @@ public class ServerManager {
     }
 
     //ServerIndex: ip:port
-    public boolean removeNode(String ServerIndex)throws KeeperException, InterruptedException{
-        if (hashMap.containsKey(ServerIndex)){
-            ServerNode node = (ServerNode) hashMap.get(ServerIndex);
+    public boolean removeNode(String serverIndex) {
+        ConfigEntity configEntity = originalEntityList.get(Integer.parseInt(serverIndex));
+        String serverHostPort = configEntity.getIpAddr() + ":" + configEntity.getIpAddr();
+        if (hashMap.containsKey(serverHostPort)){
+            ServerNode node = (ServerNode) hashMap.get(serverHostPort);
+
             //if remove node, add the node back to entity list for next launch
             ConfigEntity entity = new ConfigEntity(node.getNodeHost(), node.getNodeHost(), node.getNodePort());
             entityList.add(entity);
 
-            BigInteger[] range = metadata.findHashRange(ServerIndex);
+            BigInteger[] range = metadata.findHashRange(node.getNodeHostPort());
             ServerNode successor = updateSuccessor(node);
 
-            metadata.removeServer((node).getNodeHostPort());
-            hashMap.remove(ServerIndex);
+            metadata.removeServer(node.getNodeHostPort());
+            hashMap.remove(node.getNodeHostPort());
 
             try {
                 if (!hashMap.isEmpty()) {
@@ -295,6 +298,7 @@ public class ServerManager {
                 String[] entry = splitArray[i].split("\\s+");
                 ConfigEntity node = new ConfigEntity(entry[0],entry[1],Integer.parseInt(entry[2]));
                 entityList.add(node);
+                originalEntityList.add(node); // this one doesn't get removed from later
             }
             bufferedReader.close();
         } catch (IOException e) {

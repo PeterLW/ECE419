@@ -109,14 +109,9 @@ public class ECSClient implements IECSClient {
     }
 
     @Override
-    public boolean removeNodes(Collection<String> nodeNames) {
-        for (String name : nodeNames) {
-            try {
-                if(! serverManager.removeNode(name)){
-                    return false;
-                }
-            } catch (KeeperException | InterruptedException e) {
-                e.printStackTrace();
+    public boolean removeNodes(Collection<String> nodeIndexList) {
+        for (String index : nodeIndexList) {
+            if(! serverManager.removeNode(index)){
                 return false;
             }
         }
