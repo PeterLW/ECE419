@@ -130,24 +130,27 @@ public class DBManager {
         File[] files = new File(ROOT_PATH).listFiles();
         ArrayList<String> keys = new ArrayList<>();
         int flag = range[0].compareTo(range[1]);
+        System.out.println("Range: " + range[0] + " |||| " + range[1]);
+        System.out.println("# of files in database: " + files.length);
+        
         for(File file : files){
             String filename = file.getName();
             BigInteger hash = getMD5(filename);
-//            System.out.println("MD5 hash of " + filename + " is " + hash);
-            //move data to first node, means the node added is the first node in hash ring
+            System.out.println("MD5 hash of " + filename + " is " + hash);
+//            move data to first node, means the node added is the first node in hash ring
             if(flag > 0){
                 if(hash.compareTo(range[0]) > 0 || hash.compareTo(range[1]) < 0) {
                     keys.add(filename);
-                    System.out.println("1:send file: " + filename + " , hash: " + hash);
+                    System.out.println("1: send file: " + filename + " , hash: " + hash);
                 }
                 else {
-                    LOGGER.error("Key not in range");
+                    LOGGER.debug("Key not in range");
                 }
             }
             else if(flag < 0){
                 if(hash.compareTo(range[0]) > 0 && hash.compareTo(range[1]) < 0) {
                     keys.add(filename);
-                    System.out.println("2:send file: " + filename + " , hash: " + hash);
+                    System.out.println("2: send file: " + filename + " , hash: " + hash);
                 }
                 else {
                     LOGGER.error("Key not in range");
