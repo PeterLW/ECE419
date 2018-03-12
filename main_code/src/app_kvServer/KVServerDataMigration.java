@@ -86,6 +86,11 @@ public class KVServerDataMigration implements Runnable {
                 senderSocket.close();
             } catch (IOException e) {
                 LOGGER.error("Failed to connect data migration receiver");
+                try {
+                    Thread.sleep(2);
+                } catch (InterruptedException e1) {
+                    LOGGER.error("Thread.sleep failed");
+                }
                 return;
             }
         } else if (serverNode.getServerStatus().getStatus() == ServerStatusType.MOVE_DATA_RECEIVER) {
