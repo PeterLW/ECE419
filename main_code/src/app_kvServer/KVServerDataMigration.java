@@ -113,11 +113,12 @@ public class KVServerDataMigration implements Runnable {
 
     private void finish() {
         if (serverNode.getServerStatus().getFinalRange() == null){
-            System.out.println("This KVServer will be closing soon.");
+            System.out.println("This KVServer may be closing soon.");
         } else {
             serverNode.setRange(serverNode.getServerStatus().getFinalRange());
         }
         serverNode.getServerStatus().setReady();
+        System.out.println(serverNode.getNodeHostPort() "> servernode: " + gson.toJson(serverNode));
     }
 
     public void send_data(Socket senderSocket) throws IOException {
@@ -143,11 +144,11 @@ public class KVServerDataMigration implements Runnable {
     //need to send PUT_SUCCESS as ACK, then either return signal to main thread
 
     public void receive_data(Socket receiverSocket) throws IOException{
-
         Message data = transmission.receiveMessage(receiverSocket);
+        System.out.println("Data received, " + data);
+        System.in.read();
         while(!(data.getStatus() == KVMessage.StatusType.CLOSE_REQ)) {
             if(data.getStatus() == KVMessage.StatusType.PUT) {
-
                 System.out.println("Packets (" + data.getKey() +"," + data.getValue() + ") " + "received\n");
                 storageManager.putKV(data.getKey(), data.getValue());
 
