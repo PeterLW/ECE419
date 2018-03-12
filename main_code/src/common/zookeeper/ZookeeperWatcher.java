@@ -32,6 +32,8 @@ public class ZookeeperWatcher extends ZookeeperMetaData implements Runnable {
         byte[] data = zooKeeper.getData(fullPath,false,null);
         String dataString = new String(data);
         ZNodeMessage newNode = gson.fromJson(dataString,ZNodeMessage.class);
+        System.out.println("fetch data from znode");
+        System.out.println(new String(data));
         return newNode;
     }
 
@@ -66,30 +68,24 @@ public class ZookeeperWatcher extends ZookeeperMetaData implements Runnable {
         ZNodeMessage newMessage = gson.fromJson(new String(data),ZNodeMessage.class);
         ServerStatus ss = null;
 
-        //System.out.println(newMessage.zNodeMessageStatus);
+
+        // debug
+        System.out.println("Data has changed");
+        System.out.println(new String(data));
+
         // in progress
         switch(newMessage.zNodeMessageStatus){
             case MOVE_DATA_RECEIVER:
             case MOVE_DATA_SENDER:
-                // debug
-                System.out.println("Data has changed");
-                System.out.println(new String(data));
-
                 ss = new ServerStatus(newMessage.zNodeMessageStatus,newMessage.getMoveDataRange(),newMessage.getTargetName(),serverNode.getRange());
                 upcomingStatusQueue.addQueue(ss);
                 break;
             case REMOVE_ZNODE_SEND_DATA:
-                System.out.println("Data has changed");
-                System.out.println(new String(data));
-
                 ss = new ServerStatus(newMessage.zNodeMessageStatus,newMessage.getMoveDataRange(),newMessage.getTargetName(),null);
                 upcomingStatusQueue.addQueue(ss);
-
                 this.handleDelete();
-            break;
+                break;
             default:
-                System.out.println("New node: Data has changed");
-                System.out.println(new String(data));
                 ss = new ServerStatus(newMessage.zNodeMessageStatus);
                 upcomingStatusQueue.addQueue(ss);
                 break;

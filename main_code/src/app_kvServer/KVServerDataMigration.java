@@ -82,10 +82,11 @@ public class KVServerDataMigration implements Runnable {
             System.out.println(serverNode.getNodeHostPort() + " > trying to connect on: " + address + ":" + port);
             try {
                 Socket senderSocket = new Socket(address, port);
+                System.out.println("connected: "+ address + ":" + port);
                 send_data(senderSocket);
                 senderSocket.close();
             } catch (IOException e) {
-                LOGGER.error("Failed to connect data migration receiver");
+//                LOGGER.error("Failed to connect data migration receiver");
                 try {
                     Thread.sleep(2);
                 } catch (InterruptedException e1) {
