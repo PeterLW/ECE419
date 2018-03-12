@@ -237,7 +237,7 @@ public class ServerManager {
     //ServerIndex: ip:port
     public boolean removeNode(String serverIndex) {
         ConfigEntity configEntity = originalEntityList.get(Integer.parseInt(serverIndex));
-        String serverHostPort = configEntity.getIpAddr() + ":" + configEntity.getIpAddr();
+        String serverHostPort = configEntity.getIpAddr() + ":" + configEntity.getPortNum();
         System.out.println("Attempting to remove server node: " + serverHostPort);
         if (hashMap.containsKey(serverHostPort)){
             ServerNode node = (ServerNode) hashMap.get(serverHostPort);
