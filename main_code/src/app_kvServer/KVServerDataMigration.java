@@ -125,7 +125,7 @@ public class KVServerDataMigration implements Runnable {
         if (serverNode.getServerStatus().getFinalRange() == null){
             System.out.println("This ServerStatus getfinalRange() is null");
         } else {
-            serverNode.setRange(serverNode.getServerStatus().getFinalRange());
+//            serverNode.setRange(serverNode.getServerStatus().getFinalRange());
         }
         System.out.println(" new range: " + serverNode.getRange()[0] + " || " + serverNode.getRange()[1]);
 
