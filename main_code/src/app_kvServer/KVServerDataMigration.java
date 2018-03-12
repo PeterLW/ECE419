@@ -34,7 +34,7 @@ public class KVServerDataMigration implements Runnable {
     //cathy use this class as an object or run this thread at startup ? Need a mechanism to kill and close this thread.
     @Override
     public void run() {
-        LOGGER.error(serverNode.getNodeHostPort() + " > KVServerDataMigration thread starts ....\n");
+        System.out.println(serverNode.getNodeHostPort() + " > KVServerDataMigration thread starts ....\n");
         while(true){
             ServerStatusType statusType = serverNode.getServerStatus().getStatus();
             if (statusType == ServerStatusType.MOVE_DATA_RECEIVER || statusType == ServerStatusType.MOVE_DATA_SENDER){ ;
@@ -48,8 +48,7 @@ public class KVServerDataMigration implements Runnable {
                 }
             } else if (statusType == ServerStatusType.CLOSE){
                 break;
-            }
-            else {
+            } else {
                 try {
                     Thread.sleep(1);
                 } catch (InterruptedException e) {
@@ -80,13 +79,22 @@ public class KVServerDataMigration implements Runnable {
         if (serverNode.getServerStatus().getStatus() == ServerStatusType.MOVE_DATA_SENDER) {
             System.out.println(serverNode.getNodeHostPort() + " > is trying connecting to receiver: " + serverNode.getServerStatus().getTargetName());
             System.out.println(serverNode.getNodeHostPort() + " > trying to connect on: " + address + ":" + port);
-            try {
-                Socket senderSocket = new Socket(address, port);
-                send_data(senderSocket);
-                senderSocket.close();
-            } catch (IOException e) {
-                LOGGER.error("Failed to connect data migration receiver");
-                return;
+            while(true) { // keep trying to connect
+                try {
+                    Socket senderSocket = new Socket(address, port);
+                    System.out.println(serverNode.getNodeHostPort() + " > is connected to receiver: " + address + ":" + port);
+                    send_data(senderSocket);
+                    senderSocket.close();
+                    break;
+                } catch (IOException e) {
+//                LOGGER.error("Failed to connect data migration receiver");
+                    try {
+                        Thread.sleep(1);
+                    } catch (InterruptedException e1) {
+                        LOGGER.error("Thread.sleep failed");
+                    }
+                    return;
+                }
             }
         } else if (serverNode.getServerStatus().getStatus() == ServerStatusType.MOVE_DATA_RECEIVER) {
             System.out.println(serverNode.getNodeHostPort() + " > is the receiver, waiting on port ("
@@ -94,24 +102,27 @@ public class KVServerDataMigration implements Runnable {
             try {
                 ServerSocket receiverSocket = new ServerSocket(port);
                 Socket socket = receiverSocket.accept(); // blocking
+                System.out.println(serverNode.getNodeHostPort() + " connected " + socket.getLocalAddress() + " " + socket.getLocalPort());
                 receive_data(socket);
                 socket.close();
                 receiverSocket.close();
-                System.out.println("Socket closed\n");
+                System.out.println("Socket closed - Transfer finished\n");
             } catch (IOException e) {
                 LOGGER.error("Failed to connect data migration sender");
                 return;
             }
         }
+
     }
 
     private void finish() {
         if (serverNode.getServerStatus().getFinalRange() == null){
-            System.out.println("This KVServer will be closing soon.");
+            System.out.println("This ServerStatus getfinalRange() is null");
         } else {
             serverNode.setRange(serverNode.getServerStatus().getFinalRange());
         }
         serverNode.getServerStatus().setReady();
+        System.out.println(serverNode.getNodeHostPort() +  "> servernode: " + gson.toJson(serverNode));
     }
 
     public void send_data(Socket senderSocket) throws IOException {
@@ -137,11 +148,10 @@ public class KVServerDataMigration implements Runnable {
     //need to send PUT_SUCCESS as ACK, then either return signal to main thread
 
     public void receive_data(Socket receiverSocket) throws IOException{
-
         Message data = transmission.receiveMessage(receiverSocket);
-        while(!(data.getStatus() == KVMessage.StatusType.CLOSE_REQ)) {
+        System.out.println("Data received, " + data);
+        while(data.getStatus() != KVMessage.StatusType.CLOSE_REQ) {
             if(data.getStatus() == KVMessage.StatusType.PUT) {
-
                 System.out.println("Packets (" + data.getKey() +"," + data.getValue() + ") " + "received\n");
                 storageManager.putKV(data.getKey(), data.getValue());
 
@@ -156,6 +166,7 @@ public class KVServerDataMigration implements Runnable {
                 break;
             }
         }
+        System.out.println("Data received, " + data);
         System.out.println("CLOSE_REQ: finished receiving packets\n");
     }
 

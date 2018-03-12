@@ -18,6 +18,14 @@ public class ServerStatus {
         this.finalRange = finalRange;
     }
 
+    // prob should refactor this later...
+    public ServerStatus(ServerStatusType status, BigInteger[] moveRange, String targetName, BigInteger[] finalRange){
+        this.moveRange = moveRange;
+        this.targetName = targetName;
+        this.status = status;
+        this.finalRange = finalRange;
+    }
+
     public ServerStatus(ZNodeMessageStatus transition){this.transition = transition;}
 
     public ServerStatus(ServerStatusType newStatus){
@@ -36,9 +44,6 @@ public class ServerStatus {
         return this.moveRange;
     }
     public BigInteger[] getFinalRange() {
-        if (finalRange == null){
-            return null;
-        }
         return finalRange;
     }
 

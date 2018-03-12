@@ -172,6 +172,10 @@ public class ServerManager {
         return true;
     }
 
+    public LinkedList<ConfigEntity> getEntityList() {
+        return entityList;
+    }
+
     public IECSNode getServerName(String Key){
         String[] temp = metadata.findServer(Key).split(":");
         Iterator i = hashMap.entrySet().iterator();

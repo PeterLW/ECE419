@@ -86,7 +86,10 @@ public class KVServer implements IKVServer {
 			// that a valid transition so =/ In way I am manually making that transition
 			ServerStatus ss;
 			if (znodeMessage.zNodeMessageStatus == ZNodeMessageStatus.NEW_ZNODE_RECEIVE_DATA) {
-				ss = new ServerStatus(ServerStatusType.MOVE_DATA_RECEIVER); // move data auto transits to Running when isReady = true
+				ss = new ServerStatus(ServerStatusType.MOVE_DATA_RECEIVER,znodeMessage.getMoveDataRange(),znodeMessage.getTargetName(),znodeMessage.getMoveDataRange()); // move data auto transits to Running when isReady = true
+                System.out.println("Starting new node - going into MOVE DATA RECEIVER state");
+				System.out.println("targetName: " + znodeMessage.getTargetName());
+				System.out.println("final range: " + ss.getFinalRange());
 			} else {
 				ss = new ServerStatus(ServerStatusType.INITIALIZE);
 			}
@@ -96,6 +99,7 @@ public class KVServer implements IKVServer {
 			System.exit(-1);
 		}
 		storage = new StorageManager(serverNode.getCacheSize(), serverNode.getCacheStrategy(), serverNode.getNodeHostPort());
+		watcherThread.start();
 
 		KVClientConnection kvClientConnection = new KVClientConnection(storage,serverNode,zookeeperHost,10000);
 		Thread kvConnThread = new Thread(kvClientConnection);
@@ -103,7 +107,6 @@ public class KVServer implements IKVServer {
         KVServerDataMigration dataMigration = new KVServerDataMigration(serverNode, storage);
         Thread dataMigraThread = new Thread(dataMigration);
 
-        watcherThread.start();
         kvConnThread.start();
 		dataMigraThread.start();
 
@@ -241,10 +244,15 @@ public class KVServer implements IKVServer {
                 if (proceed) {
                     upcomingStatusQueue.popQueue();
                 }
-            }
-            else if (serverNode.getServerStatus().getStatus() == ServerStatusType.CLOSE){
+            } else if (serverNode.getServerStatus().getStatus() == ServerStatusType.CLOSE){
             	break;
-			}
+			} else if (serverNode.getServerStatus().getStatus() == ServerStatusType.MOVE_DATA_SENDER ||
+					serverNode.getServerStatus().getStatus() == ServerStatusType.MOVE_DATA_RECEIVER) {// refactor later
+				if (serverNode.getServerStatus().isReady()){
+					ServerStatus ss = new ServerStatus(ServerStatusType.RUNNING);
+					serverNode.setServerStatus(ss);
+				}
+            }
 
         }
 	}
