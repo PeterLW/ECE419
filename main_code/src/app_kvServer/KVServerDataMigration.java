@@ -106,7 +106,11 @@ public class KVServerDataMigration implements Runnable {
     }
 
     private void finish() {
-        serverNode.setRange(serverNode.getServerStatus().getFinalRange());
+        if (serverNode.getServerStatus().getFinalRange() == null){
+            System.out.println("This KVServer will be closing soon.");
+        } else {
+            serverNode.setRange(serverNode.getServerStatus().getFinalRange());
+        }
         serverNode.getServerStatus().setReady();
     }
 
