@@ -79,6 +79,7 @@ public class ZookeeperWatcher extends ZookeeperMetaData implements Runnable {
             case MOVE_DATA_RECEIVER:
             case MOVE_DATA_SENDER:
                 ss = new ServerStatus(newMessage.zNodeMessageStatus,newMessage.getMoveDataRange(),newMessage.getTargetName(),serverNode.getRange());
+                System.out.println("servernodegetrange:" + serverNode.getRange());
                 serverNode.setRange(serverNode.getRange());
                 upcomingStatusQueue.addQueue(ss);
                 System.out.println("Serverstatus - Watcher: " + gson.toJson(ss));
