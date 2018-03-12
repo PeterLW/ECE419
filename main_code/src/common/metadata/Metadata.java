@@ -69,7 +69,7 @@ public class Metadata {
         BigInteger keyhash = null;
         try {
             keyhash = getMD5(Key);
-//            System.out.println(keyhash);
+            System.out.println(keyhash);
         }catch (Exception e){
             e.printStackTrace();
         }

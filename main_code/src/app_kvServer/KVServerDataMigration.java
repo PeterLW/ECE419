@@ -58,6 +58,10 @@ public class KVServerDataMigration implements Runnable {
         }
     }
 
+    private void datamigration_v2(){
+        storageManager.clearCache();
+    }
+
     private void update(){
         String targetName = serverNode.getServerStatus().getTargetName();
         String[] temp = targetName.split(":");
@@ -79,6 +83,7 @@ public class KVServerDataMigration implements Runnable {
         if (serverNode.getServerStatus().getStatus() == ServerStatusType.MOVE_DATA_SENDER) {
             System.out.println(serverNode.getNodeHostPort() + " > is trying connecting to receiver: " + serverNode.getServerStatus().getTargetName());
             System.out.println(serverNode.getNodeHostPort() + " > trying to connect on: " + address + ":" + port);
+
             while(true) { // keep trying to connect
                 try {
                     Socket senderSocket = new Socket(address, port);
@@ -87,13 +92,7 @@ public class KVServerDataMigration implements Runnable {
                     senderSocket.close();
                     break;
                 } catch (IOException e) {
-//                LOGGER.error("Failed to connect data migration receiver");
-                    try {
-                        Thread.sleep(1);
-                    } catch (InterruptedException e1) {
-                        LOGGER.error("Thread.sleep failed");
-                    }
-                    return;
+                    LOGGER.error("Failed to connect data migration receiver");
                 }
             }
         } else if (serverNode.getServerStatus().getStatus() == ServerStatusType.MOVE_DATA_RECEIVER) {

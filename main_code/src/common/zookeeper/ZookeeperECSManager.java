@@ -232,11 +232,12 @@ public class ZookeeperECSManager extends ZookeeperManager{
     public static void main(String[] args) throws IOException, InterruptedException, KeeperException {
         ZookeeperECSManager zm = new ZookeeperECSManager("localhost:2191", 100); // session timeout is in ms
         System.out.println("wee");
+
         ServerNode n = new ServerNode("Server1","localhost",50000,100,"LFU");
         BigInteger i = new BigInteger("9999999999");
-
-
         n.setRange(new BigInteger("0"),i);
+
+
         zm.addKVServer(n);
         System.out.println(zm.isConnected());
         System.out.println("wee1");
@@ -248,7 +249,7 @@ public class ZookeeperECSManager extends ZookeeperManager{
         System.in.read();
         zm.stopKVServer(n);
 
-        new ListGroupForever(zm.zooKeeper).listForever(ZNODE_HEAD); // debugging class
+//        new ListGroupForever(zm.zooKeeper).listForever(ZNODE_HEAD); // debugging class
 //        System.in.read();
 
     }
