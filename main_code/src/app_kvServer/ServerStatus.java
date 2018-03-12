@@ -44,9 +44,6 @@ public class ServerStatus {
         return this.moveRange;
     }
     public BigInteger[] getFinalRange() {
-        if (finalRange == null){
-            return null;
-        }
         return finalRange;
     }
 
