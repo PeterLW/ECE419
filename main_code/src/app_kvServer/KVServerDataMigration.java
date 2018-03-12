@@ -9,8 +9,10 @@ import com.google.gson.Gson;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketAddress;
 import java.util.ArrayList;
 import ecs.ServerNode;
 
@@ -84,17 +86,19 @@ public class KVServerDataMigration implements Runnable {
             System.out.println(serverNode.getNodeHostPort() + " > is trying connecting to receiver: " + serverNode.getServerStatus().getTargetName());
             System.out.println(serverNode.getNodeHostPort() + " > trying to connect on: " + address + ":" + port);
 
-            while(true) { // keep trying to connect
+//            while(true) { // keep trying to connect
                 try {
-                    Socket senderSocket = new Socket(address, port);
+                    Socket senderSocket = new Socket();
+                    SocketAddress sockAddr = new InetSocketAddress(address,port);
+                    senderSocket.connect(sockAddr); // blocking
                     System.out.println(serverNode.getNodeHostPort() + " > is connected to receiver: " + address + ":" + port);
                     send_data(senderSocket);
                     senderSocket.close();
-                    break;
+//                    break;
                 } catch (IOException e) {
                     LOGGER.error("Failed to connect data migration receiver");
                 }
-            }
+//            }
         } else if (serverNode.getServerStatus().getStatus() == ServerStatusType.MOVE_DATA_RECEIVER) {
             System.out.println(serverNode.getNodeHostPort() + " > is the receiver, waiting on port ("
                     + port + ") for sender: " + serverNode.getServerStatus().getTargetName());
