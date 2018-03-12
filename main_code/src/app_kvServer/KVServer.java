@@ -1,5 +1,6 @@
 package app_kvServer;
 
+import com.google.gson.Gson;
 import common.cache.StorageManager;
 import common.zookeeper.ZNodeMessage;
 import common.zookeeper.ZNodeMessageStatus;
@@ -216,9 +217,13 @@ public class KVServer implements IKVServer {
                         } else if (next.getTransition() == ZNodeMessageStatus.MOVE_DATA_RECEIVER) {
                             next.setServerStatus(ServerStatusType.MOVE_DATA_RECEIVER);
                             serverNode.setServerStatus(next);
-                        } else if (next.getTransition() == ZNodeMessageStatus.MOVE_DATA_SENDER) {
+							Gson gson = new Gson();
+							System.out.println("Serverstatus: " + gson.toJson(next));
+						} else if (next.getTransition() == ZNodeMessageStatus.MOVE_DATA_SENDER) {
                         	next.setServerStatus(ServerStatusType.MOVE_DATA_SENDER);
 							serverNode.setServerStatus(next);
+							Gson gson = new Gson();
+							System.out.println("Serverstatus: " + gson.toJson(next));
 						} else if (next.getTransition() == ZNodeMessageStatus.REMOVE_ZNODE_SEND_DATA) {
 							handleDeleteAndMoveDataTransition(next);
 						} else if (next.getTransition() == ZNodeMessageStatus.SHUTDOWN_SERVER){

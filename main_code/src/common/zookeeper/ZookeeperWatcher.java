@@ -2,6 +2,7 @@ package common.zookeeper;
 
 import app_kvServer.ServerStatus;
 import app_kvServer.UpcomingStatusQueue;
+import com.sun.security.ntlm.Server;
 import ecs.ServerNode;
 import org.apache.log4j.Logger;
 import org.apache.zookeeper.KeeperException;
@@ -79,6 +80,7 @@ public class ZookeeperWatcher extends ZookeeperMetaData implements Runnable {
             case MOVE_DATA_SENDER:
                 ss = new ServerStatus(newMessage.zNodeMessageStatus,newMessage.getMoveDataRange(),newMessage.getTargetName(),serverNode.getRange());
                 upcomingStatusQueue.addQueue(ss);
+                System.out.println("Serverstatus: " + gson.toJson(ss));
                 break;
             case REMOVE_ZNODE_SEND_DATA:
                 ss = new ServerStatus(newMessage.zNodeMessageStatus,newMessage.getMoveDataRange(),newMessage.getTargetName(),null);
