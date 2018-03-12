@@ -34,7 +34,7 @@ public class KVServerDataMigration implements Runnable {
     //cathy use this class as an object or run this thread at startup ? Need a mechanism to kill and close this thread.
     @Override
     public void run() {
-        LOGGER.error(serverNode.getNodeHostPort() + " > KVServerDataMigration thread starts ....\n");
+        System.out.println(serverNode.getNodeHostPort() + " > KVServerDataMigration thread starts ....\n");
         while(true){
             ServerStatusType statusType = serverNode.getServerStatus().getStatus();
             if (statusType == ServerStatusType.MOVE_DATA_RECEIVER || statusType == ServerStatusType.MOVE_DATA_SENDER){ ;
@@ -82,7 +82,7 @@ public class KVServerDataMigration implements Runnable {
             System.out.println(serverNode.getNodeHostPort() + " > trying to connect on: " + address + ":" + port);
             try {
                 Socket senderSocket = new Socket(address, port);
-                System.out.println("connected: "+ address + ":" + port);
+                System.out.println(serverNode.getNodeHostPort() + " > is connected to receiver: "+ address + ":" + port);
                 send_data(senderSocket);
                 senderSocket.close();
             } catch (IOException e) {

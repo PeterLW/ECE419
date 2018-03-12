@@ -86,8 +86,7 @@ public class KVServer implements IKVServer {
 			// that a valid transition so =/ In way I am manually making that transition
 			ServerStatus ss;
 			if (znodeMessage.zNodeMessageStatus == ZNodeMessageStatus.NEW_ZNODE_RECEIVE_DATA) {
-				ss = new ServerStatus(ServerStatusType.MOVE_DATA_RECEIVER); // move data auto transits to Running when isReady = true
-                ss.setMoveRangeStatus(ServerStatusType.MOVE_DATA_RECEIVER,znodeMessage.getMoveDataRange(),znodeMessage.getTargetName());
+				ss = new ServerStatus(ServerStatusType.MOVE_DATA_RECEIVER,znodeMessage.getMoveDataRange(),znodeMessage.getTargetName(),znodeMessage.getMoveDataRange()); // move data auto transits to Running when isReady = true
                 System.out.println("Starting new node - going into MOVE DATA RECEIVER state");
                 System.out.println("range: " + znodeMessage.getMoveDataRange()[0] + " ||| " + znodeMessage.getMoveDataRange()[1]);
                 System.out.println("targetName: " + znodeMessage.getTargetName());
