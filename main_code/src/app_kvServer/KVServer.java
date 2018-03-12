@@ -88,6 +88,9 @@ public class KVServer implements IKVServer {
 			if (znodeMessage.zNodeMessageStatus == ZNodeMessageStatus.NEW_ZNODE_RECEIVE_DATA) {
 				ss = new ServerStatus(ServerStatusType.MOVE_DATA_RECEIVER); // move data auto transits to Running when isReady = true
                 ss.setMoveRangeStatus(ServerStatusType.MOVE_DATA_RECEIVER,znodeMessage.getMoveDataRange(),znodeMessage.getTargetName());
+                System.out.println("Starting new node - going into MOVE DATA RECEIVER state");
+                System.out.println("range: " + znodeMessage.getMoveDataRange()[0] + " ||| " + znodeMessage.getMoveDataRange()[1]);
+                System.out.println("targetName: " + znodeMessage.getTargetName());
 			} else {
 				ss = new ServerStatus(ServerStatusType.INITIALIZE);
 			}
@@ -97,6 +100,7 @@ public class KVServer implements IKVServer {
 			System.exit(-1);
 		}
 		storage = new StorageManager(serverNode.getCacheSize(), serverNode.getCacheStrategy(), serverNode.getNodeHostPort());
+		watcherThread.start();
 
 		KVClientConnection kvClientConnection = new KVClientConnection(storage,serverNode,zookeeperHost,10000);
 		Thread kvConnThread = new Thread(kvClientConnection);
@@ -104,7 +108,6 @@ public class KVServer implements IKVServer {
         KVServerDataMigration dataMigration = new KVServerDataMigration(serverNode, storage);
         Thread dataMigraThread = new Thread(dataMigration);
 
-        watcherThread.start();
         kvConnThread.start();
 		dataMigraThread.start();
 
