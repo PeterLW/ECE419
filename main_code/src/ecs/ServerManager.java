@@ -155,7 +155,7 @@ public class ServerManager {
                 ServerNode successor = updateSuccessor(n);
                 if(successor != null) {
                     zookeeperECSManager.addAndMoveDataKVServer(n, newRange, successor.getNodeHostPort());
-                    Thread.sleep(1);
+                    Thread.sleep(100);
                     zookeeperECSManager.moveDataSenderKVServer(successor, newRange, n.getNodeHostPort());
                 }
                 else{

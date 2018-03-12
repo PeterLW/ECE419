@@ -73,4 +73,16 @@ public class MetadataTest extends TestCase {
         String serverName = m.getSuccessor("a");;
         assertEquals("d",serverName);
     }
+
+
+    public void testConstructTest(){
+        Metadata m = new Metadata();
+
+        m.addServer("localhost:5000");
+        m.addServer("localhost:5000");
+        m.addServer("localhost:5000");
+        m.addServer("localhost:5000");
+
+
+    }
 }
