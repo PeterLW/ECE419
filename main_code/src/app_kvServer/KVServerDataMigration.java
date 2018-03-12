@@ -118,7 +118,7 @@ public class KVServerDataMigration implements Runnable {
             serverNode.setRange(serverNode.getServerStatus().getFinalRange());
         }
         serverNode.getServerStatus().setReady();
-        System.out.println(serverNode.getNodeHostPort() "> servernode: " + gson.toJson(serverNode));
+        System.out.println(serverNode.getNodeHostPort() +  "> servernode: " + gson.toJson(serverNode));
     }
 
     public void send_data(Socket senderSocket) throws IOException {
