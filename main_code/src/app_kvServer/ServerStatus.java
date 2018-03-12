@@ -35,7 +35,12 @@ public class ServerStatus {
     public BigInteger[] getMoveRange(){
         return this.moveRange;
     }
-    public BigInteger[] getFinalRange() { return finalRange; }
+    public BigInteger[] getFinalRange() {
+        if (finalRange == null){
+            return null;
+        }
+        return finalRange;
+    }
 
     public ZNodeMessageStatus getTransition() { return transition; }
 

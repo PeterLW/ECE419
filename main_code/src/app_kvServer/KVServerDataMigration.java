@@ -78,9 +78,10 @@ public class KVServerDataMigration implements Runnable {
 
     private void start() {
         if (serverNode.getServerStatus().getStatus() == ServerStatusType.MOVE_DATA_SENDER) {
+            System.out.println(serverNode.getNodeHostPort() + " > is trying connecting to receiver: " + serverNode.getServerStatus().getTargetName());
+            System.out.println(serverNode.getNodeHostPort() + " > trying to connect on: " + address + ":" + port);
             try {
                 Socket senderSocket = new Socket(address, port);
-                System.out.println(serverNode.getNodeHostPort() + " > is connecting to receiver: " + serverNode.getServerStatus().getTargetName());
                 send_data(senderSocket);
                 senderSocket.close();
             } catch (IOException e) {
@@ -88,11 +89,11 @@ public class KVServerDataMigration implements Runnable {
                 return;
             }
         } else if (serverNode.getServerStatus().getStatus() == ServerStatusType.MOVE_DATA_RECEIVER) {
+            System.out.println(serverNode.getNodeHostPort() + " > is the receiver, waiting on port ("
+                    + port + ") for sender: " + serverNode.getServerStatus().getTargetName());
             try {
                 ServerSocket receiverSocket = new ServerSocket(port);
-                Socket socket = receiverSocket.accept();
-                System.out.println(serverNode.getNodeHostPort() + " > is the receiver, established connection on port ("
-                        + port + ") with sender: " + serverNode.getServerStatus().getTargetName());
+                Socket socket = receiverSocket.accept(); // blocking
                 receive_data(socket);
                 socket.close();
                 receiverSocket.close();
@@ -105,7 +106,11 @@ public class KVServerDataMigration implements Runnable {
     }
 
     private void finish() {
-        serverNode.setRange(serverNode.getServerStatus().getFinalRange());
+        if (serverNode.getServerStatus().getFinalRange() == null){
+            System.out.println("This KVServer will be closing soon.");
+        } else {
+            serverNode.setRange(serverNode.getServerStatus().getFinalRange());
+        }
         serverNode.getServerStatus().setReady();
     }
 
