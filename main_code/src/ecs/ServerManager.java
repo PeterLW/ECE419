@@ -141,7 +141,6 @@ public class ServerManager {
      */
 
     private boolean addServer(ServerNode n, String cacheStrategy, int cacheSize) throws KeeperException, InterruptedException { // change to throw?
-
         String id = n.getNodeHostPort();
         if (hashMap.containsKey(id)) {
             return false;
@@ -239,6 +238,7 @@ public class ServerManager {
     public boolean removeNode(String serverIndex) {
         ConfigEntity configEntity = originalEntityList.get(Integer.parseInt(serverIndex));
         String serverHostPort = configEntity.getIpAddr() + ":" + configEntity.getIpAddr();
+        System.out.println("Attempting to remove server node: " + serverHostPort);
         if (hashMap.containsKey(serverHostPort)){
             ServerNode node = (ServerNode) hashMap.get(serverHostPort);
 
