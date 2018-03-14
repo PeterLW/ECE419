@@ -40,8 +40,9 @@ public class KVServerDataMigration implements Runnable {
         while(true){
             ServerStatusType statusType = serverNode.getServerStatus().getStatus();
             if (statusType == ServerStatusType.MOVE_DATA_RECEIVER || statusType == ServerStatusType.MOVE_DATA_SENDER){ ;
-                update();
-                start();
+//                update();
+//                start();
+                datamigration_v2();
                 finish();
                 try {
                     Thread.sleep(10);
@@ -119,13 +120,19 @@ public class KVServerDataMigration implements Runnable {
     }
 
     private void finish() {
+        System.out.println(" old range: " + serverNode.getRange()[0] + " || " + serverNode.getRange()[1]);
+
         if (serverNode.getServerStatus().getFinalRange() == null){
             System.out.println("This ServerStatus getfinalRange() is null");
         } else {
             serverNode.setRange(serverNode.getServerStatus().getFinalRange());
         }
+        System.out.println(" new range: " + serverNode.getRange()[0] + " || " + serverNode.getRange()[1]);
+
         serverNode.getServerStatus().setReady();
         System.out.println(serverNode.getNodeHostPort() +  "> servernode: " + gson.toJson(serverNode));
+        System.out.println(serverNode.getNodeHostPort() +  "> servernode-serverStatus: " + gson.toJson(serverNode.getServerStatus()));
+
     }
 
     public void send_data(Socket senderSocket) throws IOException {

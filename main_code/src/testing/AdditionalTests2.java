@@ -58,4 +58,15 @@ public class AdditionalTests2 extends TestCase {
         assertEquals(exist, true);
     }
 
+    public void testServerManagerRemoveServers(){
+        ServerManager sm = new ServerManager();
+
+        sm.setupNodes(2,  "FIFO", 100);
+
+        sm.removeNode(sm.getServerMap().entrySet().iterator().next().getKey());
+        sm.removeNode(sm.getServerMap().entrySet().iterator().next().getKey());
+
+        boolean exist = sm.getServerMap().isEmpty();
+        assertEquals(exist, true);
+    }
 }

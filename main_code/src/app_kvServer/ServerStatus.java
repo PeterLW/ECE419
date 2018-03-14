@@ -15,7 +15,9 @@ public class ServerStatus {
         this.moveRange = moveRange;
         this.targetName = targetName;
         this.transition = transition;
-        this.finalRange = finalRange;
+        this.finalRange = new BigInteger[2];
+        this.finalRange[0] = finalRange[0];
+        this.finalRange[1] = finalRange[1];
     }
 
     // prob should refactor this later...
@@ -23,7 +25,9 @@ public class ServerStatus {
         this.moveRange = moveRange;
         this.targetName = targetName;
         this.status = status;
-        this.finalRange = finalRange;
+        this.finalRange = new BigInteger[2];
+        this.finalRange[0] = finalRange[0];
+        this.finalRange[1] = finalRange[1];
     }
 
     public ServerStatus(ZNodeMessageStatus transition){this.transition = transition;}
