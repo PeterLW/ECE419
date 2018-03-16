@@ -23,7 +23,7 @@ import common.messages.KVMessage.StatusType;
 public class KVStore implements KVCommInterface {
 
 	private final static Logger LOGGER = Logger.getLogger(KVStore.class);
-	private final int TIMEOUT = 10000; // idk set this later - nanoseconds
+	private final int TIMEOUT = 2000; // idk set this later - nanoseconds
 	private final Gson gson = new Gson();
 
 	private Socket clientSocket;
@@ -58,6 +58,8 @@ public class KVStore implements KVCommInterface {
 	@Override
 	public void connect() throws IOException{
 		// TODO Auto-generated method stub
+
+		System.out.println("address = " + address + " : " + Integer.toString(port));
         clientSocket = new Socket(address, port);
 		clientSocket.setSoTimeout(TIMEOUT);
 		this.output = clientSocket.getOutputStream();
@@ -89,6 +91,34 @@ public class KVStore implements KVCommInterface {
 		}
 	}
 
+	private void disconnect(String key) {
+		// TODO Auto-generated method stub
+		try{
+			setRunning(false);
+			LOGGER.info("tearing down the connection ...");
+			
+			message = new Message(StatusType.CLOSE_REQ, clientId, seqNum, key);
+			transmit.sendMessage(toByteArray(gson.toJson(message)), clientSocket);
+
+			try{
+				Thread.sleep(TIMEOUT);
+			}
+			catch(InterruptedException e){
+				e.printStackTrace();
+			}
+
+			if (clientSocket != null){
+				clientSocket.close();
+				LOGGER.info("connection closed!");
+			}
+
+			
+		} catch (IOException ioe) {
+			LOGGER.error("Unable to send message!\n");
+		}
+		
+	}
+
 	@Override
 	public boolean isConnected() {
 		// TODO Auto-generated method stub
@@ -105,6 +135,10 @@ public class KVStore implements KVCommInterface {
 	}
 
 	public void updateMetadataAndResend(Message msg, String key, String value) throws IOException{
+		
+		if(msg == null){
+			return;
+		}
 		if(msg.getStatus() == StatusType.SERVER_NOT_RESPONSIBLE){
             metadata = gson.fromJson(msg.getMetaData(), Metadata.class);
             //update bst, so checkValidServer will pass
@@ -133,7 +167,9 @@ public class KVStore implements KVCommInterface {
 	public Message put(String key, String value) throws IOException {
 
 		if(!checkValidServer(key)) {
-			clientSocket.close();
+			System.out.println("client needs to  reconnect to " + this.port +", needs to disconnect " +"\n");
+	
+			disconnect(key);
 			connect();
 		}
 

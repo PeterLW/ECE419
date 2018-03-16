@@ -29,9 +29,11 @@ public class KVServer implements IKVServer {
 	private static StorageManager storage;
 
 	/* This needs to be passed into ClientConnections & ZookeeperWatcher thread */
-	private static ServerNode serverNode;
+	private  static ServerNode serverNode;
 
 	private static UpcomingStatusQueue upcomingStatusQueue = new UpcomingStatusQueue();
+
+	private ZookeeperWatcher zookeeperWatcher = null;
 
 	/**
 	 * Start KV Server at given port
@@ -62,14 +64,15 @@ public class KVServer implements IKVServer {
 			System.exit(-1);
 			return;
 		}
-		System.out.println(name + "is launched\n");
+		System.out.println(name + " is launched\n");
 
-		ZookeeperWatcher zookeeperWatcher = null;
+		
 		String zookeeperHost = zkHostname + ":" + Integer.toString(zkPort);
 		Thread watcherThread = null;
 		try {
 			zookeeperWatcher = new ZookeeperWatcher(zookeeperHost,100000,name, upcomingStatusQueue);
 			watcherThread = new Thread(zookeeperWatcher);
+			watcherThread.start();
 
 		} catch (IOException | InterruptedException e) {
 			LOGGER.error("Failed to connect to zookeeper server");
@@ -77,8 +80,10 @@ public class KVServer implements IKVServer {
 		}
 
 		try { // get serverNode
+
 			ZNodeMessage znodeMessage = zookeeperWatcher.getZnodeMessage();
 			serverNode = znodeMessage.serverNode;
+
 			zookeeperWatcher.setServerNode(serverNode); // zookeeperWatcher may change this when receive data updates
 
 			//Peter: better still in INITIALIZE state and put the MOVE_DATA_RECEIVER into queue, more consistent
@@ -89,6 +94,9 @@ public class KVServer implements IKVServer {
 				ss = new ServerStatus(ServerStatusType.INITIALIZE);
 			}
 			serverNode.setServerStatus(ss);
+			serverNode.getServerStatus().setTargetName(znodeMessage.getTargetName());
+
+
 		} catch (KeeperException | InterruptedException e){
 			LOGGER.error("Failed to get data from zNode ",e);
 			System.exit(-1);
@@ -101,11 +109,23 @@ public class KVServer implements IKVServer {
         KVServerDataMigration dataMigration = new KVServerDataMigration(serverNode, storage);
         Thread dataMigraThread = new Thread(dataMigration);
 
-        watcherThread.start();
+        // watcherThread.start();
         kvConnThread.start();
 		dataMigraThread.start();
 
 	}
+
+	private void print_servernode(ServerNode node){
+
+        System.out.println("servernode.name = " + node.getName());
+        System.out.println("servernode.host = " + node.getNodeHost());
+        System.out.println("servernode.port = " + Integer.toString(node.getNodePort()));
+        System.out.println("servernode.status.targetName = " + node.getServerStatus().getTargetName());
+        System.out.println("servernode.status.getStatus = " + serverNode.getServerStatus().getStatus());
+
+        String[] range = node.getNodeHashRange();
+        System.out.println("servernode.range[0] = " + range[0] + ",servernode.range[1] = " + range[1]);
+    }
 
 	private CacheStrategy string_to_enum_cache_strategy(String str) {
 		switch (str.toLowerCase()){
@@ -184,11 +204,29 @@ public class KVServer implements IKVServer {
 		storage.clearAll();
 	}
 
-	public void run(){ // status
+
+// 	public enum ZNodeMessageStatus {
+//     /*
+//         When data in a znode is updated by the ECS Client, the following changes are possible:
+//      */
+//     NEW_ZNODE,
+//     NEW_ZNODE_RECEIVE_DATA,
+//     REMOVE_ZNODE_SEND_DATA,
+//     MOVE_DATA_SENDER,
+//     MOVE_DATA_RECEIVER,
+//     START_SERVER,
+//     STOP_SERVER,
+//     SHUTDOWN_SERVER
+// }
+
+
+
+		public void run(){ // status
         while (true) {
             if (upcomingStatusQueue.peakQueue() != null) {
                 ServerStatus next = upcomingStatusQueue.peakQueue();
                 ServerStatus curr = serverNode.getServerStatus();
+               
 
                 boolean proceed = true;
 
@@ -196,8 +234,10 @@ public class KVServer implements IKVServer {
                     case INITIALIZE:
 					case IDLE:
                         if (next.getTransition() == ZNodeMessageStatus.START_SERVER) {
+                        	
 							next.setServerStatus(ServerStatusType.RUNNING);
 							serverNode.setServerStatus(next);
+			
 						} else if (next.getTransition() == ZNodeMessageStatus.REMOVE_ZNODE_SEND_DATA){
 							handleDeleteAndMoveDataTransition(next);
 						} else if (next.getTransition() == ZNodeMessageStatus.SHUTDOWN_SERVER){
@@ -210,13 +250,18 @@ public class KVServer implements IKVServer {
                             serverNode.setServerStatus(next);
                         } else if (next.getTransition() == ZNodeMessageStatus.MOVE_DATA_RECEIVER) {
                             next.setServerStatus(ServerStatusType.MOVE_DATA_RECEIVER);
+                            
                             serverNode.setServerStatus(next);
+                            
                         } else if (next.getTransition() == ZNodeMessageStatus.MOVE_DATA_SENDER) {
                         	next.setServerStatus(ServerStatusType.MOVE_DATA_SENDER);
+                
 							serverNode.setServerStatus(next);
 						} else if (next.getTransition() == ZNodeMessageStatus.REMOVE_ZNODE_SEND_DATA) {
 							handleDeleteAndMoveDataTransition(next);
+
 						} else if (next.getTransition() == ZNodeMessageStatus.SHUTDOWN_SERVER){
+							System.out.println(serverNode.getNodeHostPort() + " is about to shutdown\n");
 							handleShutdownTransition(next);
 						}
                         break;
@@ -224,28 +269,45 @@ public class KVServer implements IKVServer {
                     case MOVE_DATA_SENDER:
                         if (curr.isReady()) {
                         	if (next.getTransition()== ZNodeMessageStatus.SHUTDOWN_SERVER){
+                        		System.out.println(serverNode.getNodeHostPort() + " reached shutdown state now\n");
 								handleShutdownTransition(next);
 							} else {
 								next.setServerStatus(ServerStatusType.RUNNING);
 								serverNode.setServerStatus(next);
+								System.out.println(serverNode.getNodeHostPort() + " reached running state now\n");
+								curr.resetReady();
 							}
                         }
-						proceed = false;
+                        else{
+                        	proceed = false;
+                        	//System.out.println("reached here for " + curr.getTargetName() +"\n");
+                        }
+						
 						break;
                     case CLOSE:
                     	break;
                 }
 
-                if (proceed) {
+                if (proceed && curr.getStatus() != ServerStatusType.MOVE_DATA_SENDER && curr.getStatus() != ServerStatusType.MOVE_DATA_RECEIVER) {
                     upcomingStatusQueue.popQueue();
                 }
             }
             else if (serverNode.getServerStatus().getStatus() == ServerStatusType.CLOSE){
             	break;
 			}
+			else{
+				
+				 try {
+		            // thread to sleep for 1000 milliseconds
+		            Thread.sleep(100);
+		         } catch (InterruptedException e) {
+		            e.printStackTrace();
+		         }
+			}
 
         }
 	}
+	
 
 	private void handleShutdownTransition(ServerStatus next){
 		next.setServerStatus(ServerStatusType.CLOSE);
@@ -352,7 +414,7 @@ public class KVServer implements IKVServer {
 			LOGGER.error("Error parsing command line arguments", e);
 			System.exit(-1);
 		}
-		System.out.println("server "+name + "starts now\n");
+		System.out.println("server "+name + " starts now\n");
 		KVServer kvServer = new KVServer(name,zkhost,zkport);
 		kvServer.run();
 	}

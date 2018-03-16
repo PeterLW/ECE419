@@ -184,7 +184,7 @@ public class ECSClient implements IECSClient {
             }
         } else if(tokens[0].equals("removeNode")) {
             int num_args = tokens.length;
-            if(num_args < 2) {
+            if(num_args != 2) {
                 printError("Invalid number of arguments");
             }
             else{

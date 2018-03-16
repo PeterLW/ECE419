@@ -136,7 +136,8 @@ public class DBManager {
                     System.out.println("1:send file: " + filename + " , hash: " + hash);
                 }
                 else {
-                    LOGGER.error("Key not in range");
+                    // LOGGER.error("1.Key not in range");
+                    // LOGGER.error("1.hash = "+ hash.toString() + ", range0 = "+ range[0].toString() + ", range1 = "+ range[1].toString());
                 }
             }
             else if(flag < 0){
@@ -145,7 +146,8 @@ public class DBManager {
                     System.out.println("2:send file: " + filename + " , hash: " + hash);
                 }
                 else {
-                    LOGGER.error("Key not in range");
+                    System.out.println(file.getName() + " not in range");
+                    System.out.println(file.getName() + " : range[0] = "+ range[0].toString() + ", range[1] = "+ range[1].toString());
                 }
             }
             else{

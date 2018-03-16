@@ -46,14 +46,14 @@ public class ZookeeperECSManager extends ZookeeperManager{
 
     public void updateMetadataZNode(common.metadata.Metadata metadata) throws KeeperException, InterruptedException {
         String jsonMetadataData = gson.toJson(metadata);
-        System.out.println(jsonMetadataData);
+        //System.out.println(jsonMetadataData);
         this.updateZNode(ZNODE_HEAD,ZNODE_METADATA_NODE,toByteArray(jsonMetadataData));
     }
 
     public void addKVServer(ServerNode n) throws KeeperException, InterruptedException {
         ZNodeMessage message = new ZNodeMessage(n, ZNodeMessageStatus.NEW_ZNODE);
         String jsonServerData = gson.toJson(message);
-        System.out.println(jsonServerData); // debug
+        //System.out.println(jsonServerData); // debug
         this.addZNode(ZNODE_HEAD,n.getNodeHostPort(),toByteArray(jsonServerData));
     }
 
@@ -79,7 +79,7 @@ public class ZookeeperECSManager extends ZookeeperManager{
         message.setMoveDataParameters(moveDataRange,targetName);
 
         String jsonServerData = gson.toJson(message);
-        System.out.println(jsonServerData); // debug
+        //System.out.println(jsonServerData); // debug
         this.updateZNode(ZNODE_HEAD,n.getNodeHostPort(),toByteArray(jsonServerData));
     }
 
@@ -126,7 +126,8 @@ public class ZookeeperECSManager extends ZookeeperManager{
         ZNodeMessage message = new ZNodeMessage(n, ZNodeMessageStatus.MOVE_DATA_RECEIVER);
         message.setMoveDataParameters(moveDataRange,targetName);
         String jsonServerData = gson.toJson(message);
-        System.out.println(jsonServerData); // debug
+        //System.out.println(jsonServerData); // debug
+        System.out.println("moveDataReceiverKVServer: n.getNodeHostPort() = " + n.getNodeHostPort());
         return this.updateZNode(ZNODE_HEAD,n.getNodeHostPort(),toByteArray(jsonServerData));
     }
 
@@ -136,7 +137,7 @@ public class ZookeeperECSManager extends ZookeeperManager{
     public boolean startKVServer(ServerNode n) throws KeeperException, InterruptedException {
         ZNodeMessage message = new ZNodeMessage(n, ZNodeMessageStatus.START_SERVER);
         String jsonServerData = gson.toJson(message);
-        System.out.println(jsonServerData); // debug
+        //System.out.println(jsonServerData); // debug
         return this.updateZNode(ZNODE_HEAD,n.getNodeHostPort(),toByteArray(jsonServerData));
     }
 
@@ -146,7 +147,7 @@ public class ZookeeperECSManager extends ZookeeperManager{
     public boolean stopKVServer(ServerNode n) throws KeeperException, InterruptedException {
         ZNodeMessage message = new ZNodeMessage(n, ZNodeMessageStatus.STOP_SERVER);
         String jsonServerData = gson.toJson(message);
-        System.out.println(jsonServerData); // debug
+        //System.out.println(jsonServerData); // debug
         return this.updateZNode(ZNODE_HEAD,n.getNodeHostPort(),toByteArray(jsonServerData));
     }
 
@@ -156,7 +157,7 @@ public class ZookeeperECSManager extends ZookeeperManager{
     public boolean shutdownKVServer(ServerNode n) throws KeeperException, InterruptedException {
         ZNodeMessage message = new ZNodeMessage(n, ZNodeMessageStatus.SHUTDOWN_SERVER);
         String jsonServerData = gson.toJson(message);
-        System.out.println(jsonServerData); // debug
+        //System.out.println(jsonServerData); // debug
         return this.updateZNode(ZNODE_HEAD,n.getNodeHostPort(),toByteArray(jsonServerData));
     }
 
@@ -178,7 +179,7 @@ public class ZookeeperECSManager extends ZookeeperManager{
     }
 
 
-    private boolean updateZNode(String path, String memberName, byte[] data) throws KeeperException, InterruptedException {
+    private synchronized boolean updateZNode(String path, String memberName, byte[] data) throws KeeperException, InterruptedException {
         String fullPath = path + "/" + memberName;
         Stat stat = zooKeeper.exists(fullPath, false);
         if (stat != null){
@@ -196,6 +197,7 @@ public class ZookeeperECSManager extends ZookeeperManager{
         Stat stat = zooKeeper.exists(fullPath,false);
         if (stat == null) {
             zooKeeper.create(fullPath, data, ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+            //zooKeeper.setData(fullPath,data,-1);
             LOGGER.debug("Successfully created znode: " + fullPath);
             System.out.println("Successfully created znode: " + fullPath);
         } else {

@@ -84,6 +84,14 @@ public class StorageManager {
     	return dbManager.deleteKV(key);
     }
 
+    public void deleteCacheRV(String key){
+        if(cacheStructure.inCacheStructure(key)){
+             cacheStructure.deleteKV(key);
+        }
+        return;
+    }
+
+
     public int get_cache_size(){
         return cache_size;
     }

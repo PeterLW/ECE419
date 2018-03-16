@@ -27,6 +27,10 @@ public class ServerManager {
     private ZookeeperECSManager zookeeperECSManager;
     private boolean is_init;
 
+    private ServerNode successorNode;
+    private BigInteger[] successorRange;
+    private String successorPort;
+
     public ServerManager(){
         try {
             zookeeperECSManager = new ZookeeperECSManager(ZOOKEEPER_HOST_PORT,10000); // session timeout ms
@@ -61,7 +65,7 @@ public class ServerManager {
 
                     // now when I add zNode they have their range given a -full- hash ring.
                     this.addServer(node, cacheStrategy, cacheSize);
-                    System.out.println("node.serverName = "+node.getNodeName() + ", node.ipport = " +node.getNodeHostPort());
+                    //System.out.println("node.serverName = "+node.getNodeName() + ", node.ipport = " +node.getNodeHostPort());
 
                     SSH ssh_conn = new SSH(node.getNodeHostPort(), ZOOKEEPER_HOST_NAME,ZOOKEEPER_PORT);
                     Thread sshConnThread = new Thread(ssh_conn);
@@ -77,12 +81,22 @@ public class ServerManager {
                     list.add(node);
 
                     zookeeperECSManager.updateMetadataZNode(metadata); // update metadata node
-                    this.addServer(node, cacheStrategy, cacheSize);
-                    System.out.println("node.serverName = "+node.getNodeName() + ", node.ipport = " +node.getNodeHostPort());
-                
+                    
+                    //System.out.println("node.serverName = "+node.getNodeName() + ", node.ipport = " +node.getNodeHostPort());
+                    // this.addServer(node, cacheStrategy, cacheSize);
                     SSH ssh_conn = new SSH(node.getNodeHostPort(), ZOOKEEPER_HOST_NAME,ZOOKEEPER_PORT);
                     Thread sshConnThread = new Thread(ssh_conn);
                     sshConnThread.start();
+                    this.addServer(node, cacheStrategy, cacheSize);
+                    try{
+                        Thread.sleep(2000);
+                    }catch(InterruptedException e){
+                        e.printStackTrace();
+                    }
+                    zookeeperECSManager.moveDataSenderKVServer(this.successorNode, this.successorRange, node.getNodeHostPort());
+
+
+                    
                 }
             }
         } catch (KeeperException | InterruptedException e) {
@@ -99,16 +113,19 @@ public class ServerManager {
     private ServerNode updateSuccessor(ServerNode node){
         BigInteger[] range = metadata.findHashRange(node.getNodeHostPort());
         if(range == null) {
+            System.out.println("updateSuccessor: reached here 1\n");
             return null;
         }
 
         String successorID = metadata.getSuccessor(node.getNodeHostPort());
         if (successorID == null){
+            System.out.println("updateSuccessor: reached here 2\n");
             return null;
         }
 
         BigInteger[] successorRange = metadata.findHashRange(successorID);
         if (successorRange == null){
+            System.out.println("updateSuccessor: reached here 3\n");
             return null;
         }
 
@@ -143,6 +160,13 @@ public class ServerManager {
         }
 
         BigInteger[] newRange = metadata.findHashRange(id);
+        if(newRange == null){
+            System.out.println("addServer: failed to find the hash range for "+ id);
+            return false;
+        }
+        else{
+            System.out.println("addServer : " +id + " hash range = (" + newRange[0].toString() + "," + newRange[1].toString() +")");
+        }
         n.setRange(newRange);
         hashMap.put(id,n);
 
@@ -151,10 +175,15 @@ public class ServerManager {
                 ServerNode successor = updateSuccessor(n);
                 if(successor != null) {
                     zookeeperECSManager.addAndMoveDataKVServer(n, newRange, successor.getNodeHostPort());
-                    Thread.sleep(1);
-                    zookeeperECSManager.moveDataSenderKVServer(successor, newRange, n.getNodeHostPort());
+
+                    this.successorNode = new ServerNode(successor.getNodeHostPort(), successor.getNodeHost(), successor.getNodePort());
+                    this.successorRange = newRange;
+                    this.successorPort = successor.getNodeHostPort();
+                   
+                    //zookeeperECSManager.moveDataSenderKVServer(successor, newRange, n.getNodeHostPort());
                 }
                 else{
+                    // LOGGER.error("Failed to find successor!");
                     LOGGER.error("Failed to find successor!");
                 }
             }
@@ -243,11 +272,18 @@ public class ServerManager {
 
             metadata.removeServer((node).getNodeHostPort());
             hashMap.remove(ServerIndex);
+            if(successor == null){
+                System.out.println("removeNode: successor is null\n");  
+            }
+
+            if(range == null){
+                System.out.println("removeNode: range is null\n");  
+            }
 
             try {
                 if (!hashMap.isEmpty()) {
                     zookeeperECSManager.moveDataReceiverKVServer(successor, range, node.getNodeHostPort());
-                    Thread.sleep(1);
+                    Thread.sleep(1000);
                     zookeeperECSManager.removeAndMoveDataKVServer(node, range, successor.getNodeHostPort());
                 } else {
                     zookeeperECSManager.shutdownKVServer(node);

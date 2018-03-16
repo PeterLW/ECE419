@@ -58,7 +58,9 @@ public class KVClientConnection implements Runnable {
     }
 
     public void run() {
-        initializeServer();
+        if(!initializeServer()){
+            return;
+        }
         while (!this.stop) {
             // waits for connection
             if (this.serverSocket != null) {
@@ -66,7 +68,7 @@ public class KVClientConnection implements Runnable {
                 try {
                     client = serverSocket.accept(); // blocking call
                     numConnectedClients++;
-                    client.setSoTimeout(sessionTimeout);
+                    //client.setSoTimeout(sessionTimeout);
                     ClientConnection connection = new ClientConnection(client, serverNode, storage, numConnectedClients, zookeeperHost, sessionTimeout);
                    // LOGGER.info("Connected to " + client.getInetAddress().getHostName() + " on port " + client.getPort());
                     System.out.println("Connected to " + client.getInetAddress().getHostName() + " on port " + client.getPort());

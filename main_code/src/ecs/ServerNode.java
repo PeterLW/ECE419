@@ -18,7 +18,7 @@ public class ServerNode implements IECSNode {
     private String cacheStrategy;
 
     // transient means it's not serialized to JSON (therefore these fields are not stored in zNode)
-    private transient ServerStatus serverStatus; // really only used by KVServer, for ECSClient this is unreliable
+    private ServerStatus serverStatus = new ServerStatus(); // really only used by KVServer, for ECSClient this is unreliable
     private transient String[] hexStringRange = new String[2]; // this is only generated when accessor function is called
 
     public ServerNode(ConfigEntity e, int cacheSize, String cacheStrategy){
@@ -64,6 +64,11 @@ public class ServerNode implements IECSNode {
         return(host + ":" + Integer.toString(port));
     }
 
+    public String getName(){
+        return name;
+    }
+
+
     @Override
     public String getNodeHost() {
         return host;
@@ -91,9 +96,20 @@ public class ServerNode implements IECSNode {
     }
 
     public void setServerStatus(ServerStatus newStatus){
-        serverStatus = newStatus;
-    }
 
+        if(newStatus.getStatus() != null){
+            serverStatus.setServerStatus(newStatus.getStatus());
+        }
+        if(newStatus.getTargetName() != null){
+            serverStatus.setTargetName(newStatus.getTargetName());
+
+        }
+        if(newStatus.getMoveRange() != null){
+            serverStatus.setMoveRange(newStatus.getMoveRange());
+
+        }
+    }
+    
     public ServerStatus getServerStatus(){
         return serverStatus;
     }

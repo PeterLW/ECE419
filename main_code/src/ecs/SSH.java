@@ -111,7 +111,7 @@ public class SSH implements Runnable {
             channel.connect();
 
             readChannelOutput(channel);
-            //System.out.println("Connection is closed");
+            System.out.println("Connection is closed");
             channel.disconnect();
             session.disconnect();
 

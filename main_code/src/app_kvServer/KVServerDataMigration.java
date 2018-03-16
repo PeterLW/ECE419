@@ -27,6 +27,7 @@ public class KVServerDataMigration implements Runnable {
     StorageManager storageManager;
     private final Gson gson = new Gson();
     private final static Logger LOGGER = Logger.getLogger(KVServerDataMigration.class);
+    private final static int MIGRATION_PORT_OFFSET = 50;
 
     public KVServerDataMigration(ServerNode node, StorageManager storageManager){
         this.serverNode = node;
@@ -40,9 +41,9 @@ public class KVServerDataMigration implements Runnable {
         System.out.println("KVServerDataMigration thread starts ....\n");
         while(true){
             ServerStatusType statusType = serverNode.getServerStatus().getStatus();
-            if (statusType == ServerStatusType.MOVE_DATA_RECEIVER || statusType == ServerStatusType.MOVE_DATA_SENDER){ ;
-                update();
-                start();
+            if ((statusType == ServerStatusType.MOVE_DATA_RECEIVER || statusType == ServerStatusType.MOVE_DATA_SENDER) && (serverNode.getServerStatus().isReady() == false)){ 
+                update(statusType);
+                start(statusType);
                 finish();
                 try {
                     Thread.sleep(10);
@@ -62,19 +63,62 @@ public class KVServerDataMigration implements Runnable {
         }
     }
 
-    private void update(){
-        String targetName = serverNode.getServerStatus().getTargetName();
-        String[] temp = targetName.split(":");
-        this.address = temp[0];
-        this.port = Integer.parseInt(temp[1]);
+    private void print_servernode(){
 
-        this.hashRange = serverNode.getServerStatus().getMoveRange();
-        this.transmission = new Transmission();
+        System.out.println("servernode.name = " + serverNode.getName());
+        System.out.println("servernode.host = " + serverNode.getNodeHost());
+        System.out.println("servernode.port = " + Integer.toString(serverNode.getNodePort()));
+        System.out.println("servernode.status.targetName = " + serverNode.getServerStatus().getTargetName());
+        System.out.println("servernode.status.getStatus = " + serverNode.getServerStatus().getStatus());
     }
 
-    private void start() {
 
-        if (serverNode.getServerStatus().getStatus() == ServerStatusType.MOVE_DATA_SENDER) {
+private void print_stats(String localName, String targetName){
+
+    System.out.println("servernode.localName = " + localName);
+    System.out.println("servernode.targetName = " + targetName);
+    System.out.println("servernode.address = " + address);
+    System.out.println("servernode.port = " + port);
+    System.out.println("servernode.hashRange = " + hashRange);
+
+}
+    private void update(ServerStatusType statusType) {
+       
+        String targetName = null;
+        String localName = null;
+
+        if(statusType == ServerStatusType.MOVE_DATA_RECEIVER){
+            
+            localName = serverNode.getNodeHostPort();
+            System.out.println("the receiver is " + localName);
+            System.out.println("the sender is " + serverNode.getServerStatus().getTargetName());
+            String[] temp = localName.split(":");
+            this.address = temp[0];
+            this.port = Integer.parseInt(temp[1]) + MIGRATION_PORT_OFFSET;
+            
+        }
+        else{
+           
+            localName = serverNode.getNodeHostPort();
+            System.out.println("the sender is " + localName);
+            targetName = serverNode.getServerStatus().getTargetName();
+            System.out.println("the receiver is " + targetName);
+
+            String[] temp = targetName.split(":");
+            this.address = temp[0];
+            this.port = Integer.parseInt(temp[1]) + MIGRATION_PORT_OFFSET;
+        }
+        
+        this.hashRange = serverNode.getServerStatus().getMoveRange();
+        this.transmission = new Transmission();
+
+        print_stats(localName,targetName);
+    }
+
+    private void start(ServerStatusType statusType) {
+
+        if (statusType == ServerStatusType.MOVE_DATA_SENDER) {
+
             try {
                 Socket senderSocket = new Socket(address, port);
                 System.out.println("connecting to receiver...");
@@ -84,9 +128,12 @@ public class KVServerDataMigration implements Runnable {
                 LOGGER.error("Failed to connect data migration receiver");
                 return;
             }
-        } else if (serverNode.getServerStatus().getStatus() == ServerStatusType.MOVE_DATA_RECEIVER) {
+        }
+        else if (statusType == ServerStatusType.MOVE_DATA_RECEIVER) {
             try {
+                System.out.println("Data migration created a ServerSocket: " + Integer.toString(port));
                 ServerSocket receiverSocket = new ServerSocket(port);
+                
                 Socket socket = receiverSocket.accept();
                 System.out.println("Connected to the sender, start receiving packets\n");
                 receive_data(socket);
@@ -98,15 +145,31 @@ public class KVServerDataMigration implements Runnable {
                 return;
             }
         }
+        else{
+            System.out.println("something is wrong...\n");
+        }
     }
 
     private void finish() {
-        serverNode.setRange(serverNode.getServerStatus().getFinalRange());
+        System.out.println("finish");
+        if(serverNode.getServerStatus().getFinalRange() != null){
+            serverNode.setRange(serverNode.getServerStatus().getFinalRange());
+        }
         serverNode.getServerStatus().setReady();
+        System.out.println(serverNode.getNodeHostPort() + ": data migration finishes\n");
     }
 
     public void send_data(Socket senderSocket) throws IOException {
+       
+       if(hashRange == null){
+            Message message = new Message(KVMessage.StatusType.CLOSE_REQ, 0, 0, null, null);
+            transmission.sendMessage(toByteArray(gson.toJson(message)), senderSocket);
+            return;
+       }
         ArrayList<String> keys = storageManager.returnKeysInRange(hashRange);
+        if(keys.isEmpty()){
+            System.out.println("Warning: No keys to be sent\n");
+        }
         for (String key : keys) {
             String value = storageManager.getKV(key);
             Message message = new Message(KVMessage.StatusType.PUT, 0, 0, key, value);
@@ -114,7 +177,7 @@ public class KVServerDataMigration implements Runnable {
 
             Message recvMsg = transmission.receiveMessage(senderSocket);
             if (recvMsg.getStatus() == KVMessage.StatusType.PUT_SUCCESS) {
-                storageManager.deleteRV(key);
+                storageManager.deleteCacheRV(key); //we only need to clear the cache, not the disk, because all servers share the same disk.
                 System.out.println(recvMsg.getStatus().toString());
             } else {
                 //todo... possibly retry and send error message
@@ -124,8 +187,6 @@ public class KVServerDataMigration implements Runnable {
         Message message = new Message(KVMessage.StatusType.CLOSE_REQ, 0, 0, null, null);
         transmission.sendMessage(toByteArray(gson.toJson(message)), senderSocket);
     }
-
-    //need to send PUT_SUCCESS as ACK, then either return signal to main thread
 
     public void receive_data(Socket receiverSocket) throws IOException{
 
@@ -143,7 +204,7 @@ public class KVServerDataMigration implements Runnable {
                 data = transmission.receiveMessage(receiverSocket);
             }
             else{
-                LOGGER.error("Receiver: Wrong data migration status");
+                System.out.println("Receiver: Wrong data migration status");
                 break;
             }
         }

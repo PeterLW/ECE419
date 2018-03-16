@@ -150,10 +150,13 @@ public class KVClient implements IKVClient {
                             value.append(" ");
                         }
                     }
+
+                    Message msg = null;
                     try {
+                       
                         if(checkValidKeyValue(tokens[1],value.toString())) {
-                            Message msg = kvStore.put(tokens[1], value.toString()); // blocking call
-                            kvStore.updateMetadataAndResend(msg, tokens[1], value.toString());
+                            msg = kvStore.put(tokens[1], value.toString()); // blocking call
+                            
                             if (msg == null) {
                                 printError("Communication for PUT failed");
                             }
@@ -165,6 +168,12 @@ public class KVClient implements IKVClient {
                     }catch(Exception e){
                         LOGGER.error("Put fail!", e);
                     }
+                    try{
+                        kvStore.updateMetadataAndResend(msg, tokens[1], value.toString());
+                    }catch(IOException e){
+                        e.printStackTrace();
+                    }
+
                 } else {
                     printError("Not connected!");
                 }

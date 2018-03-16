@@ -18,6 +18,7 @@ import java.security.MessageDigest;
 import java.util.HashSet;
 import common.zookeeper.ZookeeperMetaData;
 import org.apache.zookeeper.KeeperException;
+import logger.LogSetup;
 
 /**
  * Represents a connection end point for a particular client that is 
@@ -39,6 +40,17 @@ public class ClientConnection implements Runnable {
 	private ZookeeperMetaData zookeeperMetaData;
 	private ServerNode serverNode;
 
+	   static {
+        try {
+            new LogSetup("logs/clientconnection.log", Level.ERROR);
+        } catch (IOException e) {
+            System.out.println("Error! Unable to initialize logger!");
+            e.printStackTrace();
+            System.exit(1);
+        }
+    }
+
+
 	/**
 	 * Constructs a new ClientConnection object for a given TCP socket.
 	 * @param clientSocket the Socket object for the client connection.
@@ -47,8 +59,8 @@ public class ClientConnection implements Runnable {
 		this.clientSocket = clientSocket;
 		this.clientId = clientId;
 		// initialized when declared above
-//		this.isOpen = true;
-//		this.transmission = new Transmission();
+		this.isOpen = true;
+		this.transmission = new Transmission();
 		this.storageManager = caching;
 
 		try {
@@ -102,50 +114,29 @@ public class ClientConnection implements Runnable {
         Message return_msg = new Message(responseType, clientId, received_msg.getSeq(), received_msg.getKey(), received_msg.getValue());
         String metadata = gson.toJson(metaData);
         return_msg.setMetaData(metadata);
-
+        System.out.println("RespondMsg: reached here\n");
         System.out.println(gson.toJson(return_msg));
         boolean success = transmission.sendMessage(toByteArray(gson.toJson(return_msg)), clientSocket);
 	    if (!success) {
 	        LOGGER.error("Send message failed to client " + this.clientId);
-            //System.out.println("Send message failed to client " + this.clientId);
+            System.out.println("Send message failed to client " + this.clientId);
 	    }
     }
 
-
-//    private void HandleRequest(Message msg){
-//        if(isKeyInValidRange(msg.getKey())) {
-//            processMessage(msg);
-//        }
-//        else{
-//            Metadata metadata = null;
-////            try {
-////                metadata = zookeeperMetaData.getMetadata();
-////            }catch (KeeperException | InterruptedException e){
-////                e.printStackTrace();
-////            }
-//            metadata = new Metadata();
-//            String serverIpPort = "100.64.193.243:60000";
-//            metadata.addServer(serverIpPort);
-//            BigInteger[] range = new BigInteger[2];
-//            try {
-//                range[0] = getMD5("a");
-//                range[1] = getMD5("z");
-//            }catch (Exception e){
-//                e.printStackTrace();
-//            }
-//
-//            serverNode.setRange(range);
-//            RespondMsg(msg, StatusType.SERVER_NOT_RESPONSIBLE, metadata);
-//            System.out.println("SERVER_NOT_RESPONSIBLE sent\n");
-//        }
-//    }
-
     private void HandleRequest(Message msg){
-        if(isKeyInValidRange(msg.getKey())) {
+
+    	if(msg.getStatus() == StatusType.CLOSE_REQ){
+
+    		System.out.println(serverNode.getNodeHostPort() + " starts to process CLOSE message\n");
+            processMessage(msg);
+    	}
+        else if(isKeyInValidRange(msg.getKey())) {
+        	System.out.println(serverNode.getNodeHostPort() + " starts to process message\n");
             processMessage(msg);
         }
         else{
             Metadata metadata = null;
+            System.out.println(serverNode.getNodeHostPort() + " finds msg out of range\n");
             try {
                 metadata = zookeeperMetaData.getMetadata();
             }catch (KeeperException | InterruptedException e){
@@ -156,55 +147,102 @@ public class ClientConnection implements Runnable {
         }
     }
 
-	/**
-	 * Initializes and starts the client connection.
-	 * Loops until the connection is closed or aborted by the client.
-	 */
-	@Override
+
+	// public void run() {
+	//         Message latestMsg = new Message();
+	// 		while (isOpen) {
+	//             try {
+	// 				 latestMsg = transmission.receiveMessage(clientSocket);
+
+	// 				/* connection either terminated by the client or lost due to
+	// 				 * network problems*/
+	// 			} catch (IOException ioe) {
+	// 				LOGGER.error("Error: " + serverNode.getNodeHostPort() + " Connection lost with client " + this.clientId);
+	// 				ioe.printStackTrace();
+	// 				try {
+	// 					if (clientSocket != null) {
+	// 						clientSocket.close();
+	// 						isOpen = false;
+	// 					}
+	// 				} catch (IOException ie) {
+	// 					LOGGER.error("Error! Unable to tear down connection for client: " + this.clientId, ioe);
+	// 				}
+	// 			}
+	// 			ServerStatusType curr_nodeStatus = serverNode.getServerStatus().getStatus(); 
+	//             if (curr_nodeStatus == ServerStatusType.INITIALIZE ||
+	// 					curr_nodeStatus == ServerStatusType.IDLE) {
+					
+	// 				RespondMsg(latestMsg, StatusType.SERVER_STOPPED, null);
+	// 				continue;
+	// 			} else if (curr_nodeStatus == ServerStatusType.RUNNING) {
+	// 				System.out.println(serverNode.getNodeHostPort() + ": ClientConnection reached running\n");
+	// 				HandleRequest(latestMsg);
+	// 				continue;
+	// 			} else if (curr_nodeStatus == ServerStatusType.MOVE_DATA_SENDER){
+	// 				 if (latestMsg.getStatus() == KVMessage.StatusType.PUT) {
+	// 				 		RespondMsg(latestMsg, StatusType.SERVER_WRITE_LOCK, null);
+	// 				 }
+	// 			}
+	// 			else if (curr_nodeStatus == ServerStatusType.MOVE_DATA_RECEIVER) {
+	// 				if (latestMsg.getStatus() == KVMessage.StatusType.PUT) {
+	// 						if(latestMsg.getSeq() == 0 && latestMsg.getClientID() == 0){
+	// 							HandleRequest(latestMsg);
+	// 						}
+	// 						else{
+	// 							RespondMsg(latestMsg, StatusType.SERVER_WRITE_LOCK, null);
+	// 						}
+	// 				} else {
+	// 					HandleRequest(latestMsg);
+	// 				}
+	// 			} else if (curr_nodeStatus == ServerStatusType.CLOSE) {
+	// 				close();
+	// 			}
+	// 		}
+	// 	}
+
 	public void run() {
-		Message latestMsg;
-        System.out.printf("server that accepts the client connection starts running...");
-		while (isOpen) {
-			try {
-				latestMsg = transmission.receiveMessage(clientSocket);
-				if (serverNode.getServerStatus().getStatus() == ServerStatusType.INITIALIZE ||
-						serverNode.getServerStatus().getStatus() == ServerStatusType.IDLE) {
+	        Message latestMsg = new Message();
+			while (isOpen) {
+	            try {
+					 latestMsg = transmission.receiveMessage(clientSocket);
+
+					/* connection either terminated by the client or lost due to
+					 * network problems*/
+				} catch (IOException ioe) {
+					LOGGER.error("Error: " + serverNode.getNodeHostPort() + " Connection lost with client " + this.clientId);
+					ioe.printStackTrace();
+					try {
+						if (clientSocket != null) {
+							clientSocket.close();
+							isOpen = false;
+						}
+					} catch (IOException ie) {
+						LOGGER.error("Error! Unable to tear down connection for client: " + this.clientId, ioe);
+					}
+				}
+				ServerStatusType curr_nodeStatus = serverNode.getServerStatus().getStatus(); 
+	            if (curr_nodeStatus == ServerStatusType.INITIALIZE ||
+						curr_nodeStatus == ServerStatusType.IDLE) {
+					
 					RespondMsg(latestMsg, StatusType.SERVER_STOPPED, null);
-				} else if (serverNode.getServerStatus().getStatus() == ServerStatusType.RUNNING) {
+					continue;
+				} else if (curr_nodeStatus == ServerStatusType.RUNNING) {
+					System.out.println(serverNode.getNodeHostPort() + ": ClientConnection reached running\n");
 					HandleRequest(latestMsg);
-				} else if (serverNode.getServerStatus().getStatus() == ServerStatusType.MOVE_DATA_SENDER ||
-						serverNode.getServerStatus().getStatus() == ServerStatusType.MOVE_DATA_RECEIVER) {
+					continue;
+				} else if (curr_nodeStatus == ServerStatusType.MOVE_DATA_SENDER ||
+						curr_nodeStatus == ServerStatusType.MOVE_DATA_RECEIVER) {
 					if (latestMsg.getStatus() == KVMessage.StatusType.PUT) {
 						RespondMsg(latestMsg, StatusType.SERVER_WRITE_LOCK, null);
 					} else {
 						HandleRequest(latestMsg);
 					}
-				} else if (serverNode.getServerStatus().getStatus() == ServerStatusType.CLOSE) {
+				} else if (curr_nodeStatus == ServerStatusType.CLOSE) {
 					close();
 				}
-				Thread.sleep(1);
-				/* connection either terminated by the client or lost due to
-				 * network problems*/
 			}
-			catch(SocketTimeoutException e){
-				close();
-			} catch (IOException ioe) {
-				LOGGER.error("Error! Connection lost with client " + this.clientId);
-				ioe.printStackTrace();
-				try {
-					if (clientSocket != null) {
-						clientSocket.close();
-						isOpen = false;
-					}
-				} catch (IOException ie) {
-					LOGGER.error("Error! Unable to tear down connection for client: " + this.clientId, ioe);
-				}
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-
 		}
-	}
+
 
 	private void close(){
 		try {

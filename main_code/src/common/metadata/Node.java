@@ -16,6 +16,14 @@ public class Node implements Comparable<Node>{
         this.hash = hash;
     }
 
+    public String getNodeID(){
+        return this.id;
+    }
+
+    public BigInteger getNodeHash(){
+        return this.hash;
+    }
+
     @Override
     public int compareTo(Node o) {
         return this.hash.compareTo(o.hash);

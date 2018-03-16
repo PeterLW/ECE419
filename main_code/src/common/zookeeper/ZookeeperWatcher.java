@@ -31,6 +31,7 @@ public class ZookeeperWatcher extends ZookeeperMetaData implements Runnable {
     public ZNodeMessage getZnodeMessage() throws KeeperException, InterruptedException {
         byte[] data = zooKeeper.getData(fullPath,false,null);
         String dataString = new String(data);
+        //System.out.println("getZnodeMessage: dataString = "+ dataString);
         ZNodeMessage newNode = gson.fromJson(dataString,ZNodeMessage.class);
         return newNode;
     }
@@ -71,6 +72,7 @@ public class ZookeeperWatcher extends ZookeeperMetaData implements Runnable {
         switch(newMessage.zNodeMessageStatus){
             case MOVE_DATA_RECEIVER:
             case MOVE_DATA_SENDER:
+            case NEW_ZNODE_RECEIVE_DATA:
                 // debug
                 System.out.println("Data has changed");
                 System.out.println(new String(data));
@@ -88,8 +90,8 @@ public class ZookeeperWatcher extends ZookeeperMetaData implements Runnable {
                 this.handleDelete();
             break;
             default:
-                System.out.println("New node: Data has changed");
-                System.out.println(new String(data));
+               
+               // System.out.println(new String(data));
                 ss = new ServerStatus(newMessage.zNodeMessageStatus);
                 upcomingStatusQueue.addQueue(ss);
                 break;

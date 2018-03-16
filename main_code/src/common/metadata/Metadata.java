@@ -30,6 +30,7 @@ public class Metadata {
      * Purpose: Upon receiving a new Metadata object, by the KVClient
      * it builds a new bst (as the bst is not converted to JSON and thus not sent in the message)
      */
+
     public void build_bst(){
         System.out.println("building bst...");
         this.removeAll();
@@ -131,8 +132,10 @@ public class Metadata {
     public void addServer(String serverIpPort){
         try {
             Node s = new Node(serverIpPort, getMD5(serverIpPort));
+            System.out.println(serverIpPort + " hash value = " + getMD5(serverIpPort));
             if(!servers_bst.contains(s)) {
                 servers_bst.add(s);
+                System.out.println("bst add: " + serverIpPort);
                 first_node = servers_bst.first();
                 last_node = servers_bst.last();
                 HashToServer.put(s.hash, s.id);
@@ -203,18 +206,32 @@ public class Metadata {
         return getSuccessor(n.getNodeHostPort());
     }
 
+    // public String getSuccessor(String id){
+    //     Node n = findNode(id);
+    //     if(n == null){
+    //         return null;
+    //     }
+    //     Node successor = servers_bst.higher(n);
+    //     if(successor == null){ //meaning that the current node is the highest one, need to return the smallest one.
+    //         return null;
+    //     } else {
+    //         return successor.id;
+    //     }
+    // }
+
     public String getSuccessor(String id){
         Node n = findNode(id);
         if(n == null){
             return null;
         }
         Node successor = servers_bst.higher(n);
-        if(successor == null){
-            return null;
+        if(successor == null){ //meaning that the current node is the highest one, need to return the smallest one.
+            return first_node.getNodeID();
         } else {
             return successor.id;
         }
     }
+
     /*
    updateSuccessor( ) works for both adding nodes and removing nodes.
    lower doesn't change, the higher will change for all cases.
@@ -257,8 +274,10 @@ public class Metadata {
         }catch(Exception e){
             e.printStackTrace();
         }
-        if(!servers_bst.contains(node))
+        if(!servers_bst.contains(node)){
+            System.out.println("findHashRange: reached here 1\n");
             return null;
+        }
 
         BigInteger[] range = new BigInteger[2];
 

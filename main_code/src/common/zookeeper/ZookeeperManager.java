@@ -17,6 +17,7 @@ public class ZookeeperManager {
     protected static final String HEAD_NAME = "ZNODES_HEAD";
     protected static final String ZNODE_HEAD = "/"+HEAD_NAME;
     protected static final String ZNODE_METADATA_NODE = "METADATA_NODE";
+    protected static final String SERVER_STATUS_NODE = "SERVER_STATUS_NODE";
     protected static final Gson gson = new Gson();
 
     protected ZooKeeper zooKeeper = null;
