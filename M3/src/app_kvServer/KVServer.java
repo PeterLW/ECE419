@@ -26,8 +26,11 @@ public class KVServer implements IKVServer {
     private ServerSocket serverSocket;
     private boolean running = false;
     private boolean stop = false;
+    private Thread kvConnThread;
+    private Thread dataReplicationThread;
+    private Thread dataMigraThread;
 
-	private static StorageManager storage;
+    private static StorageManager storage;
 
 	/* This needs to be passed into ClientConnections & ZookeeperWatcher thread */
 	private static ServerNode serverNode;
@@ -99,13 +102,13 @@ public class KVServer implements IKVServer {
 		storage = new StorageManager(serverNode.getCacheSize(), serverNode.getCacheStrategy(), serverNode.getNodeHostPort());
 
 		KVClientConnection kvClientConnection = new KVClientConnection(storage,serverNode,zookeeperHost,10000);
-		Thread kvConnThread = new Thread(kvClientConnection);
+		kvConnThread = new Thread(kvClientConnection);
 		
         KVServerDataMigration dataMigration = new KVServerDataMigration(serverNode, storage);
-        Thread dataMigraThread = new Thread(dataMigration);
+        dataMigraThread = new Thread(dataMigration);
 
         KVReplication dataReplication = new KVReplication(serverNode, storage,10000);
-        Thread dataReplicationThread = new Thread(dataReplication);
+        dataReplicationThread = new Thread(dataReplication);
 
         kvConnThread.start();
         dataReplicationThread.start();
@@ -202,28 +205,27 @@ public class KVServer implements IKVServer {
 		storage.clearAll();
 	}
 
-
-		public void run(){ // status
+    public void run(){ // status
         while (true) {
             if (upcomingStatusQueue.peakQueue() != null) {
                 ServerStatus next = upcomingStatusQueue.peakQueue();
                 ServerStatus curr = serverNode.getServerStatus();
 
                 boolean proceed = true;
-
                 switch (curr.getStatus()) {
                     case INITIALIZE:
-					case IDLE:
+                    case IDLE:
                         if (next.getTransition() == ZNodeMessageStatus.START_SERVER) {
-                        	
-							next.setServerStatus(ServerStatusType.RUNNING);
-							serverNode.updateServerNode(next);
-			
-						} else if (next.getTransition() == ZNodeMessageStatus.REMOVE_ZNODE_SEND_DATA){
-							handleDeleteAndMoveDataTransition(next);
-						} else if (next.getTransition() == ZNodeMessageStatus.SHUTDOWN_SERVER){
-							handleShutdownTransition(next);
-						}
+
+                            next.setServerStatus(ServerStatusType.RUNNING);
+                            serverNode.updateServerNode(next);
+
+                        } else if (next.getTransition() == ZNodeMessageStatus.REMOVE_ZNODE_SEND_DATA){
+                            //handleDeleteAndMoveDataTransition(next);
+                            serverNode.updateServerNode(next);
+                        } else if (next.getTransition() == ZNodeMessageStatus.SHUTDOWN_SERVER){
+                            handleShutdownTransition(next);
+                        }
                         break;
                     case RUNNING:
                         if (next.getTransition() == ZNodeMessageStatus.STOP_SERVER) {
@@ -234,75 +236,82 @@ public class KVServer implements IKVServer {
 
                             next.setServerStatus(ServerStatusType.MOVE_DATA_RECEIVER);
                             serverNode.updateServerNode(next);
-                            
+
                         } else if (next.getTransition() == ZNodeMessageStatus.MOVE_DATA_SENDER) {
 
-                        	next.setServerStatus(ServerStatusType.MOVE_DATA_SENDER);
-							serverNode.updateServerNode(next);
+                            next.setServerStatus(ServerStatusType.MOVE_DATA_SENDER);
+                            serverNode.updateServerNode(next);
 
-						} else if (next.getTransition() == ZNodeMessageStatus.REMOVE_ZNODE_SEND_DATA) {
-							handleDeleteAndMoveDataTransition(next);
+                        } else if (next.getTransition() == ZNodeMessageStatus.REMOVE_ZNODE_SEND_DATA) {
+                            //handleDeleteAndMoveDataTransition(next);
+                            next.setServerStatus(ServerStatusType.MOVE_DATA_SENDER);
+                            serverNode.updateServerNode(next);
 
-						}else if (next.getTransition() == ZNodeMessageStatus.SHUTDOWN_SERVER){
+                        }else if (next.getTransition() == ZNodeMessageStatus.SHUTDOWN_SERVER){
 
-							System.out.println(serverNode.getNodeHostPort() + " is about to shutdown\n");
-							handleShutdownTransition(next);
-						}
+                            System.out.println(serverNode.getNodeHostPort() + " is about to shutdown\n");
+                            handleShutdownTransition(next);
+                        }
                         break;
                     case MOVE_DATA_RECEIVER:
                     case MOVE_DATA_SENDER:
                         if (curr.isReady()) {
-                        	if (next.getTransition()== ZNodeMessageStatus.SHUTDOWN_SERVER){
+                            if (next.getTransition()== ZNodeMessageStatus.SHUTDOWN_SERVER){
 
-                        		System.out.println(serverNode.getNodeHostPort() + " reached shutdown state now\n");
-								handleShutdownTransition(next);
-							} else {
+                                System.out.println(serverNode.getNodeHostPort() + " reached shutdown state now\n");
+                                handleShutdownTransition(next);
+                            } else {
 
-								next.setServerStatus(ServerStatusType.RUNNING);
-								serverNode.updateServerNode(next);
-								System.out.println(serverNode.getNodeHostPort() + " reached running state now\n");
-								curr.resetReady();
-							}
+                                next.setServerStatus(ServerStatusType.RUNNING);
+                                serverNode.updateServerNode(next);
+                                System.out.println(serverNode.getNodeHostPort() + " reached running state now\n");
+                                curr.resetReady();
+                            }
                         }
                         else{
-                        	proceed = false;
-                        	//System.out.println("reached here for " + curr.getTargetName() +"\n");
+                            proceed = false;
+                            //System.out.println("reached here for " + curr.getTargetName() +"\n");
                         }
-						break;
+                        break;
                     case CLOSE:
-                    	break;
+
+                        break;
                 }
                 if (proceed && curr.getStatus() != ServerStatusType.MOVE_DATA_SENDER && curr.getStatus() != ServerStatusType.MOVE_DATA_RECEIVER) {
                     upcomingStatusQueue.popQueue();
+
                 }
             }
             else if (serverNode.getServerStatus().getStatus() == ServerStatusType.CLOSE){
-            	break;
-			}
-			else{
-				 try {
-		            // thread to sleep for 1000 milliseconds
-		            Thread.sleep(100);
-		         } catch (InterruptedException e) {
-		            e.printStackTrace();
-		         }
-			}
+                break;
+            }
+            else{
+                try {
+                    // thread to sleep for 1 milliseconds
+                    Thread.sleep(1);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
         }
-	}
+    }
 
 	private void handleShutdownTransition(ServerStatus next){
 		next.setServerStatus(ServerStatusType.CLOSE);
 		serverNode.updateServerNode(next);
+		//remove the disk
+		storage.clearAll();
+
 	}
 
-	private void handleDeleteAndMoveDataTransition(ServerStatus next){
-		ServerStatus closeStatus = new ServerStatus(ZNodeMessageStatus.SHUTDOWN_SERVER);
-		upcomingStatusQueue.addQueue(closeStatus);
-		next.setServerStatus(ServerStatusType.MOVE_DATA_SENDER);
-		next.setLocalRemove(true);
-		next.setRangeUpdate(true);
-		serverNode.updateServerNode(next);
-	}
+//	private void handleDeleteAndMoveDataTransition(ServerStatus next){
+//		ServerStatus closeStatus = new ServerStatus(ZNodeMessageStatus.SHUTDOWN_SERVER);
+//		upcomingStatusQueue.addQueue(closeStatus);
+//		next.setServerStatus(ServerStatusType.MOVE_DATA_SENDER);
+//		next.setLocalRemove(true);
+//		next.setRangeUpdate(true);
+//		serverNode.updateServerNode(next);
+//	}
 
 	@Override
     public void kill(){ //here kill( ) will be same as close( ) as we are using write-through cache. For now, leave it as the same as close()

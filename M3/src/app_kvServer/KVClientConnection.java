@@ -16,12 +16,14 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.security.MessageDigest;
+import java.util.*;
 
 // IN PROGRESS
-public class KVClientConnection implements Runnable {
+public class KVClientConnection extends Thread {
     //log info
     private static final Logger LOGGER = Logger.getLogger(app_kvServer.KVClientConnection.class);
     private static int numConnectedClients = 0;
+    private static ArrayList <Thread> childThreads = new ArrayList<Thread>();
 
     //connection info
     private ServerSocket serverSocket;
@@ -61,35 +63,55 @@ public class KVClientConnection implements Runnable {
             return;
         }
         while (!this.stop) {
-            // waits for connection
-            if (this.serverSocket != null) {
-                Socket client = null;
-                try {
-                    client = serverSocket.accept(); // blocking call
-                    numConnectedClients++;
-                    //client.setSoTimeout(sessionTimeout);
-                    ClientConnection connection = new ClientConnection(client, serverNode, storage, numConnectedClients, zookeeperHost, sessionTimeout);
-                   // LOGGER.info("Connected to " + client.getInetAddress().getHostName() + " on port " + client.getPort());
-                    System.out.println("server " + this.serverNode.getNodePort() + " connected to " + client.getInetAddress().getHostName() + " on port " + Integer.toString(client.getPort()));
-                   
-                    new Thread(connection).start();
-
-                } catch (SocketTimeoutException e) {
-                    if (serverNode.getServerStatus().getStatus() == ServerStatusType.CLOSE){
-                        close();
-                    }
-                } catch (IOException e) {
-                    LOGGER.error("Error! " + "Unable to establish connection. \n");
-                }
-                if(serverNode.getServerStatus().getStatus() == ServerStatusType.CLOSE){
+            if (!Thread.interrupted()) {
+                // waits for connection
+                if (this.serverSocket != null) {
+                    Socket client = null;
                     try {
-                        serverSocket.close();
-                       // System.exit(0);
-                        break;
-                    }catch (IOException e){
-                        LOGGER.error("Error! " + "Unable to close connection. \n");
+                        client = serverSocket.accept(); // blocking call
+                        numConnectedClients++;
+                        //client.setSoTimeout(sessionTimeout);
+                        ClientConnection connection = new ClientConnection(client, serverNode, storage, numConnectedClients, zookeeperHost, sessionTimeout);
+                        // LOGGER.info("Connected to " + client.getInetAddress().getHostName() + " on port " + client.getPort());
+                        System.out.println("server " + this.serverNode.getNodePort() + " connected to " + client.getInetAddress().getHostName() + " on port " + Integer.toString(client.getPort()));
+
+                        Thread newThread = new Thread(connection);
+                        childThreads.add(newThread);
+                        newThread.start();
+
+                    } catch (SocketTimeoutException e) {
+                        if (serverNode.getServerStatus().getStatus() == ServerStatusType.CLOSE) {
+                            close();
+                        }
+                    } catch (IOException e) {
+                        LOGGER.error("Error! " + "Unable to establish connection. \n");
+                    }
+                    if (serverNode.getServerStatus().getStatus() == ServerStatusType.CLOSE) {
+                        try {
+                            serverSocket.close();
+                            // System.exit(0);
+                            break;
+                        } catch (IOException e) {
+                            LOGGER.error("Error! " + "Unable to close connection. \n");
+                        }
                     }
                 }
+            }
+            else{
+                for (int i = 0; i < childThreads.size(); i++) {
+                    Thread thread = childThreads.get(i);
+                    thread.interrupt();
+                }
+                for (int i = 0; i < childThreads.size(); i++) {
+                    Thread thread = childThreads.get(i);
+                    try {
+                        thread.join();
+                    }catch (InterruptedException e){
+                        e.printStackTrace();
+                    }
+                }
+                System.out.println("KVClientConnection Thread: thread is closed now\n");
+                return;
             }
         }
     }

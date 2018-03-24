@@ -23,7 +23,7 @@ import common.messages.Message;
 import common.transmission.Transmission;
 
 
-public class KVReplication implements Runnable {
+public class KVReplication extends Thread {
     //log info
     private static final Logger LOGGER = Logger.getLogger(app_kvServer.KVReplication.class);
     //connection info
@@ -62,31 +62,32 @@ public class KVReplication implements Runnable {
             return;
         }
         while (true) {
-                Socket client = null;
-                try {
-                    client = serverSocket.accept(); 
-                    String clientIdString = Integer.toString(0);
-                    transmission.sendMessage(toByteArray(clientIdString),client);
-                    receive_data(client);
-                    client.close();
-                    System.out.println("localhost:" +Integer.toString(port) + " replication connection closed\n");
-                    
-                } catch (SocketTimeoutException e) {
-                    if (serverNode.getServerStatus().getStatus() == ServerStatusType.CLOSE){
-                        close();
-                    }
-                } catch (IOException e) {
-                    LOGGER.error("Error! " + "Unable to establish connection. \n");
-                }
-                if(serverNode.getServerStatus().getStatus() == ServerStatusType.CLOSE){
+
+                    Socket client = null;
                     try {
-                        serverSocket.close();
-                       // System.exit(0);
-                        break;
-                    }catch (IOException e){
-                        LOGGER.error("Error! " + "Unable to close connection. \n");
+                        client = serverSocket.accept();
+                        String clientIdString = Integer.toString(0);
+                        transmission.sendMessage(toByteArray(clientIdString), client);
+                        receive_data(client);
+                        client.close();
+                        System.out.println("localhost:" + Integer.toString(port) + " replication connection closed\n");
+
+                    } catch (SocketTimeoutException e) {
+                        if (serverNode.getServerStatus().getStatus() == ServerStatusType.CLOSE) {
+                            close();
+                        }
+                    } catch (IOException e) {
+                        LOGGER.error("Error! " + "Unable to establish connection. \n");
                     }
-                }
+                    if (serverNode.getServerStatus().getStatus() == ServerStatusType.CLOSE) {
+                        try {
+                            serverSocket.close();
+                            // System.exit(0);
+                            break;
+                        } catch (IOException e) {
+                            LOGGER.error("Error! " + "Unable to close connection. \n");
+                        }
+                    }
         }
     }
 

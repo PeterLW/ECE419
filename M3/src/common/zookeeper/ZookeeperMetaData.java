@@ -22,4 +22,13 @@ public class ZookeeperMetaData extends ZookeeperManager {
         return n;
     }
 
+    public void closeZk(){
+
+        try{
+            super.close();
+        }catch (InterruptedException e){
+            e.printStackTrace();
+        }
+    }
+
 }

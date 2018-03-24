@@ -88,8 +88,16 @@ public class ZookeeperWatcher extends ZookeeperMetaData implements Runnable {
                 ss = new ServerStatus(newMessage.zNodeMessageStatus,newMessage.getMoveDataRange(),newMessage.getTargetName());
                 upcomingStatusQueue.addQueue(ss);
 
+//                this.handleDelete();
+                break;
+            case SHUTDOWN_SERVER:
+                System.out.println("Data has changed");
+                System.out.println(new String(data));
+
+                ss = new ServerStatus(newMessage.zNodeMessageStatus,newMessage.getMoveDataRange(),newMessage.getTargetName());
+                upcomingStatusQueue.addQueue(ss);
                 this.handleDelete();
-            break;
+                break;
             default:
                
                // System.out.println(new String(data));
