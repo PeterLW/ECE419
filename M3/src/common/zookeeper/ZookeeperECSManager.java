@@ -32,18 +32,6 @@ public class ZookeeperECSManager extends ZookeeperManager{
         addZNode(ZNODE_HEAD, ZNODE_METADATA_NODE,null);
     }
 
-    private void createHead() throws KeeperException, InterruptedException {
-        Stat stat = zooKeeper.exists(ZNODE_HEAD,false);
-        if (stat == null) {
-            zooKeeper.create(ZNODE_HEAD, null, ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
-            LOGGER.debug("Successfully created Head node");
-            System.out.println("Successfully created Head node");
-        } else {
-            LOGGER.debug("Head already exists, not creating");
-            System.out.println("Head already exists, not creating");
-        }
-    }
-
     public void updateMetadataZNode(common.metadata.Metadata metadata) throws KeeperException, InterruptedException {
         String jsonMetadataData = gson.toJson(metadata);
         //System.out.println(jsonMetadataData);
@@ -188,23 +176,6 @@ public class ZookeeperECSManager extends ZookeeperManager{
         } else {
             LOGGER.error("Attempting to update znode: " + fullPath + " , however it does not exist");
             return false;
-        }
-    }
-
-    private void addZNode(String path, String memberName, byte[] data) throws KeeperException, InterruptedException { // KeeperException can be thrown if data to large
-        String fullPath = path + "/" + memberName;
-        zooKeeper.sync(fullPath,null,null);
-        Stat stat = zooKeeper.exists(fullPath,false);
-        if (stat == null) {
-            zooKeeper.create(fullPath, data, ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
-            //zooKeeper.setData(fullPath,data,-1);
-            LOGGER.debug("Successfully created znode: " + fullPath);
-            System.out.println("Successfully created znode: " + fullPath);
-        } else {
-            LOGGER.debug("Trying to add znode: " + fullPath + " ,but already exists, updating data instead");
-            System.out.println("Trying to add znode: " + fullPath + " ,but already exists, updating data instead");
-            System.out.println(stat.toString());
-            zooKeeper.setData(fullPath,data,-1);
         }
     }
 

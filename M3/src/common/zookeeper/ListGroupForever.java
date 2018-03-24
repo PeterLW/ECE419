@@ -38,14 +38,8 @@ public class ListGroupForever {
             @Override
             public void process(WatchedEvent event) {
                 if (event.getType() == Watcher.Event.EventType.NodeChildrenChanged) {
-//                    semaphore.release();
-                    try {
-                        System.out.println(event.getPath());
-                        list(event.getPath());
-                    } catch(Exception e){
-
-                    }
-
+                    semaphore.release();
+                    System.out.println("released");
                 }
             }
         });
@@ -54,13 +48,9 @@ public class ListGroupForever {
             System.out.printf("No members in group %s\n", groupName);
             return;
         }
+
         Collections.sort(children);
         System.out.println(children);
         System.out.println("--------------------");
-        try {
-            System.in.read();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 }

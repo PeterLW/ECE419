@@ -4,6 +4,10 @@ import java.util.Collection;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+
+import common.zookeeper.HeartbeatTracker;
+import common.zookeeper.ZookeeperHeartbeat;
+import common.zookeeper.ZookeeperHeartbeatWatcher;
 import ecs.IECSNode;
 import ecs.ServerManager;
 import ecs.ServerNode;
@@ -23,6 +27,9 @@ public class ECSClient implements IECSClient {
     private final BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in));
     private final ServerManager serverManager = new ServerManager();
 
+    private HeartbeatTracker heartbeatTracker = new HeartbeatTracker();
+    private ZookeeperHeartbeatWatcher zookeeperHeartbeatWatcher = null;
+
     private boolean stop = false;
 
     static {
@@ -35,7 +42,18 @@ public class ECSClient implements IECSClient {
         }
     }
 
-    public ECSClient(){}
+    public ECSClient(){
+        try {
+            zookeeperHeartbeatWatcher = new ZookeeperHeartbeatWatcher(ServerManager.ZOOKEEPER_HOST_PORT,10000);
+            zookeeperHeartbeatWatcher.setServerManager(serverManager);
+            zookeeperHeartbeatWatcher.setHeartbeatTracker(heartbeatTracker);
+            Thread zhwThread = new Thread(zookeeperHeartbeatWatcher);
+            zhwThread.start();
+        } catch (IOException | InterruptedException | KeeperException e) {
+            e.printStackTrace();
+        }
+
+    }
 
     @Override
     public boolean start() {
@@ -96,7 +114,14 @@ public class ECSClient implements IECSClient {
      */
     @Override
     public Collection<IECSNode> setupNodes(int count, String cacheStrategy, int cacheSize) { // this function is redundant.
-        return serverManager.setupNodes(count,cacheStrategy,cacheSize);
+        Collection <IECSNode> list = serverManager.setupNodes(count,cacheStrategy,cacheSize);
+
+        for (IECSNode n : list){
+            ServerNode sn = (ServerNode) n;
+            heartbeatTracker.addServer(sn.getNodeHostPort());
+        }
+
+        return list;
     }
 
     @Override
@@ -115,16 +140,13 @@ public class ECSClient implements IECSClient {
     }
 
     @Override
-    public boolean removeNodes(Collection<String> nodeNames) {
-        for (String name : nodeNames) {
-            try {
-                if(! serverManager.removeNode(name)){
-                    return false;
-                }
-            } catch (KeeperException | InterruptedException e) {
-                e.printStackTrace();
+    public boolean removeNodes(Collection<String> nodeIndexList) {
+        for (String index : nodeIndexList) {
+            String serverIpPort = serverManager.removeNode(Integer.parseInt(index));
+            if( serverIpPort == null){
                 return false;
             }
+            heartbeatTracker.removeServer(serverIpPort);
         }
         return true;
     }
