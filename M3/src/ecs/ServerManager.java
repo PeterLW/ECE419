@@ -454,12 +454,11 @@ public class ServerManager {
 
             //get the range needed to be sent from the deleted node to the successor node
             BigInteger[] range = metadata.findHashRange(ServerIndex);
-            String successorID = metadata.getSuccessor(node.getNodeHostPort());
-            String nextSuccessorID = null;
-            String nextNextSuccessorID = null;
+            String nodeID = node.getNodeHostPort();
+            String successorID = metadata.getSuccessor(nodeID);
 
             //remove the node from the ring
-            metadata.removeServer((node).getNodeHostPort());
+            metadata.removeServer(nodeID);
             //remove the node from the hashMap
             hashMap.remove(ServerIndex);
 
@@ -474,116 +473,210 @@ public class ServerManager {
             try {
                 if (!hashMap.isEmpty()) {
 
-                    ServerNode successor = getServerNode(successorID);
-                    //migrate the target node's coordinate range to the successor first
-                    //for receive, node.getNodeHostPort( ) just indicates the sender, not being used in Data migration.
-
-                    //In the meeting example, this is B -> C
-                    zookeeperECSManager.moveDataReceiverKVServer(successor, range, node.getNodeHostPort());
-                    Thread.sleep(SLEEP_TIME);
-                    zookeeperECSManager.removeAndMoveDataKVServer(node, range, successor.getNodeHostPort());
-                    Thread.sleep(SLEEP_TIME);
-                    //the target's predecessor sends its replicaOneRange to the successor
+                    //first get predecessor and successor
                     String predecessorID = metadata.getPredecessor(successorID);
+                    String prePredecessorID = metadata.getPredecessor(predecessorID);
+                    String nextSuccessorID = metadata.getSuccessor(successorID);
+                    String nextNextSuccessorID = metadata.getSuccessor(nextSuccessorID);
+
+                    ServerNode successor = getServerNode(successorID);
+
+                    //For the successor's new CoordinateRange:
+                    updateServerStatusFlags(successor, false, false);
+                    zookeeperECSManager.moveDataReceiverKVServer(successor, range, nodeID);
+                    Thread.sleep(SLEEP_TIME);
+                    updateServerStatusFlags(node, true, true);
+                    zookeeperECSManager.removeAndMoveDataKVServer(node, range, successorID);
+                    Thread.sleep(SLEEP_TIME);
 
                     if(predecessorID != null){
 
+                        //For the successor's ReplicaRangeTwo
                         ServerNode predecessor = getServerNode(predecessorID);
-                        BigInteger[] replicaOneMoveRange = predecessor.getReplicaTwoRange();
-                        //migrate the predecessor's replicaOneRange to the deleted node's successor
-
-                        //In the meeting example, this is A -> C
+                        BigInteger[] replicaTwoMoveRange = predecessor.getRange();
                         updateServerStatusFlags(successor, false, false);
-                        zookeeperECSManager.moveDataReceiverKVServer(successor, replicaOneMoveRange, predecessor.getNodeHostPort());
+                        zookeeperECSManager.moveDataReceiverKVServer(successor, replicaTwoMoveRange, predecessorID);
 
                         Thread.sleep(SLEEP_TIME);
 
                         //set the localRemove flag on predecessor to false so that the transferred data will not be removed
                         updateServerStatusFlags(predecessor, false, false);
-                        zookeeperECSManager.moveDataSenderKVServer(predecessor, replicaOneMoveRange, successor.getNodeHostPort());
+                        zookeeperECSManager.moveDataSenderKVServer(predecessor, replicaTwoMoveRange, successorID);
                         Thread.sleep(SLEEP_TIME);
 
-                        nextSuccessorID = metadata.getSuccessor(successorID);
-                        if(nextSuccessorID != null){
 
-                            ServerNode nextSuccessor = getServerNode(predecessorID);
-                            replicaOneMoveRange = predecessor.getRange();
-                            //in the meeting example, this is A -> D
+                        //For the successor's ReplicaRangeOne
+                        if(prePredecessorID != null && !prePredecessorID.equals(successorID)){
+                            ServerNode prePredecessor = getServerNode(predecessorID);
+                            BigInteger[] replicaRangeOne = prePredecessor.getRange();
+
+                            updateServerStatusFlags(successor, false, true);
+                            zookeeperECSManager.moveDataReceiverKVServer(successor, replicaRangeOne, prePredecessorID);
+                            Thread.sleep(SLEEP_TIME);
+
+                            //set the localRemove flag on predecessor to false so that the transferred data will not be removed
+                            updateServerStatusFlags(prePredecessor, false, false);
+                            zookeeperECSManager.moveDataSenderKVServer(prePredecessor, replicaRangeOne, successorID);
+                            Thread.sleep(SLEEP_TIME);
+                        }
+
+                        //For the nextSuccessor's new replicaRangeTwo:
+                        if(nextSuccessorID != null) {
+
+                            ServerNode nextSuccessor = getServerNode(nextSuccessorID);
+                            BigInteger[] replicaRangeTwo = successor.getRange();
                             updateServerStatusFlags(nextSuccessor, false, true);
-                            zookeeperECSManager.moveDataReceiverKVServer(nextSuccessor, replicaOneMoveRange, predecessor.getNodeHostPort());
-
-                            Thread.sleep(SLEEP_TIME);
-                            updateServerStatusFlags(predecessor, false, true);
-                            zookeeperECSManager.moveDataSenderKVServer(predecessor, replicaOneMoveRange, nextSuccessor.getNodeHostPort());
+                            zookeeperECSManager.moveDataReceiverKVServer(nextSuccessor, replicaRangeTwo, successorID);
                             Thread.sleep(SLEEP_TIME);
 
+                            updateServerStatusFlags(successor, false, false);
+                            zookeeperECSManager.moveDataSenderKVServer(successor, replicaRangeTwo, nextSuccessorID);
+                            Thread.sleep(SLEEP_TIME);
 
-                            nextNextSuccessorID = metadata.getSuccessor(nextSuccessorID);
-                            if(nextNextSuccessorID != null){
-
-                                ServerNode nextNextSuccessor = getServerNode(nextNextSuccessorID);
-                                replicaOneMoveRange = range;
-                                //in the meeting example, this is C -> E
-                                updateServerStatusFlags(nextNextSuccessor, false, true);
-                                zookeeperECSManager.moveDataReceiverKVServer(nextNextSuccessor, replicaOneMoveRange, successor.getNodeHostPort());
-                                Thread.sleep(SLEEP_TIME);
-                                updateServerStatusFlags(successor, false, true);
-                                zookeeperECSManager.moveDataSenderKVServer(successor, replicaOneMoveRange, nextNextSuccessor.getNodeHostPort());
+                            //For the nextSuccessor's new replicaRangeOne:
+                            if(!predecessorID.equals(nextSuccessorID)) {
+                                BigInteger[] replicaRangeOne = predecessor.getRange();
+                                updateServerStatusFlags(nextSuccessor, false, true);
+                                zookeeperECSManager.moveDataReceiverKVServer(nextSuccessor, replicaRangeOne, predecessorID);
                                 Thread.sleep(SLEEP_TIME);
 
+                                updateServerStatusFlags(predecessor, false, false);
+                                zookeeperECSManager.moveDataSenderKVServer(predecessor, replicaRangeOne, nextSuccessorID);
+                                Thread.sleep(SLEEP_TIME);
                             }
-                            else{
-                                System.out.println("removeNode(): there is no 3rd successor\n");
-                            }
+
                         }
-                        else{
-                            System.out.println("removeNode(): there is no 2nd successor\n");
+                        //For the nextNextSuccessor's
+                        if(nextNextSuccessorID != null && !nextNextSuccessorID.equals(successorID)){
+
+                            ServerNode nextNextSuccessor = getServerNode(nextNextSuccessorID);
+                            BigInteger[] replicaOneMoveRange = successor.getRange();
+                            updateServerStatusFlags(nextNextSuccessor, false, true);
+                            zookeeperECSManager.moveDataReceiverKVServer(nextNextSuccessor, replicaOneMoveRange, successorID);
+                            Thread.sleep(SLEEP_TIME);
+                            updateServerStatusFlags(successor, false, true);
+                            zookeeperECSManager.moveDataSenderKVServer(successor, replicaOneMoveRange, nextNextSuccessorID);
+                            Thread.sleep(SLEEP_TIME);
                         }
-                    }
-                    else{
-                        System.out.println("Error: replication attempts to be started when there is only one node in the ring\n");
-                    }
-                } else {
-                    zookeeperECSManager.shutdownKVServer(node);
                 }
-            }catch (KeeperException | InterruptedException e){
-                e.printStackTrace();
-                return false;
+                else{ //in this case, there is only one node in the ring, we can simply send shutdown message to the deleted node
+                    System.out.println("removeNode( ): Now only one node in the ring\n");
+                    Thread.sleep(SLEEP_TIME);
+                }
             }
-            return true;
+            zookeeperECSManager.shutdownKVServer(node);
+        }catch (KeeperException | InterruptedException e){
+            e.printStackTrace();
+            return false;
         }
+        return true;
+    }
         else {
             LOGGER.error("Cannot remove non-existing node!");
             return false;
         }
     }
 
-    //ServerIndex: ip:port
+
 //    public boolean removeNode(String ServerIndex)throws KeeperException, InterruptedException{
+//
 //        if (hashMap.containsKey(ServerIndex)){
 //            ServerNode node = (ServerNode) hashMap.get(ServerIndex);
 //            //if remove node, add the node back to entity list for next launch
 //            ConfigEntity entity = new ConfigEntity(node.getNodeHost(), node.getNodeHost(), node.getNodePort());
 //            entityList.add(entity);
 //
+//            //get the range needed to be sent from the deleted node to the successor node
 //            BigInteger[] range = metadata.findHashRange(ServerIndex);
-//            ServerNode successor = updateSuccessor(node);
+//            String successorID = metadata.getSuccessor(node.getNodeHostPort());
+//            String nextSuccessorID = null;
+//            String nextNextSuccessorID = null;
 //
+//            //remove the node from the ring
 //            metadata.removeServer((node).getNodeHostPort());
+//            //remove the node from the hashMap
 //            hashMap.remove(ServerIndex);
-//            if(successor == null){
-//                System.out.println("removeNode: successor is null\n");
-//            }
 //
-//            if(range == null){
-//                System.out.println("removeNode: range is null\n");
+//            //now update all ranges associated with possible all three successors for the deleted node.
+//            if(successorID != null) {
+//                updateAllThreeSuccessorsRanges(successorID);
+//            }
+//            else{
+//                System.out.println("removeNode( ): There is no successor for node " + ServerIndex + "\n");
 //            }
 //
 //            try {
 //                if (!hashMap.isEmpty()) {
+//
+//                    ServerNode successor = getServerNode(successorID);
+//                    //migrate the target node's coordinate range to the successor first
+//                    //for receive, node.getNodeHostPort( ) just indicates the sender, not being used in Data migration.
+//
+//                    //In the meeting example, this is B -> C
 //                    zookeeperECSManager.moveDataReceiverKVServer(successor, range, node.getNodeHostPort());
-//                    Thread.sleep(1000);
+//                    Thread.sleep(SLEEP_TIME);
 //                    zookeeperECSManager.removeAndMoveDataKVServer(node, range, successor.getNodeHostPort());
+//                    Thread.sleep(SLEEP_TIME);
+//                    //the target's predecessor sends its replicaOneRange to the successor
+//                    String predecessorID = metadata.getPredecessor(successorID);
+//
+//                    if(predecessorID != null){
+//
+//                        ServerNode predecessor = getServerNode(predecessorID);
+//                        BigInteger[] replicaTwoMoveRange = predecessor.getReplicaTwoRange();
+//                        //migrate the predecessor's replicaOneRange to the deleted node's successor
+//
+//                        //In the meeting example, this is A -> C
+//                        updateServerStatusFlags(successor, false, false);
+//                        zookeeperECSManager.moveDataReceiverKVServer(successor, replicaTwoMoveRange, predecessor.getNodeHostPort());
+//
+//                        Thread.sleep(SLEEP_TIME);
+//
+//                        //set the localRemove flag on predecessor to false so that the transferred data will not be removed
+//                        updateServerStatusFlags(predecessor, false, false);
+//                        zookeeperECSManager.moveDataSenderKVServer(predecessor, replicaTwoMoveRange, successor.getNodeHostPort());
+//                        Thread.sleep(SLEEP_TIME);
+//
+//                        nextSuccessorID = metadata.getSuccessor(successorID);
+//                        if(nextSuccessorID != null){
+//
+//                            ServerNode nextSuccessor = getServerNode(predecessorID);
+//                            BigInteger[] predeceesorRange = predecessor.getRange();
+//                            //in the meeting example, this is A -> D
+//                            updateServerStatusFlags(nextSuccessor, false, true);
+//                            zookeeperECSManager.moveDataReceiverKVServer(nextSuccessor, predeceesorRange, predecessor.getNodeHostPort());
+//
+//                            Thread.sleep(SLEEP_TIME);
+//                            updateServerStatusFlags(predecessor, false, true);
+//                            zookeeperECSManager.moveDataSenderKVServer(predecessor, predeceesorRange, nextSuccessor.getNodeHostPort());
+//                            Thread.sleep(SLEEP_TIME);
+//
+//
+//                            nextNextSuccessorID = metadata.getSuccessor(nextSuccessorID);
+//                            if(nextNextSuccessorID != null){
+//
+//                                ServerNode nextNextSuccessor = getServerNode(nextNextSuccessorID);
+//                                BigInteger[] replicaOneMoveRange = range;
+//                                //in the meeting example, this is C -> E
+//                                updateServerStatusFlags(nextNextSuccessor, false, true);
+//                                zookeeperECSManager.moveDataReceiverKVServer(nextNextSuccessor, replicaOneMoveRange, successor.getNodeHostPort());
+//                                Thread.sleep(SLEEP_TIME);
+//                                updateServerStatusFlags(successor, false, true);
+//                                zookeeperECSManager.moveDataSenderKVServer(successor, replicaOneMoveRange, nextNextSuccessor.getNodeHostPort());
+//                                Thread.sleep(SLEEP_TIME);
+//
+//                            }
+//                            else{
+//                                System.out.println("removeNode(): there is no 3rd successor\n");
+//                            }
+//                        }
+//                        else{
+//                            System.out.println("removeNode(): there is no 2nd successor\n");
+//                        }
+//                    }
+//                    else{ //in this case, there is only one node in the ring, we can simply send shutdown message to the deleted node
+//                        System.out.println("removeNode( ): Now only one node in the ring\n");
+//                    }
 //                } else {
 //                    zookeeperECSManager.shutdownKVServer(node);
 //                }
@@ -598,7 +691,6 @@ public class ServerManager {
 //            return false;
 //        }
 //    }
-
 
     /**
      * parse the ecs.config file to get a list of IPs

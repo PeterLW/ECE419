@@ -17,7 +17,7 @@ import java.security.MessageDigest;
 import java.util.ArrayList;
 import ecs.ServerNode;
 
-public class KVServerDataMigration implements Runnable {
+public class KVServerDataMigration extends Thread {
 
     private  String address;
     private int port;
@@ -40,46 +40,35 @@ public class KVServerDataMigration implements Runnable {
     public void run() {
         System.out.println("KVServerDataMigration thread starts ....\n");
         while(true){
-            ServerStatusType statusType = serverNode.getServerStatus().getStatus();
-            if ((statusType == ServerStatusType.MOVE_DATA_RECEIVER || statusType == ServerStatusType.MOVE_DATA_SENDER) && (serverNode.getServerStatus().isReady() == false)){ 
-                update(statusType);
-                start(statusType);
-                finish();
-                try {
-                    Thread.sleep(10);
-                }catch (InterruptedException e){
-                    e.printStackTrace();
+                ServerStatusType statusType = serverNode.getServerStatus().getStatus();
+                if ((statusType == ServerStatusType.MOVE_DATA_RECEIVER || statusType == ServerStatusType.MOVE_DATA_SENDER) && (serverNode.getServerStatus().isReady() == false)) {
+                    update(statusType);
+                    start(statusType);
+                    finish();
+                    try {
+                        Thread.sleep(10);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                } else if (statusType == ServerStatusType.CLOSE) {
+                    break;
+                } else {
+                    try {
+                        Thread.sleep(1);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 }
-            } else if (statusType == ServerStatusType.CLOSE){
-                break;
             }
-            else {
-                try {
-                    Thread.sleep(1);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
     }
-
-    private void print_servernode(){
-
-        System.out.println("servernode.name = " + serverNode.getName());
-        System.out.println("servernode.host = " + serverNode.getNodeHost());
-        System.out.println("servernode.port = " + Integer.toString(serverNode.getNodePort()));
-        System.out.println("servernode.status.targetName = " + serverNode.getServerStatus().getTargetName());
-        System.out.println("servernode.status.getStatus = " + serverNode.getServerStatus().getStatus());
-    }
-
 
 private void print_stats(String localName, String targetName){
 
-    System.out.println("servernode.localName = " + localName);
-    System.out.println("servernode.targetName = " + targetName);
-    System.out.println("servernode.address = " + address);
-    System.out.println("servernode.port = " + port);
-    System.out.println("servernode.hashRange = " + hashRange);
+    System.out.println("servernode.localName = " + localName + "\n");
+    System.out.println("servernode.targetName = " + targetName + "\n");
+    System.out.println("servernode.address = " + address + "\n");
+    System.out.println("servernode.port = " + port + "\n");
+    System.out.println("servernode.hashRange = " + hashRange + "\n");
 
 }
     private void update(ServerStatusType statusType) {
@@ -90,8 +79,8 @@ private void print_stats(String localName, String targetName){
         if(statusType == ServerStatusType.MOVE_DATA_RECEIVER){
             
             localName = serverNode.getNodeHostPort();
-            System.out.println("the receiver is " + localName);
-            System.out.println("the sender is " + serverNode.getServerStatus().getTargetName());
+            System.out.println("the receiver is " + localName + "\n");
+            System.out.println("the sender is " + serverNode.getServerStatus().getTargetName() + "\n");
             String[] temp = localName.split(":");
             this.address = temp[0];
             this.port = Integer.parseInt(temp[1]) + MIGRATION_PORT_OFFSET;
@@ -99,9 +88,9 @@ private void print_stats(String localName, String targetName){
         else{
            
             localName = serverNode.getNodeHostPort();
-            System.out.println("the sender is " + localName);
+            System.out.println("the sender is " + localName + "\n");
             targetName = serverNode.getServerStatus().getTargetName();
-            System.out.println("the receiver is " + targetName);
+            System.out.println("the receiver is " + targetName + "\n");
 
             String[] temp = targetName.split(":");
             this.address = temp[0];
@@ -124,7 +113,7 @@ private void print_stats(String localName, String targetName){
                 send_data(senderSocket);
                 senderSocket.close();
             } catch (IOException e) {
-                LOGGER.error("Failed to connect data migration receiver");
+                LOGGER.error(serverNode.getNodeHostPort() +" failed to connect data migration receiver");
                 return;
             }
         }
@@ -140,7 +129,7 @@ private void print_stats(String localName, String targetName){
                 receiverSocket.close();
                 System.out.println("Socket closed\n");
             } catch (IOException e) {
-                LOGGER.error("Failed to connect data migration sender");
+                LOGGER.error(serverNode.getNodeHostPort() +"failed to connect data migration sender");
                 return;
             }
         }

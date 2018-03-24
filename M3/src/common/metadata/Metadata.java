@@ -115,8 +115,14 @@ public class Metadata {
             if(servers_bst.contains(s)) {
                 servers_bst.remove(s);
                 removeServerListNode(serverIpPort);
-                first_node = servers_bst.first();
-                last_node = servers_bst.last();
+                if(!servers_bst.isEmpty()) {
+                    first_node = servers_bst.first();
+                    last_node = servers_bst.last();
+                }
+                else{
+                    first_node = null;
+                    last_node = null;
+                }
                 HashToServer.remove(s.hash);
             }
         } catch (Exception e) {
@@ -268,6 +274,9 @@ public class Metadata {
 
     public String getPredecessor(String id){
 
+        if(id == null){
+            return null;
+        }
         Node n = findNode(id);
         if(n == null || servers_bst.size() == 1){//meaning either no such node is found or only node available now
             return null;
@@ -332,6 +341,10 @@ public class Metadata {
     }
 
     public String getSuccessor(String id){
+
+        if(id == null){
+            return null;
+        }
         Node n = findNode(id);
         if(n == null || servers_bst.size() == 1){//meaning either no such node is found or only node available now
             return null;

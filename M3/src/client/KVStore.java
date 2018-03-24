@@ -97,24 +97,23 @@ public class KVStore implements KVCommInterface {
 		// TODO Auto-generated method stub
 		try{
 			setRunning(false);
-			LOGGER.info("tearing down the connection ...");
+			System.out.println("tearing down the connection ...");
 			
 			message = new Message(StatusType.CLOSE_REQ, clientId, seqNum, key);
 			transmit.sendMessage(toByteArray(gson.toJson(message)), clientSocket);
 
-			try{
-				Thread.sleep(TIMEOUT);
-			}
-			catch(InterruptedException e){
-				e.printStackTrace();
-			}
+//			try{
+//				Thread.sleep(TIMEOUT);
+//			}
+//			catch(InterruptedException e){
+//				e.printStackTrace();
+//			}
 
 			if (clientSocket != null){
 				clientSocket.close();
 				LOGGER.info("connection closed!");
 			}
 
-			
 		} catch (IOException ioe) {
 			LOGGER.error("Unable to send message!\n");
 		}
