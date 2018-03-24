@@ -2,10 +2,7 @@ package common.zookeeper;
 
 import com.google.gson.Gson;
 import org.apache.log4j.Logger;
-import org.apache.zookeeper.KeeperException;
-import org.apache.zookeeper.WatchedEvent;
-import org.apache.zookeeper.Watcher;
-import org.apache.zookeeper.ZooKeeper;
+import org.apache.zookeeper.*;
 import org.apache.zookeeper.data.Stat;
 
 import java.io.IOException;
@@ -22,7 +19,18 @@ public class ZookeeperManager {
 
     protected ZooKeeper zooKeeper = null;
 
+    protected static final String QUEUE_NAME = "QUEUE_ZNODE";
+    protected static final String QUEUE_PATH = ZNODE_HEAD + "/" + QUEUE_NAME;
+    protected static final String QUEUE_PREFIX = "QUEUE";
+
     public ZookeeperManager(String zookeeperHost, int sessionTimeout) throws IOException, InterruptedException {
+        if (zooKeeper == null) {
+            connect(zookeeperHost, sessionTimeout);
+        }
+//        zooKeeper.sync(ZNODE_HEAD,null,null);
+    }
+
+    private void connect(String zookeeperHost, int sessionTimeout) throws IOException, InterruptedException {
         final CountDownLatch connectedSignal = new CountDownLatch(1);
         zooKeeper = new ZooKeeper(zookeeperHost,sessionTimeout,
                 new Watcher(){
@@ -34,7 +42,6 @@ public class ZookeeperManager {
                     }
                 });
         connectedSignal.await();
-        zooKeeper.sync(ZNODE_HEAD,null,null);
     }
 
     public boolean isConnected(){
@@ -43,6 +50,37 @@ public class ZookeeperManager {
         }
         return false;
     }
+
+
+    protected void createHead() throws KeeperException, InterruptedException {
+        Stat stat = zooKeeper.exists(ZNODE_HEAD,false);
+        if (stat == null) {
+            zooKeeper.create(ZNODE_HEAD, null, ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+            LOGGER.debug("Successfully created Head node");
+            System.out.println("Successfully created Head node");
+        } else {
+            LOGGER.debug("Head already exists, not creating");
+            System.out.println("Head already exists, not creating");
+        }
+    }
+
+    protected void addZNode(String path, String memberName, byte[] data) throws KeeperException, InterruptedException { // KeeperException can be thrown if data to large
+        String fullPath = path + "/" + memberName;
+        zooKeeper.sync(fullPath,null,null);
+        Stat stat = zooKeeper.exists(fullPath,false);
+        if (stat == null) {
+            zooKeeper.create(fullPath, data, ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+            //zooKeeper.setData(fullPath,data,-1);
+            LOGGER.debug("Successfully created znode: " + fullPath);
+            System.out.println("Successfully created znode: " + fullPath);
+        } else {
+            LOGGER.debug("Trying to add znode: " + fullPath + " ,but already exists, updating data instead");
+            System.out.println("Trying to add znode: " + fullPath + " ,but already exists, updating data instead");
+            System.out.println("stat: " + stat.toString());
+            zooKeeper.setData(fullPath,data,-1);
+        }
+    }
+
 
     protected void deleteZNode(String path, String groupName) throws KeeperException, InterruptedException {
         String fullPath = path + "/" + groupName;

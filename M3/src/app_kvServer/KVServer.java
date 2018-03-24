@@ -3,6 +3,7 @@ package app_kvServer;
 import common.cache.StorageManager;
 import common.zookeeper.ZNodeMessage;
 import common.zookeeper.ZNodeMessageStatus;
+import common.zookeeper.ZookeeperHeartbeat;
 import common.zookeeper.ZookeeperWatcher;
 import ecs.ServerNode;
 import logger.LogSetup;
@@ -114,10 +115,16 @@ public class KVServer implements IKVServer {
         dataReplicationThread.start();
 		dataMigraThread.start();
 
+		try {
+			Thread zkheartbeatThread = new Thread(new ZookeeperHeartbeat(zookeeperHost,10000,serverNode.getNodeHostPort()));
+			zkheartbeatThread.start();
+		} catch (IOException | InterruptedException | KeeperException e) {
+			e.printStackTrace();
+		}
+
 	}
 
 	private void print_servernode(ServerNode node){
-
         System.out.println("servernode.name = " + node.getName());
         System.out.println("servernode.host = " + node.getNodeHost());
         System.out.println("servernode.port = " + Integer.toString(node.getNodePort()));

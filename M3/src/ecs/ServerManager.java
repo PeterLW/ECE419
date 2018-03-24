@@ -20,10 +20,13 @@ public class ServerManager {
     /* It was stated we can assume zookeeper running on same machine, default port*/
     private static final String ZOOKEEPER_HOST_NAME = "localhost";
     private static final String ZOOKEEPER_PORT = "2181";
-    private static final String ZOOKEEPER_HOST_PORT = ZOOKEEPER_HOST_NAME + ":" + ZOOKEEPER_PORT;
-   
+    public static final String ZOOKEEPER_HOST_PORT = ZOOKEEPER_HOST_NAME + ":" + ZOOKEEPER_PORT;
+
+    // TODO: make these thread-safe with Colletions.synchronizedList(new Object<>())
     private LinkedHashMap<String,IECSNode> hashMap = new LinkedHashMap<String,IECSNode>(); // stores the active running nodes
     private LinkedList<ConfigEntity> entityList = new LinkedList<ConfigEntity>(); // stores provided nodes from Config file
+    private LinkedList<ConfigEntity> originalEntityList = new LinkedList<ConfigEntity>();
+
     private ZookeeperECSManager zookeeperECSManager;
     private boolean is_init;
     private static final int SLEEP_TIME = 1000;
@@ -442,10 +445,17 @@ public class ServerManager {
             System.out.println("updateAllThreeSuccessorsRanges( ): There is one successor\n");
         }
     }
+
+    public String removeNode(Integer serverIndex) {
+        ConfigEntity configEntity = originalEntityList.get(serverIndex);
+        String serverIpPort = configEntity.getIpAddr() + ":" + configEntity.getPortNum(); // actually serverIpPort
+        System.out.println("Attempting to remove server node: " + serverIpPort);
+        return removeNode(serverIpPort);
+    }
+
+
     //In removeNode( ): the order of replica range updates and ECS message passing is irrevelant !
-
-    public boolean removeNode(String ServerIndex)throws KeeperException, InterruptedException{
-
+    public String removeNode(String ServerIndex) {
         if (hashMap.containsKey(ServerIndex)){
             ServerNode node = (ServerNode) hashMap.get(ServerIndex);
             //if remove node, add the node back to entity list for next launch
@@ -472,7 +482,6 @@ public class ServerManager {
 
             try {
                 if (!hashMap.isEmpty()) {
-
                     //first get predecessor and successor
                     String predecessorID = metadata.getPredecessor(successorID);
                     String prePredecessorID = metadata.getPredecessor(predecessorID);
@@ -567,13 +576,13 @@ public class ServerManager {
             zookeeperECSManager.shutdownKVServer(node);
         }catch (KeeperException | InterruptedException e){
             e.printStackTrace();
-            return false;
+            return null;
         }
-        return true;
+        return ServerIndex;
     }
         else {
             LOGGER.error("Cannot remove non-existing node!");
-            return false;
+            return null;
         }
     }
 
@@ -717,6 +726,7 @@ public class ServerManager {
                 String[] entry = splitArray[i].split("\\s+");
                 ConfigEntity node = new ConfigEntity(entry[0],entry[1],Integer.parseInt(entry[2]));
                 entityList.add(node);
+                originalEntityList.add(node); // this one doesn't get removed from later
             }
             bufferedReader.close();
         } catch (IOException e) {
