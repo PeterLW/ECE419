@@ -34,6 +34,9 @@ public class HeartbeatTracker {
             updateCountsList(-1, min+2,serverName);
 
         }
+        System.out.println(serverName + " added ");
+
+
         return true;
     }
 
@@ -64,8 +67,10 @@ public class HeartbeatTracker {
         }
 
         Integer count = countsPerServer.get(serverName);
-        countsPerServer.put(serverName, count+1);
-        updateCountsList(count,count + 1, serverName);
+        Integer newCount = count + 1;
+        countsPerServer.put(serverName, newCount);
+        updateCountsList(count,newCount, serverName);
+        System.out.println(serverName + " count: " + count + " new count: " + newCount + " min: " + min + " max: " + max);
         return true;
     }
 
@@ -90,9 +95,11 @@ public class HeartbeatTracker {
         }
 
         serversPerCount.get(newCount).add(serverName);
+//        System.out.println("here " + oldCount + " " + newCount);
 
         // no old
-        if (oldCount <0){
+        if (oldCount < 0){
+//            System.out.println(oldCount);
             return;
         }
 
@@ -100,19 +107,18 @@ public class HeartbeatTracker {
         serversPerCount.get(oldCount).remove(serverName);
         if (serversPerCount.get(oldCount).isEmpty()){
             serversPerCount.remove(oldCount);
-
-            if (max < newCount){
-                max = newCount;
-            }
-
             if (min == oldCount){
                 min++; // can only go up by 1
                 if (max < min){
                     max = min;
                 }
             }
-
         }
+
+        if (max < newCount){
+            max = newCount;
+        }
+
     }
 
 }

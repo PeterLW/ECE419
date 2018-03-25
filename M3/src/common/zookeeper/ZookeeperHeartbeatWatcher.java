@@ -42,17 +42,19 @@ public class ZookeeperHeartbeatWatcher extends ZookeeperManager implements Runna
     public void run() {
         try {
             semaphore.acquire();
+            System.out.println("Running");
             while (true) {
                 checkHeartbeats();
                 semaphore.acquire();
             }
         } catch (KeeperException | InterruptedException e) {
-            System.out.println("Check heartbeats failed");
+            System.out.println("Check heartbeats failed ");
+            e.printStackTrace();
         }
     }
 
     private void checkHeartbeats() throws KeeperException, InterruptedException {
-        List<String> children = zooKeeper.getChildren(QUEUE_PATH, new Watcher() {
+        List<String> children = zooKeeper.getChildren(QUEUE_PATH,  new Watcher() {
             @Override
             public void process(WatchedEvent event) {
                 if (event.getType() == Watcher.Event.EventType.NodeChildrenChanged) {
@@ -62,16 +64,21 @@ public class ZookeeperHeartbeatWatcher extends ZookeeperManager implements Runna
         });
 
         if (children.isEmpty()) {
-            System.out.printf("No members in group %s\n", QUEUE_PATH);
+            System.out.printf("~No members in group %s\n", QUEUE_PATH);
             return;
         }
 
         for (String zNodeName : children){
             byte[] data = zooKeeper.getData(QUEUE_PATH+"/"+zNodeName,null,null);
-            String serverIpPort = data.toString();
-            heartbeatTracker.appendCount(serverIpPort);
+            String serverIpPort = new String(data);
+//            System.out.print(" " + serverIpPort + " | ");
+            if (!heartbeatTracker.appendCount(serverIpPort)) {
+                System.out.print(serverIpPort + " appendCount failed - check if added to heartbeatTracker |");
+            }
             zooKeeper.delete(QUEUE_PATH+"/"+zNodeName,-1);
+
         }
+        System.out.println(" \n" + children);
 
         String value = heartbeatTracker.getDead();
         if (value == null){ // no dead
@@ -86,7 +93,16 @@ public class ZookeeperHeartbeatWatcher extends ZookeeperManager implements Runna
 
     public static void main(String[] args) throws IOException, InterruptedException, KeeperException {
         ZookeeperHeartbeatWatcher zm = new ZookeeperHeartbeatWatcher("localhost:2191", 1000000); // session timeout is in ms
+        HeartbeatTracker ht = new HeartbeatTracker();
+        ht.addServer("localhost:4000");
+        zm.setHeartbeatTracker(ht);
         System.out.println(zm.isConnected());
-        new ListGroupForever(zm.zooKeeper).listForever(ZookeeperManager.QUEUE_PATH); // debugging class
+        Thread a = new Thread(zm);
+        a.start();
+
+        System.in.read();
+        ht.addServer("localhost:3000");
+        ht.addServer("localhost:2000");
+//        new ListGroupForever(zm.zooKeeper).listForever(ZookeeperManager.QUEUE_PATH); // debugging class
     }
 }
