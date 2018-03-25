@@ -165,6 +165,7 @@ public class ECSClient implements IECSClient {
         System.out.println(PROMPT + "Error! " +  error);
     }
 
+
     private void handleCommand(String cmdLine) {
         String[] tokens = cmdLine.split("\\s+");
         if(tokens[0].equals("shutdown")) {
@@ -204,22 +205,22 @@ public class ECSClient implements IECSClient {
                     System.out.println(tokens[1] + " nodes added to the ECS");
                 }
             }
-        } else if(tokens[0].equals("removeNode")) {
+        } else if(tokens[0].equals("removeNodes")) {
             int num_args = tokens.length;
-            if(num_args != 2) {
+            if(num_args < 2) {
                 printError("Invalid number of arguments");
             }
             else{
-                    ArrayList<String> nodes = new ArrayList<String>();
-                    for(int i = 1; i < num_args; i++){
-                        nodes.add(tokens[i]);
-                    }
-                    if(!removeNodes(nodes)){
-                        printError("failed to remove " + Integer.toString(num_args - 1) +" nodes");
-                    }
-                    else{
-                        System.out.println("node deletion succeed");
-                    }
+                ArrayList<String> nodes = new ArrayList<String>();
+                for(int i = 1; i < num_args; i++){
+                    nodes.add(tokens[i]);
+                }
+                if(!removeNodes(nodes)){
+                    printError("failed to remove " + Integer.toString(num_args - 1) +" nodes");
+                }
+                else{
+                    System.out.println("node deletion succeed");
+                }
             }
         } else if(tokens[0].equals("help")) {
             help();
@@ -250,7 +251,7 @@ public class ECSClient implements IECSClient {
 
         sb.append(PROMPT).append("addNode <cacheSize> <replacementStrategy>");
         sb.append("\t\t Add a new server to the storage service at an arbitrary position .\n");
-        sb.append(PROMPT).append("removeNode <server_index> ");
+        sb.append(PROMPT).append("removeNodes <server_index> <server_index> ...");
         sb.append("\t\t Remove a server from the storage service at an arbitrary position. \n");
         System.out.println(sb);
 

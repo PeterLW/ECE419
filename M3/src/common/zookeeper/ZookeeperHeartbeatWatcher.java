@@ -91,7 +91,7 @@ public class ZookeeperHeartbeatWatcher extends ZookeeperManager implements Runna
 
         System.out.println("Found a dead node: " + value + " starting removeNode procedure for a already dead node.");
         // call servermanager.removeNode() -
-        serverManager.removeNode(value); // should be serverIpPort
+        serverManager.removeNode(value, true); // should be serverIpPort
 
         // clean-up
         heartbeatTracker.removeServer(value);

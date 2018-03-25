@@ -11,12 +11,12 @@ import org.apache.commons.cli.*;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.zookeeper.KeeperException;
-
+import java.lang.*;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.LinkedList;
 
-public class KVServer implements IKVServer {
+public class KVServer implements Runnable, IKVServer {
     //log info
     private static final String PROMPT = "KVSERVER>";
     private static final Logger LOGGER = Logger.getLogger(KVServer.class);
@@ -286,9 +286,11 @@ public class KVServer implements IKVServer {
                         break;
                 }
                 if (proceed && curr.getStatus() != ServerStatusType.MOVE_DATA_SENDER && curr.getStatus() != ServerStatusType.MOVE_DATA_RECEIVER) {
-                    upcomingStatusQueue.popQueue();
+					if(upcomingStatusQueue.getQueueSize() > 0){
+						upcomingStatusQueue.popQueue();
+					}
 
-                }
+				}
             }
             else if (serverNode.getServerStatus().getStatus() == ServerStatusType.CLOSE){
                 break;
@@ -379,46 +381,72 @@ public class KVServer implements IKVServer {
 	 * getHostIpPort
 	 *
 	 */
+
 	public static void main(String[] args){
 
-		//TODO read from cmdline the arguments needed to start KVServer
-		Options options = new Options();
-
-		options.addOption("name",true,"The serverID, getHostIpPort()");
-		options.getOption("name").setRequired(true);
-		options.addOption("zkhost",true,"Zookeeper Host (IP Address)");
-		options.addOption("zkport",true,"Zookeeper port #");
-		options.getOption("zkport").setType(Integer.class);
-
-
-		CommandLineParser cmdLineParser = new DefaultParser();
-
 		// default values
-		String name = null, zkhost = "localhost";
-		int zkport = 2185; // double check
+		int zkport = 2181; // double check
+		String name = "server";
+		String zkhost = "localhost";
+		String address = "localhost";
+		int port = 50000;
 
-		try {
-			CommandLine cmdLine = cmdLineParser.parse(options, args);
+		 int numberOfServer = 5;
 
-			if (cmdLine.hasOption("name")){
-				name = cmdLine.getOptionValue("name").toString();
-			}
+		 for(int i = 0; i < numberOfServer; i++){
+		 	name = address + ":" + Integer.toString(port + 100 *i);
+		 	System.out.println("server "+name + " starts now\n");
+		 	KVServer kvServer = new KVServer(name,zkhost,zkport);
+		 	Thread t = new Thread(kvServer);
+		 	t.start();
+		 }
+		 while(true){
 
-			if (cmdLine.hasOption("zkhost")){
-				zkhost = cmdLine.getOptionValue("zkhost").toString();
-			}
+		 }
 
-			if (cmdLine.hasOption("zkport")){
-				zkport = Integer.parseInt(cmdLine.getOptionValue("zkport"));
-			}
-		} catch (ParseException e) {
-			LOGGER.error("Error parsing command line arguments", e);
-			System.exit(-1);
-		}
-		System.out.println("server "+name + " starts now\n");
-
-		KVServer kvServer = new KVServer(name,zkhost,zkport);
-		kvServer.run();
 
 	}
+
+//	public static void main(String[] args){
+//
+//		//TODO read from cmdline the arguments needed to start KVServer
+//		Options options = new Options();
+//
+//		options.addOption("name",true,"The serverID, getHostIpPort()");
+//		options.getOption("name").setRequired(true);
+//		options.addOption("zkhost",true,"Zookeeper Host (IP Address)");
+//		options.addOption("zkport",true,"Zookeeper port #");
+//		options.getOption("zkport").setType(Integer.class);
+//
+//
+//		CommandLineParser cmdLineParser = new DefaultParser();
+//
+//		// default values
+//		String name = null, zkhost = "localhost";
+//		int zkport = 2185; // double check
+//
+//		try {
+//			CommandLine cmdLine = cmdLineParser.parse(options, args);
+//
+//			if (cmdLine.hasOption("name")){
+//				name = cmdLine.getOptionValue("name").toString();
+//			}
+//
+//			if (cmdLine.hasOption("zkhost")){
+//				zkhost = cmdLine.getOptionValue("zkhost").toString();
+//			}
+//
+//			if (cmdLine.hasOption("zkport")){
+//				zkport = Integer.parseInt(cmdLine.getOptionValue("zkport"));
+//			}
+//		} catch (ParseException e) {
+//			LOGGER.error("Error parsing command line arguments", e);
+//			System.exit(-1);
+//		}
+//		System.out.println("server "+name + " starts now\n");
+//
+//		KVServer kvServer = new KVServer(name,zkhost,zkport);
+//		kvServer.run();
+//
+//	}
 }

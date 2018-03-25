@@ -8,7 +8,6 @@ public class UpcomingStatusQueue {
     private LinkedList<ServerStatus> upcomingStatus = new LinkedList<ServerStatus>();
     /*check concurrentLinkedQueue & LinkedBlockingDeque*/
 
-    //Peter: want to remove and return first element? Use removeFirst()
     public synchronized ServerStatus popQueue(){
         return upcomingStatus.pop();
     }
@@ -20,5 +19,8 @@ public class UpcomingStatusQueue {
     /* double check */
     public synchronized ServerStatus peakQueue(){
         return upcomingStatus.peek();
+    }
+    public int getQueueSize(){
+        return upcomingStatus.size();
     }
 }
