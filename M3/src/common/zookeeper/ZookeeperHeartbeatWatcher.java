@@ -10,6 +10,10 @@ import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 
+/**
+ * To use, must add server to heartbeat tracker from ECSClient before heartbeat tracker will record
+ * heartbeats from server
+ */
 public class ZookeeperHeartbeatWatcher extends ZookeeperManager implements Runnable {
     private Semaphore semaphore = new Semaphore(1);
     private ServerManager serverManager = null; // reference
@@ -88,6 +92,13 @@ public class ZookeeperHeartbeatWatcher extends ZookeeperManager implements Runna
         System.out.println("Found a dead node: " + value + " starting removeNode procedure for a already dead node.");
         // call servermanager.removeNode() -
         serverManager.removeNode(value); // should be serverIpPort
+
+        // clean-up
+        heartbeatTracker.removeServer(value);
+        Stat stat = zooKeeper.exists(ZNODE_HEAD+"/" + value,null);
+        if (stat != null){
+            zooKeeper.delete(ZNODE_HEAD+"/"+value,-1);
+        }
     }
 
 
