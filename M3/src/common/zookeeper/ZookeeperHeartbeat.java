@@ -30,19 +30,19 @@ public class ZookeeperHeartbeat extends ZookeeperManager implements Runnable {
         while (true) {
             addToQueue();
             try {
-                Thread.sleep(60000); // 60s
+                Thread.sleep(30000); // 60s
             } catch (InterruptedException e) {
                 System.out.println("sleep failed");
             }
         }
     }
 
-    private void addToQueue(){
+    private void addToQueue(){ // writes serverIpPort as data to node in queue
         try {
             zooKeeper.create(QUEUE_PATH + "/" + QUEUE_PREFIX, serverIpPort.getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT_SEQUENTIAL);
             System.out.println(serverIpPort + " added to Heartbeat Queue");
         } catch (KeeperException | InterruptedException e){
-            System.out.println("Trying to add queue, failed. " + e);
+            System.out.println("Trying to add " + serverIpPort + " to queue, failed. " + e);
         }
     }
 
@@ -51,7 +51,12 @@ public class ZookeeperHeartbeat extends ZookeeperManager implements Runnable {
         System.out.println(zm.isConnected());
         Thread a = new Thread(zm);
         a.start();
-//        new ListGroupForever(zm.zooKeeper).listForever(ZNODE_HEAD); // debugging class
+//
+        ZookeeperHeartbeat zm2 = new ZookeeperHeartbeat("localhost:2191", 1000000,"localhost:3000"); // session timeout is in ms
+        System.out.println(zm2.isConnected());
+        Thread b = new Thread(zm2);
+        b.start();
+
     }
 }
 

@@ -115,8 +115,9 @@ public class KVServer implements IKVServer {
         dataReplicationThread.start();
 		dataMigraThread.start();
 
-		try {
-			Thread zkheartbeatThread = new Thread(new ZookeeperHeartbeat(zookeeperHost,10000,serverNode.getNodeHostPort()));
+		try { // zookeeper heartbeat thread
+			ZookeeperHeartbeat zookeeperHeartbeat = new ZookeeperHeartbeat(zookeeperHost,10000,serverNode.getNodeHostPort());
+			Thread zkheartbeatThread = new Thread(zookeeperHeartbeat);
 			zkheartbeatThread.start();
 		} catch (IOException | InterruptedException | KeeperException e) {
 			e.printStackTrace();
