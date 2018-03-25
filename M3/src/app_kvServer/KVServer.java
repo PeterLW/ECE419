@@ -380,6 +380,7 @@ public class KVServer implements IKVServer {
 	 *
 	 */
 	public static void main(String[] args){
+
 		//TODO read from cmdline the arguments needed to start KVServer
 		Options options = new Options();
 
@@ -415,7 +416,9 @@ public class KVServer implements IKVServer {
 			System.exit(-1);
 		}
 		System.out.println("server "+name + " starts now\n");
+
 		KVServer kvServer = new KVServer(name,zkhost,zkport);
 		kvServer.run();
+
 	}
 }
