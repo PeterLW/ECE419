@@ -126,7 +126,7 @@ public class ZookeeperWatcher extends ZookeeperMetaData implements Runnable {
 
     public static void main(String[] args) throws IOException, InterruptedException, KeeperException {
         UpcomingStatusQueue upcomingStatusQueue = new UpcomingStatusQueue();
-        ZookeeperWatcher zookeeperWatcher = new ZookeeperWatcher("localhost:2181",10000,"TEST_SERVER_0 localhost", upcomingStatusQueue);
+        ZookeeperWatcher zookeeperWatcher = new ZookeeperWatcher("localhost:2191",10000,"TEST_SERVER_0 localhost", upcomingStatusQueue);
         ServerNode n = zookeeperWatcher.initServerNode();
         zookeeperWatcher.setServerNode(n);
         zookeeperWatcher.run();

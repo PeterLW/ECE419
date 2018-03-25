@@ -21,6 +21,7 @@ public class ZookeeperHeartbeatWatcher extends ZookeeperManager implements Runna
 
     public ZookeeperHeartbeatWatcher(String zookeeperHost, int sessionTimeout) throws IOException, InterruptedException, KeeperException {
         super(zookeeperHost, sessionTimeout); // put if statement - make function
+        clearZNodes(); // in case crashed before shutting down last time
         createQueueZnode();
     }
 

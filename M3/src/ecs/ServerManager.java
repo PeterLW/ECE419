@@ -19,7 +19,7 @@ public class ServerManager {
 
     /* It was stated we can assume zookeeper running on same machine, default port*/
     private static final String ZOOKEEPER_HOST_NAME = "localhost";
-    private static final String ZOOKEEPER_PORT = "2181";
+    private static final String ZOOKEEPER_PORT = "2191";
     public static final String ZOOKEEPER_HOST_PORT = ZOOKEEPER_HOST_NAME + ":" + ZOOKEEPER_PORT;
 
     // TODO: make these thread-safe with Colletions.synchronizedList(new Object<>())

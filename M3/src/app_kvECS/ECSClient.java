@@ -25,7 +25,7 @@ public class ECSClient implements IECSClient {
 
     //Buffered Reader pointed at STDIN
     private final BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in));
-    private final ServerManager serverManager = new ServerManager();
+    private ServerManager serverManager = null;
 
     private HeartbeatTracker heartbeatTracker = new HeartbeatTracker();
     private ZookeeperHeartbeatWatcher zookeeperHeartbeatWatcher = null;
@@ -45,6 +45,8 @@ public class ECSClient implements IECSClient {
     public ECSClient(){
         try {
             zookeeperHeartbeatWatcher = new ZookeeperHeartbeatWatcher(ServerManager.ZOOKEEPER_HOST_PORT,10000);
+            // maintain sequential execution, zookeeper heartbeat watcher -> then -> zookeeper ecs manager creation
+            serverManager = new ServerManager();
             zookeeperHeartbeatWatcher.setServerManager(serverManager);
             zookeeperHeartbeatWatcher.setHeartbeatTracker(heartbeatTracker);
             Thread zhwThread = new Thread(zookeeperHeartbeatWatcher);
