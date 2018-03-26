@@ -62,9 +62,15 @@ public class ZookeeperManager {
                 return;
             List<String> children = zooKeeper.getChildren(ZNODE_HEAD, false);
             for (String child : children) {
+                if (child.contains(QUEUE_NAME)) {
+                    List<String> queueChild = zooKeeper.getChildren(ZNODE_HEAD + "/" + QUEUE_NAME, false);
+                    for (String c : queueChild) {
+                        zooKeeper.delete(ZNODE_HEAD + "/" + QUEUE_NAME + "/" + c, -1);
+                    }
+                }
                 zooKeeper.delete(ZNODE_HEAD + "/" + child, -1);
             }
-            zooKeeper.delete(ZNODE_HEAD, -1);
+                zooKeeper.delete(ZNODE_HEAD, -1);
         } catch (Exception e) {
             LOGGER.error("Error deleting all nodes from zookeeper");
             throw new RuntimeException("Error deleting all nodes from zookeeper",e);
