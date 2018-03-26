@@ -32,19 +32,18 @@ public class DBManager {
     }
 
     public DBManager(String serverName){
-
         this.diskPath = ROOT_PATH + "/" + serverName;
+//        System.out.println(this.diskPath);
         File diskDirectory = new File(diskPath);
         if (!diskDirectory.exists()) {
-
-            diskDirectory.mkdir();
+            diskDirectory.mkdirs();
         }
     }
 
     public synchronized boolean clearStorage() {
 
         File[] allFiles = new File(getCurrentDiskPath()).listFiles();
-        if (allFiles.length == 0)// no files in Database
+        if (allFiles == null || allFiles.length == 0)// no files in Database
             return true;
 
         for (File f : allFiles) {
@@ -55,12 +54,11 @@ public class DBManager {
         return true;
     }
 
-    private String getCurrentDiskPath(){
+    public String getCurrentDiskPath(){
 
         if(diskPath != null){
             return diskPath;
-        }
-        else{
+        } else{
             return ROOT_PATH;
         }
     }

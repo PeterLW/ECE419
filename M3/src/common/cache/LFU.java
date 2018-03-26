@@ -33,17 +33,14 @@ public class LFU implements CacheStructure{
         if(capacity <=0)
             return false;
 
-        if (!vals.containsKey(key)){
+        if (!vals.containsKey(key)){ // not in cache
             if (vals.size() >= capacity) {
                 String evitKey = lists.get(min).iterator().next();
                 deleteKey(evitKey);
             }
-            vals.put(key, value);
         }
-        // vals.put(key, value);
+        vals.put(key, value); // must be here for update things that are in cache
         this.updateStructures(key);
-
-
         return true;
     }
 

@@ -33,6 +33,10 @@ public class StorageManager {
         }
     }
 
+    public String getCurrentDiskPath(){
+        return dbManager.getCurrentDiskPath();
+    }
+
     public boolean putKV(String key, String value){
        return (cacheStructure.putKV(key,value) && dbManager.storeKV(key,value));
     }
