@@ -17,15 +17,18 @@ public class ZookeeperManager {
     protected static final String SERVER_STATUS_NODE = "SERVER_STATUS_NODE";
     protected static final Gson gson = new Gson();
 
-    protected ZooKeeper zooKeeper = null;
-
     protected static final String QUEUE_NAME = "QUEUE_ZNODE";
     protected static final String QUEUE_PATH = ZNODE_HEAD + "/" + QUEUE_NAME;
     protected static final String QUEUE_PREFIX = "QUEUE";
 
+    protected ZooKeeper zooKeeper = null;
+
     public ZookeeperManager(String zookeeperHost, int sessionTimeout) throws IOException, InterruptedException {
         if (zooKeeper == null) {
             connect(zookeeperHost, sessionTimeout);
+            System.out.println("Connected to zookeeper.");
+        } else {
+            System.out.println("Already connected to zookeeper.");
         }
 //        zooKeeper.sync(ZNODE_HEAD,null,null);
     }
@@ -50,6 +53,30 @@ public class ZookeeperManager {
         }
         return false;
     }
+
+
+    protected void clearZNodes(){ // zookeeper only has one layer, no need recursion
+        try {
+            Stat stat = zooKeeper.exists(ZNODE_HEAD, false);
+            if (stat == null)
+                return;
+            List<String> children = zooKeeper.getChildren(ZNODE_HEAD, false);
+            for (String child : children) {
+                if (child.contains(QUEUE_NAME)) {
+                    List<String> queueChild = zooKeeper.getChildren(ZNODE_HEAD + "/" + QUEUE_NAME, false);
+                    for (String c : queueChild) {
+                        zooKeeper.delete(ZNODE_HEAD + "/" + QUEUE_NAME + "/" + c, -1);
+                    }
+                }
+                zooKeeper.delete(ZNODE_HEAD + "/" + child, -1);
+            }
+                zooKeeper.delete(ZNODE_HEAD, -1);
+        } catch (Exception e) {
+            LOGGER.error("Error deleting all nodes from zookeeper");
+            throw new RuntimeException("Error deleting all nodes from zookeeper",e);
+        }
+    }
+
 
 
     protected void createHead() throws KeeperException, InterruptedException {

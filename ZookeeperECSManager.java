@@ -7,7 +7,6 @@ import org.apache.zookeeper.data.Stat;
 
 import java.io.IOException;
 import java.math.BigInteger;
-import java.util.List;
     /*
         class for managing zookeeper for the ECSClient
      */
@@ -24,21 +23,11 @@ public class ZookeeperECSManager extends ZookeeperManager{
     public ZookeeperECSManager(String zookeeperHosts, int sessionTimeout)
             throws IOException, InterruptedException, KeeperException {
         super(zookeeperHosts,sessionTimeout);
-        System.out.println("Connected to Zookeeper client " + zookeeperHosts);
-        LOGGER.info("Connected to Zookeeper client " + zookeeperHosts);
-
-        Stat stat = zooKeeper.exists(ZNODE_HEAD, false);
-        if (stat == null){
-            addZNode(ZNODE_HEAD, ZNODE_METADATA_NODE,null);
-            return;
-        }
-        else{
-            clearZNodes();
-        }
-        //clearZNodes(); // in case crashed before shutting down last time
-        //createHead();
+//        System.out.println("Connected to Zookeeper client " + zookeeperHosts);
+//        LOGGER.info("Connected to Zookeeper client " + zookeeperHosts);
+        createHead();
         // the config node should store the metadata class
-        
+        addZNode(ZNODE_HEAD, ZNODE_METADATA_NODE,null);
     }
 
     public void updateMetadataZNode(common.metadata.Metadata metadata) throws KeeperException, InterruptedException {
@@ -185,22 +174,6 @@ public class ZookeeperECSManager extends ZookeeperManager{
         } else {
             LOGGER.error("Attempting to update znode: " + fullPath + " , however it does not exist");
             return false;
-        }
-    }
-
-    private void clearZNodes(){ // zookeeper only has one layer, no need recursion
-        try {
-            Stat stat = zooKeeper.exists(ZNODE_HEAD, false);
-            if (stat == null)
-                return;
-            List<String> children = zooKeeper.getChildren(ZNODE_HEAD, false);
-            for (String child : children) {
-                zooKeeper.delete(ZNODE_HEAD + "/" + child, -1);
-            }
-            zooKeeper.delete(ZNODE_HEAD, -1);
-        } catch (Exception e) {
-            LOGGER.error("Error deleting all nodes from zookeeper");
-            throw new RuntimeException("Error deleting all nodes from zookeeper",e);
         }
     }
 

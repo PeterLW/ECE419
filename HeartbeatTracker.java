@@ -121,4 +121,8 @@ public class HeartbeatTracker {
 
     }
 
+    public Integer getMin(){
+        return min;
+    }
+
 }
