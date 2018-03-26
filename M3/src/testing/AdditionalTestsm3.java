@@ -1,5 +1,6 @@
 package testing;
 
+import common.metadata.Metadata;
 import common.zookeeper.HeartbeatTracker;
 import common.zookeeper.ZookeeperECSManager;
 import common.zookeeper.ZookeeperHeartbeat;
@@ -8,6 +9,29 @@ import ecs.ServerNode;
 import junit.framework.TestCase;
 
 public class AdditionalTestsm3 extends TestCase {
+
+    public void test3(){
+
+    }
+
+    public void testZkClearNodes(){
+        try {
+            ZookeeperHeartbeatWatcher z = new ZookeeperHeartbeatWatcher("localhost:2191", 10000); // session timeout is in ms
+            HeartbeatTracker ht = new HeartbeatTracker();
+            z.setHeartbeatTracker(ht);
+            assertTrue(z.isConnected());
+
+            ZookeeperECSManager zk = new ZookeeperECSManager("localhost:2191", 10000);
+            assertTrue(zk.isConnected());
+
+            Metadata m = new Metadata();
+            zk.updateMetadataZNode(m);
+
+            assertTrue(z.isExistsQueueNode());
+        } catch (Exception e){
+
+        }
+    }
 
     public void testZkHeartbeat(){
         try {

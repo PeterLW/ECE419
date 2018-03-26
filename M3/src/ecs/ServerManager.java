@@ -14,7 +14,7 @@ public class ServerManager {
     private static final Logger LOGGER = Logger.getLogger(ServerManager.class);
 
     private static final String RELATIVE_CONFIG_FILE_PATH = "/src/app_kvECS/ecs.config"; // SHOULD BE an argument passed in at start-up
-    
+
     private static Metadata metadata = new Metadata();
 
     /* It was stated we can assume zookeeper running on same machine, default port*/
@@ -44,7 +44,7 @@ public class ServerManager {
             parseConfigFile(filePath);
         } catch (Exception e) {
             LOGGER.error("Failed to connect to zookeeper. Check that zookeeper server has started and is running on " + ZOOKEEPER_PORT );
-            throw new RuntimeException("Failed to connect to zookeeper. Check that zookeeper server has started and is running on localhost:2181", e);
+            throw new RuntimeException("Failed to connect to zookeeper. Check that zookeeper server has started and is running on localhost: " + ZOOKEEPER_PORT, e);
         }
     }
 
@@ -63,7 +63,7 @@ public class ServerManager {
                     metadata.addServer(node.getNodeHostPort());
                 }
                 zookeeperECSManager.updateMetadataZNode(metadata); // step 2
-               
+
                 for(int i = 0; i < count; ++i){ // step 3: launch
                     ServerNode node = (ServerNode) list.get(i);
 
@@ -86,7 +86,7 @@ public class ServerManager {
                     list.add(node);
 
                     zookeeperECSManager.updateMetadataZNode(metadata); // update metadata node
-                    
+
                     //System.out.println("node.serverName = "+node.getNodeName() + ", node.ipport = " +node.getNodeHostPort());
                     this.addServer(node, cacheStrategy, cacheSize);
                     SSH ssh_conn = new SSH(node.getNodeHostPort(), ZOOKEEPER_HOST_NAME,ZOOKEEPER_PORT);
@@ -121,6 +121,7 @@ public class ServerManager {
 
     //the metadata is updated by now, so the structure to be used here is metadata.
     //here we update the server node stored in hash map.
+
     private void updateReplicaRanges(String nodeID){
 
         String predecessorID = metadata.getPredecessor(nodeID);
@@ -132,7 +133,8 @@ public class ServerManager {
 
             newReplicaTwoRange = metadata.findHashRange(predecessorID);
             String prepPredecessorID = metadata.getPredecessor(nodeID);
-            if (prepPredecessorID != null) {
+
+            if (prepPredecessorID != null && !predecessorID.equals(nodeID)) { //when there are only 2 nodes in the ring, this happens
                 newReplicaOneRange = metadata.findHashRange(prepPredecessorID);
             }
         }
@@ -185,7 +187,6 @@ public class ServerManager {
         }
     }
 
-
     private boolean isBelongingToSuccessors(String nodeID, String checkID){
 
         String successorID = metadata.getSuccessor(nodeID);
@@ -224,14 +225,14 @@ public class ServerManager {
             else{
                 if((nodeRange[0].compareTo(range[0]) == 0) &&
                         (nodeRange[1].compareTo(range[1])) == 0){
-                        //find the nodeID
-                        String checkNodeID = node.getNodeHostPort();
-                        if(isBelongingToSuccessors(currNodeID,checkNodeID)){
-                            return false;
-                        }
-                        else{
-                            return true;
-                        }
+                    //find the nodeID
+                    String checkNodeID = node.getNodeHostPort();
+                    if(isBelongingToSuccessors(currNodeID,checkNodeID)){
+                        return false;
+                    }
+                    else{
+                        return true;
+                    }
                 }
             }
         }
@@ -291,6 +292,7 @@ public class ServerManager {
         }
 
     }
+
     private boolean addServer(ServerNode n, String cacheStrategy, int cacheSize) throws KeeperException, InterruptedException { // change to throw?
 
         String nodeID = n.getNodeHostPort();
@@ -313,22 +315,20 @@ public class ServerManager {
             //set replica ranges for the new node, this shall be the last step
             updateReplicaRanges(nodeID);
 
-            if(!is_init) {
-                int mapSize = hashMap.size();
-                if(mapSize >= 2) {
+            int mapSize = hashMap.size();
+            if(mapSize >= 2) {
 
-                    //set replica ranges for all possible three successor nodes
-                    String successorID = metadata.getSuccessor(nodeID);
-                    if(successorID != null) {
-                        updateAllThreeSuccessorsRanges(successorID);
-                    }
-                    else{
-                        System.out.println("addServer( ): error, successor is null for the ring containing more than 2 nodes !\n");
-                    }
+                //set replica ranges for all possible three successor nodes
+                String successorID = metadata.getSuccessor(nodeID);
+                if(successorID != null) {
+                    updateAllThreeSuccessorsRanges(successorID);
                 }
                 else{
-                    System.out.println("addServer( ): error, there should be never reached !\n");
+                    System.out.println("addServer( ): error, successor is null for the ring containing more than 2 nodes !\n");
                 }
+            }
+
+            if(!is_init) {
 
                 String successorID = metadata.getSuccessor(nodeID);
                 ServerNode successor = getServerNode(successorID);
@@ -339,17 +339,9 @@ public class ServerManager {
                     //in my note example, this is B --> D for (A,D)
                     updateServerStatusFlags(n, false, false);
                     zookeeperECSManager.addAndRecvDataKVServer(n, newRange, successor.getNodeHostPort());
-
-//                    Thread.sleep(SLEEP_TIME);
-//                    updateServerStatusFlags(successor, false, false); //B doesn't need to remove the data, since it is its replicaRangeTwo
-//                    zookeeperECSManager.moveDataSenderKVServer(successor, newRange, n.getNodeHostPort());
-//                    Thread.sleep(SLEEP_TIME);
-//
-//                    dataReplicationForNewKVServer(n, successor, newRange);
                 }
             }
             else{
-                System.out.println("addServer( ): Currently there is only one server running in the system\n");
                 zookeeperECSManager.addKVServer(n); // add new Znode
             }
 
@@ -359,6 +351,7 @@ public class ServerManager {
         }
         return true;
     }
+
 
     public IECSNode getServerName(String Key){
         String[] temp = metadata.findServer(Key).split(":");
@@ -433,9 +426,9 @@ public class ServerManager {
         if(nextSuccessorID != null) {
             updateReplicaRanges(nextSuccessorID);
             //update the 3rd successor
-            nextNextSuccessorID = metadata.getSuccessor(successorID);
+            nextNextSuccessorID = metadata.getSuccessor(nextSuccessorID);
             if(nextNextSuccessorID != null) {
-                updateReplicaRanges(nextSuccessorID);
+                updateReplicaRanges(nextNextSuccessorID);
             }
             else{
                 System.out.println("updateAllThreeSuccessorsRanges( ): There are two successors\n");
@@ -450,12 +443,13 @@ public class ServerManager {
         ConfigEntity configEntity = originalEntityList.get(serverIndex);
         String serverIpPort = configEntity.getIpAddr() + ":" + configEntity.getPortNum(); // actually serverIpPort
         System.out.println("Attempting to remove server node: " + serverIpPort);
-        return removeNode(serverIpPort);
+        return removeNode(serverIpPort, false);
     }
 
 
     //In removeNode( ): the order of replica range updates and ECS message passing is irrevelant !
-    public String removeNode(String ServerIndex) {
+    public String removeNode(String ServerIndex, boolean recovery) {
+
         if (hashMap.containsKey(ServerIndex)){
             ServerNode node = (ServerNode) hashMap.get(ServerIndex);
             //if remove node, add the node back to entity list for next launch
@@ -466,6 +460,8 @@ public class ServerManager {
             BigInteger[] range = metadata.findHashRange(ServerIndex);
             String nodeID = node.getNodeHostPort();
             String successorID = metadata.getSuccessor(nodeID);
+            int cacheSize = node.getCacheSize();
+            String cacheStrategy = node.getCacheStrategy();
 
             //remove the node from the ring
             metadata.removeServer(nodeID);
@@ -567,19 +563,23 @@ public class ServerManager {
                             zookeeperECSManager.moveDataSenderKVServer(successor, replicaOneMoveRange, nextNextSuccessorID);
                             Thread.sleep(SLEEP_TIME);
                         }
+                    }
+                    else{ //in this case, there is only one node in the ring, we can simply send shutdown message to the deleted node
+                        System.out.println("removeNode( ): Now only one node in the ring\n");
+                        //Thread.sleep(SLEEP_TIME);
+                    }
                 }
-                else{ //in this case, there is only one node in the ring, we can simply send shutdown message to the deleted node
-                    System.out.println("removeNode( ): Now only one node in the ring\n");
-                    Thread.sleep(SLEEP_TIME);
+                zookeeperECSManager.shutdownKVServer(node);
+                Thread.sleep(SLEEP_TIME);
+                if(recovery){
+                    setupNodes(1, cacheStrategy, cacheSize);
                 }
+            }catch (KeeperException | InterruptedException e){
+                e.printStackTrace();
+                return null;
             }
-            zookeeperECSManager.shutdownKVServer(node);
-        }catch (KeeperException | InterruptedException e){
-            e.printStackTrace();
-            return null;
+            return ServerIndex;
         }
-        return ServerIndex;
-    }
         else {
             LOGGER.error("Cannot remove non-existing node!");
             return null;
@@ -733,7 +733,7 @@ public class ServerManager {
             e.printStackTrace();
         }
     }
-    
+
     public static void main(String[] args) throws IOException, InterruptedException, KeeperException {
 //        ServerManager serverManager = new ServerManager();
 //

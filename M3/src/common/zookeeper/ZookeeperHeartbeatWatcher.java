@@ -33,6 +33,11 @@ public class ZookeeperHeartbeatWatcher extends ZookeeperManager implements Runna
         heartbeatTracker = ht;
     }
 
+    public boolean isExistsQueueNode() throws KeeperException, InterruptedException {
+        Stat stat = zooKeeper.exists(ZNODE_HEAD+"/"+QUEUE_NAME,false);
+        return (stat != null);
+    }
+
     private void createQueueZnode() throws KeeperException, InterruptedException {
         Stat stat = zooKeeper.exists(ZNODE_HEAD,false);
         if (stat == null){
@@ -92,7 +97,7 @@ public class ZookeeperHeartbeatWatcher extends ZookeeperManager implements Runna
 
         System.out.println("Found a dead node: " + value + " starting removeNode procedure for a already dead node.");
         // call servermanager.removeNode() -
-        serverManager.removeNode(value); // should be serverIpPort
+        serverManager.removeNode(value, true); // should be serverIpPort
 
         // clean-up
         heartbeatTracker.removeServer(value);

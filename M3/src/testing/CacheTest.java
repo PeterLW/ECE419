@@ -12,7 +12,7 @@ import java.util.ArrayList;
 public class CacheTest extends TestCase{
     /* Unit tests for cache*/
 
-    private static final String TEST_DB_PATH = "./testDB";
+    private static final String TEST_DB_PATH = "testDB";
     ArrayList<String> cacheStrategy = new ArrayList<String>(){{
         add("FIFO");
         add("LRU");
@@ -44,6 +44,7 @@ public class CacheTest extends TestCase{
         for (String strategy: cacheStrategy) {
             StorageManager rm = new StorageManager(10, strategy, TEST_DB_PATH);
             rm.clearAll();
+//            System.out.println(strategy);
 
             for (int i = 0; i < 10; i++) {
                 assertTrue(rm.putKV(Integer.toString(i), "b"));
@@ -103,7 +104,6 @@ public class CacheTest extends TestCase{
         for (String strategy: cacheStrategy) {
             StorageManager sm = new StorageManager(10, strategy, TEST_DB_PATH);
             sm.clearAll();
-
             for (int i = 0; i < 10; i++) {
                 assertTrue(sm.putKV(Integer.toString(i), "b"));
             }
