@@ -19,6 +19,17 @@ public class CacheTest extends TestCase{
         add("LFU");
     }};
 
+    public void testNewDbPath(){
+        StorageManager sm = new StorageManager(10, "FIFO",TEST_DB_PATH);
+        sm.clearAll();
+
+        for (int i = 0; i < 10; i++) {
+            sm.putKV(Integer.toString(i), "b");
+        }
+
+        assertEquals(0,sm.getCurrentDiskPath().compareTo("DBRoot/"+TEST_DB_PATH));
+    }
+
     //@Test
     public void testInsert(){
         for (String strategy: cacheStrategy) {

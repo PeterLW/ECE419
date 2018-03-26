@@ -82,7 +82,5 @@ public class MetadataTest extends TestCase {
         m.addServer("localhost:5000");
         m.addServer("localhost:5000");
         m.addServer("localhost:5000");
-
-
     }
 }

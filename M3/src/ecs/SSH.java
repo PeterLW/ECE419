@@ -30,7 +30,6 @@ public class SSH implements Runnable {
     private static final int TIMEOUT = 5000;
 
 	public SSH(String serverIpPort, String zookeeperHost, String zookeeperPort){
-
 		this.serverIpPort = serverIpPort;
 		this.zookeeperHost = zookeeperHost;
 		this.zookeeperPort = zookeeperPort;
@@ -38,12 +37,10 @@ public class SSH implements Runnable {
 
 	@Override
 	public void run() {
-
 		remoteLaunchServer(serverIpPort, zookeeperHost, zookeeperPort);
 	}
 
 	 private static void readChannelOutput(Channel channel){
-
         byte[] buffer = new byte[1024];
 
         try{
